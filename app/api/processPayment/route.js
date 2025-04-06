@@ -4,19 +4,25 @@ import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
 
-// Utility function to generate a PDF receipt in memory.
+// Utility function to generate the PDF receipt as a Buffer.
 async function generatePDF(paymentAmount, remainingBalance) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
     let buffers = [];
+
+    // Collect data as it's generated.
     doc.on('data', buffers.push.bind(buffers));
+
+    // Resolve the promise with the concatenated PDF data when finished.
     doc.on('end', () => {
       const pdfData = Buffer.concat(buffers);
       resolve(pdfData);
     });
+
+    // Handle PDF generation errors.
     doc.on('error', reject);
 
-    // Build the PDF content.
+    // Build PDF content.
     doc.fontSize(20).text('Payment Receipt', { align: 'center' });
     doc.moveDown();
     doc.fontSize(14).text(`Payment Amount: $${paymentAmount}`, { align: 'left' });
@@ -37,25 +43,25 @@ export async function POST(request) {
       );
     }
 
-    // Assume an initial balance of $1000; adjust your logic as needed.
+    // For demonstration, assume an initial balance of $1000.
     const initialBalance = 1000;
     const remainingBalance = initialBalance - paymentAmount;
 
     // Generate the PDF receipt.
     const pdfData = await generatePDF(paymentAmount, remainingBalance);
 
-    // Configure the nodemailer transporter using secure environment variables.
+    // Configure the nodemailer transporter using your environment variables.
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST, // e.g., smtp.gmail.com
       port: parseInt(process.env.SMTP_PORT, 10), // e.g., 465
-      secure: process.env.SMTP_PORT === '465', // true if using port 465
+      secure: process.env.SMTP_PORT === '465', // true for port 465
       auth: {
-        user: process.env.EMAIL_ADDRESS, // your production email address
-        pass: process.env.EMAIL_PASSWORD, // your production email password or app-specific password
+        user: process.env.EMAIL_ADDRESS, // your email address
+        pass: process.env.EMAIL_PASSWORD, // your app-specific password or email password
       },
     });
 
-    // Set up email options with the PDF attachment.
+    // Define the email options including the PDF receipt as an attachment.
     const mailOptions = {
       from: process.env.EMAIL_ADDRESS,
       to: email,
@@ -72,13 +78,13 @@ export async function POST(request) {
     // Send the email.
     await transporter.sendMail(mailOptions);
 
-    // Respond with a success message and the remaining balance.
+    // Return a successful response.
     return NextResponse.json(
       { message: 'Payment processed and receipt sent.', remainingBalance },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Production error in payment endpoint:', error);
+    console.error('Error in processPayment endpoint:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
