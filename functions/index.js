@@ -1,80 +1,89 @@
-const { onSchedule } = require('firebase-functions/v2/scheduler');
-const admin = require('firebase-admin');
-require('dotenv').config();
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const axios = require("axios");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.sendReminderEmails = onSchedule('every 24 hours', async () => {
-  const today = new Date();
+// 🔁 DAILY REMINDER EMAIL FUNCTION
+exports.sendReminderEmails = functions.pubsub
+  .schedule("every 24 hours")
+  .onRun(async () => {
+    const today = new Date();
+    const targetDate = new Date();
+    targetDate.setDate(today.getDate() + 14); // 14 days from now
 
-  // ✅ Production: look ahead 14 days
-  const reminderDate = new Date(today.setDate(today.getDate() + 14));
+    const snapshot = await db.collection("contracts").get();
 
-  const year = reminderDate.getFullYear();
-  const month = String(reminderDate.getMonth() + 1).padStart(2, '0');
-  const day = String(reminderDate.getDate()).padStart(2, '0');
-  const formattedDate = `${year}-${month}-${day}`;
-
-  console.log(`📅 Looking for events on: ${formattedDate}`);
-
-  try {
-    const snapshot = await db.collection('contracts')
-      .where('eventDate', '==', formattedDate)
-      .get();
-
-    if (snapshot.empty) {
-      console.log('No reminders to send today.');
-      return;
-    }
-
-    for (const doc of snapshot.docs) {
+    snapshot.forEach(async (doc) => {
       const data = doc.data();
+      const eventDate = new Date(data.eventDate);
+      const diffTime = Math.abs(eventDate - targetDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      // ✅ Skip if already sent
-      if (data.reminderSent) {
-        console.log(`⏭ Already sent to ${data.email}, skipping.`);
-        continue;
-      }
-
-      // ✅ Send the reminder email via EmailJS REST API
-      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.EMAILJS_PRIVATE_KEY}`
-        },
-        body: JSON.stringify({
-          service_id: process.env.EMAILJS_SERVICE_ID,
-          template_id: process.env.EMAILJS_REMINDER_TEMPLATE_ID,
+      if (diffDays === 0) {
+        const payload = {
+          service_id: "service_9z9konq",
+          template_id: "template_p87ey1j",
+          user_id: "NdEqZMAfDI3DOObLT",
           template_params: {
-            client_name: data.clientName,
-            client_email: data.email,
-            event_date: data.eventDate,
+            to_email: data.customerEmail,
+            to_name: data.customerName,
             event_type: data.eventType,
-            total_due: `$${calculateTotal(data)}`
-          }
-        })
-      });
+            venue: data.venueName,
+            event_date: eventDate.toLocaleDateString(),
+            payment_amount: `$${(data.amountPaid / 100).toFixed(2)}`,
+            message: `This is a reminder that your event is coming up in 2 weeks on ${eventDate.toLocaleDateString()} at ${data.venueName}. Please confirm your details or final payment.`,
+          },
+        };
 
-      // ✅ Mark reminder as sent
-      await db.collection('contracts').doc(doc.id).update({
-        reminderSent: true
-      });
+        try {
+          await axios.post("https://api.emailjs.com/api/v1.0/email/send", payload);
+          console.log(`✅ Reminder sent to ${data.customerEmail}`);
+        } catch (error) {
+          console.error("❌ Failed to send reminder email:", error.message);
+        }
+      }
+    });
+  });
 
-      console.log(`✅ Reminder sent to ${data.email}`);
+// 💵 RECEIPT EMAIL AFTER PAYMENT
+exports.sendReceiptOnPayment = functions.firestore
+  .document("payments/{paymentId}")
+  .onCreate(async (snap, context) => {
+    const paymentData = snap.data();
+
+    const {
+      customerName,
+      customerEmail,
+      amountPaid,
+      eventDate,
+      eventType,
+      venueName,
+    } = paymentData;
+
+    const formattedDate = new Date(eventDate).toLocaleDateString();
+    const formattedAmount = `$${(amountPaid / 100).toFixed(2)}`;
+
+    const payload = {
+      service_id: "service_9z9konq",
+      template_id: "template_p87ey1j",
+      user_id: "NdEqZMAfDI3DOObLT",
+      template_params: {
+        to_email: customerEmail,
+        to_name: customerName,
+        event_type: eventType,
+        venue: venueName,
+        event_date: formattedDate,
+        payment_amount: formattedAmount,
+        message: `Thank you for your payment of ${formattedAmount} for your upcoming event on ${formattedDate} at ${venueName}. This email serves as your official receipt.`,
+      },
+    };
+
+    try {
+      await axios.post("https://api.emailjs.com/api/v1.0/email/send", payload);
+      console.log(`✅ Receipt sent to ${customerEmail}`);
+    } catch (error) {
+      console.error("❌ Failed to send receipt email:", error.message);
     }
-  } catch (err) {
-    console.error('❌ Error checking contracts or sending reminders:', err);
-  }
-});
-
-function calculateTotal(data) {
-  let total = 350;
-  if (data.lighting) total += 100;
-  if (data.photography) total += 150;
-  if (data.videoVisuals) total += 100;
-  if (data.additionalHours) total += data.additionalHours * 75;
-  return total;
-}
+  });

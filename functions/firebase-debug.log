@@ -1,0 +1,93 @@
+[debug] [2025-04-06T01:23:37.121Z] ----------------------------------------------------------------------
+[debug] [2025-04-06T01:23:37.125Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\B.Martin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js functions:shell
+[debug] [2025-04-06T01:23:37.125Z] CLI Version:   14.1.0
+[debug] [2025-04-06T01:23:37.126Z] Platform:      win32
+[debug] [2025-04-06T01:23:37.126Z] Node Version:  v22.14.0
+[debug] [2025-04-06T01:23:37.126Z] Time:          Sat Apr 05 2025 21:23:37 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-04-06T01:23:37.127Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-06T01:23:37.295Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-06T01:23:37.296Z] > authorizing via signed-in user (lcityfilms@gmail.com)
+[debug] [2025-04-06T01:23:37.296Z] [iam] checking project dj-contract-app for permissions ["firebase.projects.get"]
+[debug] [2025-04-06T01:23:37.297Z] Checked if tokens are valid: true, expires at: 1743905926994
+[debug] [2025-04-06T01:23:37.297Z] Checked if tokens are valid: true, expires at: 1743905926994
+[debug] [2025-04-06T01:23:37.298Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/dj-contract-app:testIamPermissions [none]
+[debug] [2025-04-06T01:23:37.298Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/dj-contract-app:testIamPermissions x-goog-quota-user=projects/dj-contract-app
+[debug] [2025-04-06T01:23:37.298Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/dj-contract-app:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-04-06T01:23:37.551Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/dj-contract-app:testIamPermissions 200
+[debug] [2025-04-06T01:23:37.551Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/dj-contract-app:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-04-06T01:23:37.557Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-04-06T01:23:37.587Z] defaultcredentials: writing to file C:\Users\B.Martin\AppData\Roaming\firebase\lcityfilms_gmail_com_application_default_credentials.json
+[debug] [2025-04-06T01:23:37.588Z] DEBUG: Setting GAC to C:\Users\B.Martin\AppData\Roaming\firebase\lcityfilms_gmail_com_application_default_credentials.json
+[debug] [2025-04-06T01:23:37.589Z] Checked if tokens are valid: true, expires at: 1743905926994
+[debug] [2025-04-06T01:23:37.589Z] Checked if tokens are valid: true, expires at: 1743905926994
+[debug] [2025-04-06T01:23:37.589Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/dj-contract-app/adminSdkConfig [none]
+[debug] [2025-04-06T01:23:37.994Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/dj-contract-app/adminSdkConfig 200
+[debug] [2025-04-06T01:23:37.994Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/dj-contract-app/adminSdkConfig {"projectId":"dj-contract-app","storageBucket":"dj-contract-app.firebasestorage.app"}
+[debug] [2025-04-06T01:23:38.005Z] [functions] Watching "C:\Users\B.Martin\dj-contract-app\functions" for Cloud Functions...
+[debug] [2025-04-06T01:23:38.009Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-04-06T01:23:38.780Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "echo Skipping lint step"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
+[debug] [2025-04-06T01:23:38.780Z] Building nodejs source
+[debug] [2025-04-06T01:23:38.780Z] Failed to find version of module node: reached end of search path C:\Users\B.Martin\dj-contract-app\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2025-04-06T01:23:38.782Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-04-06T01:23:38.787Z] Found firebase-functions binary at 'C:\Users\B.Martin\dj-contract-app\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8165
+
+[debug] [2025-04-06T01:23:39.103Z] Got response from /__/functions.yaml {"endpoints":{"sendReminderEmails":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"scheduleTrigger":{"schedule":"every 24 hours","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetrySeconds":null,"minBackoffSeconds":null,"maxBackoffSeconds":null},"timeZone":null},"entryPoint":"sendReminderEmails"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
+[debug] [2025-04-06T01:23:43.135Z] [functions] Loaded functions definitions from source: sendReminderEmails.
+[debug] [2025-04-06T01:23:43.136Z] [functions[us-central1-sendReminderEmails]] function ignored because the pubsub emulator does not exist or is not running.
+[info] i  functions: Loaded functions: sendReminderEmails 
+[warn] !  functions: The following emulators are not running, calls to these services will affect production: firestore, database, pubsub, storage, eventarc, tasks 
+[debug] [2025-04-06T01:24:06.955Z] shell:sendReminderEmails: trigger={"entryPoint":"sendReminderEmails","platform":"gcfv2","region":"us-central1","name":"sendReminderEmails","id":"us-central1-sendReminderEmails","codebase":"default","availableMemoryMb":256,"labels":{"EVENTARC_CLOUD_EVENT_SOURCE":"run-emulated.googleapis.com/projects/dj-contract-app/locations/us-central1/services/sendReminderEmails"},"timeoutSeconds":60,"secretEnvironmentVariables":[],"eventTrigger":{"eventType":"pubsub","resource":""},"schedule":{"schedule":"every 24 hours","timeZone":null,"retryConfig":{"maxBackoffSeconds":null,"minBackoffSeconds":null,"maxRetrySeconds":null,"retryCount":null,"maxDoublings":null}}}
+[debug] [2025-04-06T01:24:06.955Z] shell:sendReminderEmails: opts={}, data={}
+[debug] [2025-04-06T01:24:06.964Z] DEBUG: [worker-pool] addWorker(us-central1-sendReminderEmails)
+[debug] [2025-04-06T01:24:06.964Z] DEBUG: [worker-pool] Adding worker with key us-central1-sendReminderEmails, total=1
+[debug] [2025-04-06T01:24:08.189Z] DEBUG: [runtime-status] [30120] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-admin\\lib\\index.js"}
+[debug] [2025-04-06T01:24:08.189Z] DEBUG: [runtime-status] [30120] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-functions\\lib\\v1\\index.js"}
+[debug] [2025-04-06T01:24:08.190Z] DEBUG: [runtime-status] [30120] Outgoing network have been stubbed. [{"name":"http","status":"mocked"},{"name":"http","status":"mocked"},{"name":"https","status":"mocked"},{"name":"https","status":"mocked"},{"name":"net","status":"mocked"}]
+[debug] [2025-04-06T01:24:08.190Z] DEBUG: [runtime-status] [30120] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-functions\\lib\\v1\\index.js"}
+[debug] [2025-04-06T01:24:08.534Z] DEBUG: [runtime-status] [30120] Checked functions.config() {"config":{}}
+[debug] [2025-04-06T01:24:08.534Z] DEBUG: [runtime-status] [30120] firebase-functions has been stubbed. {"functionsResolution":{"declared":true,"installed":true,"version":"4.9.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-functions\\lib\\v1\\index.js"}}
+[debug] [2025-04-06T01:24:08.535Z] DEBUG: [runtime-status] [30120] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-functions\\lib\\v1\\index.js"}
+[debug] [2025-04-06T01:24:08.536Z] DEBUG: [runtime-status] [30120] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-admin\\lib\\index.js"}
+[debug] [2025-04-06T01:24:08.538Z] DEBUG: [runtime-status] [30120] Resolved module firebase-functions {"declared":true,"installed":true,"version":"4.9.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-functions\\lib\\v1\\index.js"}
+[debug] [2025-04-06T01:24:08.538Z] DEBUG: [runtime-status] [30120] firebase-admin has been stubbed. {"adminResolution":{"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\Users\\B.Martin\\dj-contract-app\\functions\\node_modules\\firebase-admin\\lib\\index.js"}}
+[debug] [2025-04-06T01:24:08.544Z] DEBUG: [runtime-status] [30120] initializeApp(DEFAULT) {"storageBucket":"dj-contract-app.firebasestorage.app","projectId":"dj-contract-app"}
+[warn] !  functions: The Cloud Firestore emulator is not running, so calls to Firestore will affect production. {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"The Cloud Firestore emulator is not running, so calls to Firestore will affect production."}}
+[debug] [2025-04-06T01:24:08.551Z] DEBUG: [runtime-status] [30120] Functions runtime initialized. {"cwd":"C:\\Users\\B.Martin\\dj-contract-app\\functions","node_version":"22.14.0"}
+[debug] [2025-04-06T01:24:08.551Z] DEBUG: [runtime-status] [30120] Listening to port: \\?\pipe\fire_emu_15a19139e8816415
+[debug] [2025-04-06T01:24:08.634Z] DEBUG: [worker-us-central1-sendReminderEmails-4b0f111a-aefb-437c-9602-7a30c61f0d17]: IDLE
+[info] >  📅 Looking for events on: 2025-04-20 {"user":"📅 Looking for events on: 2025-04-20","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"\u001b[90m> \u001b[39m 📅 Looking for events on: 2025-04-20"}}
+[warn] !  Google API requested!
+   - URL: "https://oauth2.googleapis.com/token"
+   - Be careful, this may be a production service. {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"Google API requested!\n   - URL: \"https://oauth2.googleapis.com/token\"\n   - Be careful, this may be a production service."}}
+[info] >  No reminders to send today. {"user":"No reminders to send today.","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"\u001b[90m> \u001b[39m No reminders to send today."}}
+[debug] [2025-04-06T01:26:21.132Z] DEBUG: File C:\Users\B.Martin\dj-contract-app\functions\index.js changed, reloading triggers
