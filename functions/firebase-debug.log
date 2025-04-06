@@ -91,3 +91,46 @@
    - Be careful, this may be a production service. {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"Google API requested!\n   - URL: \"https://oauth2.googleapis.com/token\"\n   - Be careful, this may be a production service."}}
 [info] >  No reminders to send today. {"user":"No reminders to send today.","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-sendReminderEmails"},"extension":{},"message":"\u001b[90m> \u001b[39m No reminders to send today."}}
 [debug] [2025-04-06T01:26:21.132Z] DEBUG: File C:\Users\B.Martin\dj-contract-app\functions\index.js changed, reloading triggers
+[debug] [2025-04-06T01:26:22.134Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-04-06T01:26:22.899Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "echo Skipping lint step"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
+[debug] [2025-04-06T01:26:22.899Z] Building nodejs source
+[debug] [2025-04-06T01:26:22.900Z] Failed to find version of module node: reached end of search path C:\Users\B.Martin\dj-contract-app\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2025-04-06T01:26:22.900Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-04-06T01:26:22.905Z] Found firebase-functions binary at 'C:\Users\B.Martin\dj-contract-app\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8999
+
+[debug] [2025-04-06T01:26:23.471Z] Got response from /__/functions.yaml {"endpoints":{"sendReminderEmails":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"scheduleTrigger":{"schedule":"every 24 hours","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null},"timeZone":null},"labels":{},"entryPoint":"sendReminderEmails"},"sendReceiptOnPayment":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/dj-contract-app/databases/(default)/documents/payments/{paymentId}"},"retry":false},"labels":{},"entryPoint":"sendReceiptOnPayment"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
+[debug] [2025-04-06T01:26:27.495Z] [functions] Loaded functions definitions from source: sendReminderEmails, sendReceiptOnPayment.
+[debug] [2025-04-06T01:26:27.496Z] DEBUG: [worker-pool] Shutting down IDLE worker (us-central1-sendReminderEmails)
+[debug] [2025-04-06T01:26:27.496Z] DEBUG: [worker-us-central1-sendReminderEmails-4b0f111a-aefb-437c-9602-7a30c61f0d17]: FINISHING
+[debug] [2025-04-06T01:26:27.496Z] [functions[us-central1-sendReceiptOnPayment]] function ignored because the firestore emulator does not exist or is not running.
+[debug] [2025-04-06T01:26:27.505Z] DEBUG: [worker-us-central1-sendReminderEmails-4b0f111a-aefb-437c-9602-7a30c61f0d17]: exited
+[debug] [2025-04-06T01:26:27.505Z] DEBUG: [worker-us-central1-sendReminderEmails-4b0f111a-aefb-437c-9602-7a30c61f0d17]: FINISHED
