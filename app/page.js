@@ -42,12 +42,13 @@ export default function DJContractForm() {
     additionalHours: 0,
   });
   
-  const venueLocationRef = useRef(null);
-  const [isClient, setIsClient] = useState(false);
-  
   const [submitted, setSubmitted] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
+  const [isClient, setIsClient] = useState(false);
+  const [paymentProcessed, setPaymentProcessed] = useState(false);
+  const [remainingBalance, setRemainingBalance] = useState(null);
   
+  const venueLocationRef = useRef(null);
 
   // Icon mappings for the main fields.
   const fieldIcons = {
@@ -81,7 +82,7 @@ export default function DJContractForm() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsClient(true); // This ensures the Google Places code runs only on the client
+      setIsClient(true); // Ensures Google Places code runs only on client
     }
   }, []);
 
@@ -196,6 +197,7 @@ export default function DJContractForm() {
     }
   };
 
+  // Pricing constants and calculation functions.
   const BASE = 350,
     LIGHTING = 100,
     PHOTO = 150,
@@ -225,7 +227,7 @@ export default function DJContractForm() {
     </ul>
   );
 
-  // InfoModal component for displaying info popups with an "Ok" button.
+  // InfoModal component for displaying info popups.
   function InfoModal({ text, onClose }) {
     return (
       <div style={{
@@ -262,6 +264,31 @@ export default function DJContractForm() {
     );
   }
 
+  // Function to handle the payment process.
+  const handlePayment = async (paymentMethod) => {
+    try {
+      const response = await fetch('/api/processPayment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: formData.email, 
+          paymentAmount: calculateTotal() 
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setPaymentProcessed(true);
+        setRemainingBalance(data.remainingBalance);
+        alert('Payment processed and receipt sent to your email.');
+      } else {
+        alert(data.error || 'Payment processing failed.');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('Payment processing failed.');
+    }
+  };
+
   const inputStyle = {
     width: '100%',
     padding: '12px',
@@ -290,7 +317,9 @@ export default function DJContractForm() {
     color: '#fff',
     textDecoration: 'none',
     borderRadius: '10px',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    border: 'none',
+    cursor: 'pointer'
   };
 
   return (
@@ -350,12 +379,12 @@ export default function DJContractForm() {
                 </div>
               ))}
 
-            <div>
-            <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                {venueLocationIcon} Venue Location
-                </span>
-                  </label>
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {venueLocationIcon} Venue Location
+                  </span>
+                </label>
                 <input
                   ref={venueLocationRef}
                   name="venueLocation"
@@ -366,7 +395,6 @@ export default function DJContractForm() {
                   style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
                 />
               </div>
-
 
               {['eventDate', 'startTime', 'endTime'].map((field) => (
                 <div key={field}>
@@ -518,13 +546,30 @@ export default function DJContractForm() {
                 🎉 Congratulations on successfully booking your event. Please submit your deposit or full payment to reserve your date.
               </p>
               {itemizedTotal()}
-              <p>Send payment to confirm your booking:</p>
-              <a href="https://venmo.com/Bobby-Martin-64" target="_blank" rel="noopener noreferrer" style={linkButtonStyle}>
-                Pay with Venmo
-              </a>
-              <a href="https://cash.app/$LiveCity" target="_blank" rel="noopener noreferrer" style={linkButtonStyle}>
-                Pay with Cash App
-              </a>
+              {paymentProcessed ? (
+                <div>
+                  <p>
+                    Payment processed. Receipt sent to your email.<br />
+                    <strong>Remaining Balance: ${remainingBalance}</strong>
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p>Click one of the options below to process your payment and receive your receipt:</p>
+                  <button 
+                    onClick={() => handlePayment('Venmo')}
+                    style={linkButtonStyle}
+                  >
+                    Pay with Venmo
+                  </button>
+                  <button 
+                    onClick={() => handlePayment('Cash App')}
+                    style={linkButtonStyle}
+                  >
+                    Pay with Cash App
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
