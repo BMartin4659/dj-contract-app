@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import db from '../firebase'; // Adjust path if needed
+import db from '../../firebase';
+ // Adjust path if needed
 
 export default function Dashboard() {
   // We'll store all upcoming events in `events` state.
