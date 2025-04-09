@@ -6,8 +6,9 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // 🔁 DAILY REMINDER EMAIL FUNCTION
-exports.sendReminderEmails = functions.pubsub
-  .schedule("every 24 hours")
+exports.sendReminderEmails = functions
+  .region('us-central1')
+  .pubsub.schedule("every 24 hours")
   .onRun(async () => {
     const today = new Date();
     const targetDate = new Date();
@@ -23,9 +24,9 @@ exports.sendReminderEmails = functions.pubsub
 
       if (diffDays === 0) {
         const payload = {
-          service_id: "service_9z9konq",
-          template_id: "template_p87ey1j",
-          user_id: "NdEqZMAfDI3DOObLT",
+          service_id: process.env.EMAILJS_SERVICE_ID,
+          template_id: process.env.EMAILJS_TEMPLATE_ID,
+          user_id: process.env.EMAILJS_USER_ID,
           template_params: {
             to_email: data.customerEmail,
             to_name: data.customerName,
@@ -48,8 +49,9 @@ exports.sendReminderEmails = functions.pubsub
   });
 
 // 💵 RECEIPT EMAIL AFTER PAYMENT
-exports.sendReceiptOnPayment = functions.firestore
-  .document("payments/{paymentId}")
+exports.sendReceiptOnPayment = functions
+  .region('us-central1')
+  .firestore.document("payments/{paymentId}")
   .onCreate(async (snap, context) => {
     const paymentData = snap.data();
 
@@ -66,9 +68,9 @@ exports.sendReceiptOnPayment = functions.firestore
     const formattedAmount = `$${(amountPaid / 100).toFixed(2)}`;
 
     const payload = {
-      service_id: "service_9z9konq",
-      template_id: "template_p87ey1j",
-      user_id: "NdEqZMAfDI3DOObLT",
+      service_id: process.env.EMAILJS_SERVICE_ID,
+      template_id: process.env.EMAILJS_TEMPLATE_ID,
+      user_id: process.env.EMAILJS_USER_ID,
       template_params: {
         to_email: customerEmail,
         to_name: customerName,
