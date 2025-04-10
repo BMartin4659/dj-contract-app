@@ -2,7 +2,6 @@
   "functions": {
     "source": "functions",
     "runtime": "nodejs18",
-    "regions": ["us-central1"],
-    "gen": 2
+    "regions": ["us-central1"]
   }
 }
