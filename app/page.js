@@ -545,28 +545,90 @@ export default function DJContractForm() {
                 </div>
               ))}
 
-              {/* Additional Hours Field */}
+              {/* Stylish Additional Hours Selector */}
               <div>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {additionalHoursIcon} Additional Hours ($75/hr):
+                    <FaClock style={{ marginRight: '8px', color: '#0070f3', fontSize: '18px' }} />
+                    Additional Hours ($75/hr):
                   </span>
                 </label>
-                <input
-                  type="number"
-                  name="additionalHours"
-                  min="0"
-                  value={formData.additionalHours}
-                  onChange={handleChange}
-                  style={inputStyle}
-                />
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  maxWidth: '150px',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  overflow: 'hidden'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: Math.max(0, prev.additionalHours - 1) }))}
+                    style={{
+                      border: 'none',
+                      background: '#f0f0f0',
+                      padding: '10px 15px',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                      flex: '0 0 auto'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                  >
+                    <FaMinus style={{ color: '#e53e3e' }} />
+                  </button>
+                  <div style={{
+                    padding: '10px 15px',
+                    flex: '1 1 auto',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    minWidth: '40px'
+                  }}>
+                    {formData.additionalHours}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: prev.additionalHours + 1 }))}
+                    style={{
+                      border: 'none',
+                      background: '#f0f0f0',
+                      padding: '10px 15px',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                      flex: '0 0 auto'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                  >
+                    <FaPlus style={{ color: '#38a169' }} />
+                  </button>
+                </div>
               </div>
 
-              {/* Payment Method Selection */}
+              {/* Stylish Payment Method Selection */}
               <div>
                 <label style={labelStyle}>Payment Method:</label>
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginBottom: '1rem',
+                  flexWrap: 'wrap'
+                }}>
+                  {/* Stripe Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
+                      borderRadius: '8px',
+                      padding: '10px 15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Stripe' ? '#f0f4ff' : 'white',
+                      transition: 'all 0.2s ease',
+                      minWidth: '120px'
+                    }}
+                  >
                     <input
                       type="radio"
                       id="stripe"
@@ -575,14 +637,33 @@ export default function DJContractForm() {
                       checked={formData.paymentMethod === 'Stripe'}
                       onChange={handleChange}
                       required
-                      style={{ marginRight: '0.5rem' }}
+                      style={{ marginRight: '10px' }}
                     />
-                    <label htmlFor="stripe" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                      <FaCreditCard style={{ marginRight: '0.5rem', color: '#635BFF' }} /> Stripe
-                    </label>
+                    <FaCreditCard style={{
+                      marginRight: '8px',
+                      color: '#635BFF',
+                      fontSize: '20px'
+                    }} />
+                    <span style={{ fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal' }}>
+                      Stripe
+                    </span>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  {/* Venmo Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
+                      borderRadius: '8px',
+                      padding: '10px 15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
+                      transition: 'all 0.2s ease',
+                      minWidth: '120px'
+                    }}
+                  >
                     <input
                       type="radio"
                       id="venmo"
@@ -591,14 +672,33 @@ export default function DJContractForm() {
                       checked={formData.paymentMethod === 'Venmo'}
                       onChange={handleChange}
                       required
-                      style={{ marginRight: '0.5rem' }}
+                      style={{ marginRight: '10px' }}
                     />
-                    <label htmlFor="venmo" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                      <FaMoneyBillWave style={{ marginRight: '0.5rem', color: '#008CFF' }} /> Venmo
-                    </label>
+                    <FaMoneyBillWave style={{
+                      marginRight: '8px',
+                      color: '#008CFF',
+                      fontSize: '20px'
+                    }} />
+                    <span style={{ fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal' }}>
+                      Venmo
+                    </span>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {/* CashApp Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
+                      borderRadius: '8px',
+                      padding: '10px 15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
+                      transition: 'all 0.2s ease',
+                      minWidth: '120px'
+                    }}
+                  >
                     <input
                       type="radio"
                       id="cashapp"
@@ -607,11 +707,16 @@ export default function DJContractForm() {
                       checked={formData.paymentMethod === 'CashApp'}
                       onChange={handleChange}
                       required
-                      style={{ marginRight: '0.5rem' }}
+                      style={{ marginRight: '10px' }}
                     />
-                    <label htmlFor="cashapp" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                      <FaMoneyBillWave style={{ marginRight: '0.5rem', color: '#00D632' }} /> CashApp
-                    </label>
+                    <FaMoneyBillWave style={{
+                      marginRight: '8px',
+                      color: '#00D632',
+                      fontSize: '20px'
+                    }} />
+                    <span style={{ fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal' }}>
+                      CashApp
+                    </span>
                   </div>
                 </div>
               </div>
