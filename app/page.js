@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import emailjs from '@emailjs/browser';
 import { collection, addDoc } from 'firebase/firestore';
-import db from '../lib/firebase';
+import { db } from '../lib/firebase';
+import StripeCheckout from '@/components/StripeCheckout';
 import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { 
@@ -47,6 +49,7 @@ export default function DJContractForm() {
   
   const [submitted, setSubmitted] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
+  const [showStripe, setShowStripe] = useState(false);
   
 
   // Icon mappings for the main fields.
@@ -144,55 +147,68 @@ export default function DJContractForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.venueLocation) {
-      return alert('Please select a venue location.');
+    const {
+      clientName, email, contactPhone, eventType, guestCount,
+      venueName, venueLocation, eventDate, startTime, endTime,
+      paymentMethod, lighting, photography, videoVisuals, agreeToTerms,
+      additionalHours
+    } = formData;
+
+    if (!venueLocation) return alert('Please select a venue location.');
+    if (!validateEmail(email)) return alert('Enter a valid email.');
+    if (!validatePhone(contactPhone)) return alert('Enter a valid phone number.');
+    if (!validateAddress(venueLocation)) return alert('Please enter a valid address.');
+    if (!agreeToTerms) return alert('Please agree to the terms.');
+    
+    if (paymentMethod === 'Stripe') {
+      // Handle Stripe payment flow
+      return; // Prevent form submission until Stripe payment completes
     }
-
-    // Validate start and end times with midnight crossover support (end must be <= 2:00 AM)
-    if (formData.startTime && formData.endTime) {
-      let start = new Date(`1970-01-01T${formData.startTime}:00`);
-      let end = new Date(`1970-01-01T${formData.endTime}:00`);
-
-      // If end time is not after start, assume event crosses midnight and add one day to end.
-      if (end <= start) {
-        end.setDate(end.getDate() + 1);
-      }
-
-      // For events that cross midnight, ensure the end time is at or before 2:00 AM.
-      const twoAM = new Date(`1970-01-02T02:00:00`);
-      if (end > twoAM) {
-        return alert(
-          'For events that cross midnight, the end time must be at or before 2:00 AM.'
-        );
-      }
-
-      // Confirm that start is before end.
-      if (start >= end) {
-        return alert('Start time must be before end time.');
-      }
-    }
-
-    if (!validateEmail(formData.email))
-      return alert('Enter a valid email.');
-    if (!validatePhone(formData.contactPhone))
-      return alert('Enter a valid phone number.');
-    if (!validateAddress(formData.venueLocation))
-      return alert('Please enter a valid address.');
-    if (!formData.agreeToTerms)
-      return alert('Please agree to the terms.');
 
     try {
-      await addDoc(collection(db, 'contracts'), formData);
-      setSubmitted(true);
-      confetti({
-        particleCount: 200,
-        spread: 80,
-        origin: { y: 0.6 },
-        zIndex: 9999,
-      });
-    } catch (err) {
-      console.error('Error submitting contract:', err);
-      alert('Something went wrong.');
+      const emailResponse = await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+        {
+          to_name: clientName,
+          to_email: email,
+          event_type: eventType,
+          event_date: eventDate,
+          venue_name: venueName
+        },
+        process.env.NEXT_PUBLIC_EMAILJS_USER_ID
+      );
+
+      if (emailResponse.status === 200) {
+        await addDoc(collection(db, 'djContracts'), {
+          eventType,
+          numberOfGuests: guestCount,
+          venueName,
+          venueLocation,
+          eventDate,
+          additionalHours,
+          email,
+          clientName,
+          phoneNumber: contactPhone,
+          depositPaid: false,
+          confirmationSent: true,
+          reminderSent: false,
+          status: 'emailSent'
+        });
+        setSubmitted(true);
+        confetti({
+          particleCount: 200,
+          spread: 80,
+          origin: { y: 0.6 },
+          zIndex: 9999,
+        });
+      } else {
+        console.error("Email failed. Contract not saved.");
+        alert("Failed to send confirmation email. Contract not saved.");
+      }
+    } catch (error) {
+      console.error("Something went wrong:", error);
+      alert("An error occurred while submitting the contract.");
     }
   };
 
@@ -329,7 +345,18 @@ export default function DJContractForm() {
             📧 <a href="mailto:therealdjbobbydrake@gmail.com" style={{ color: '#0070f3' }}>therealdjbobbydrake@gmail.com</a>
           </p>
 
-          {!submitted ? (
+          {showStripe ? (
+            <div className="mt-4">
+              <StripeCheckout
+                amount={calculateTotal() * 100}
+                onSuccess={() => {
+                  // Handle successful payment before form submission
+                  setShowStripe(false);
+                  handleSubmit(e);
+                }}
+              />
+            </div>
+          ) : !submitted ? (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
               {['clientName', 'email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
                 <div key={field}>
@@ -485,6 +512,7 @@ export default function DJContractForm() {
                   <option value="">Choose one</option>
                   <option value="Venmo - @Bobby-Martin-64">Venmo</option>
                   <option value="Cash App - $LiveCity">Cash App</option>
+                  <option value="Stripe">Credit/Debit Card (via Stripe)</option>
                   <option value="Cash">Cash</option>
                 </select>
               </div>
