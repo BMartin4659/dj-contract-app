@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "react",
+    "types": ["react", "react-dom", "node"],
+    "jsx": "preserve",
+    "types": ["react", "node"],
+    "jsx": "preserve",
     "target": "es5",
     "lib": [
       "dom",
