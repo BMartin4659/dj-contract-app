@@ -27,19 +27,22 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     setError(null);
 
     try {
+      // Add timeout to prevent freezing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount,
-          clientEmail: contractDetails.clientEmail,
-          eventType: contractDetails.eventType,
-          eventDate: contractDetails.eventDate
+          clientEmail: contractDetails?.clientEmail || 'customer@example.com',
+          eventType: contractDetails?.eventType || 'Event',
+          eventDate: contractDetails?.eventDate || new Date().toISOString()
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create payment intent');
+        throw new Error('Failed to create payment intent: ' + await response.text());
       }
 
       const { clientSecret } = await response.json();
