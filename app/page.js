@@ -50,6 +50,8 @@ export default function DJContractForm() {
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [infoPopup, setInfoPopup] = useState(null);
   const [showStripe, setShowStripe] = useState(false);
   
@@ -236,6 +238,25 @@ export default function DJContractForm() {
     }
   };
 
+  // Time options for the dropdowns
+  const timeOptions = [
+    '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM',
+    '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM',
+    '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM',
+    '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM',
+    '12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM'
+  ];
+
+  // Convert time to comparable number for logic (e.g., '8:30 PM' → 2030)
+  const convertToNumber = (t) => {
+    if (!t) return 0;
+    const [hourMin, ampm] = t.split(' ');
+    let [h, m] = hourMin.split(':').map(Number);
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return h * 100 + m;
+  };
+
   const BASE = 350,
     LIGHTING = 100,
     PHOTO = 150,
@@ -419,23 +440,74 @@ export default function DJContractForm() {
               </div>
 
 
-              {['eventDate', 'startTime', 'endTime'].map((field) => (
-                <div key={field}>
-                  <label style={labelStyle}>
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {timeIcons[field]} {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                    </span>
-                  </label>
-                  <input
-                    name={field}
-                    type={field.includes('Date') ? 'date' : 'time'}
-                    required
-                    style={inputStyle}
-                    value={formData[field]}
-                    onChange={handleChange}
-                  />
-                </div>
-              ))}
+              {/* Event Date */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['eventDate']} Event Date:
+                  </span>
+                </label>
+                <input
+                  name="eventDate"
+                  type="date"
+                  required
+                  style={inputStyle}
+                  value={formData.eventDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['startTime']} Start Time:
+                  </span>
+                </label>
+                <select
+                  name="startTime"
+                  value={startTime}
+                  onChange={(e) => {
+                    setStartTime(e.target.value);
+                    setEndTime(''); // reset end time when start changes
+                    setFormData(prev => ({ ...prev, startTime: e.target.value }));
+                  }}
+                  required
+                  style={inputStyle}
+                >
+                  <option value="">Select start time</option>
+                  {timeOptions.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['endTime']} End Time:
+                  </span>
+                </label>
+                <select
+                  name="endTime"
+                  value={endTime}
+                  onChange={(e) => {
+                    setEndTime(e.target.value);
+                    setFormData(prev => ({ ...prev, endTime: e.target.value }));
+                  }}
+                  required
+                  style={inputStyle}
+                  disabled={!startTime}
+                >
+                  <option value="">Select end time</option>
+                  {timeOptions
+                    .filter((t) => convertToNumber(t) > convertToNumber(startTime))
+                    .map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                </select>
+              </div>
 
               {[
                 {
