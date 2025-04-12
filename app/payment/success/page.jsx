@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function PaymentSuccessPage() {
+// Wrapper component that uses searchParams
+function SuccessContent() {
   const [countdown, setCountdown] = useState(5);
   const searchParams = useSearchParams();
   const contractId = searchParams.get('id');
@@ -50,5 +51,33 @@ export default function PaymentSuccessPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#f3f4f6',
+      }}>
+        <div style={{
+          background: '#fff',
+          padding: '2rem 3rem',
+          borderRadius: '12px',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          maxWidth: '500px'
+        }}>
+          <h1 style={{ color: '#22c55e', fontSize: '1.75rem' }}>Loading...</h1>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
