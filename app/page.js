@@ -545,71 +545,74 @@ export default function DJContractForm() {
                 </div>
               ))}
 
-              {/* Redesigned compact Additional Hours Field with icon */}
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+              {/* Additional Hours Field */}
+              <div>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     {additionalHoursIcon} Additional Hours ($75/hr):
                   </span>
                 </label>
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                  marginLeft: '1rem',
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: Math.max(0, prev.additionalHours - 1) }))}
-                    style={{
-                      border: 'none',
-                      background: '#f0f0f0',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <FaMinus />
-                  </button>
-                  <span style={{ padding: '0 12px', minWidth: '30px', textAlign: 'center' }}>
-                    {formData.additionalHours}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: prev.additionalHours + 1 }))}
-                    style={{
-                      border: 'none',
-                      background: '#f0f0f0',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <FaPlus />
-                  </button>
-                </div>
+                <input
+                  type="number"
+                  name="additionalHours"
+                  min="0"
+                  value={formData.additionalHours}
+                  onChange={handleChange}
+                  style={inputStyle}
+                />
               </div>
 
               {/* Payment Method Selection */}
               <div>
                 <label style={labelStyle}>Payment Method:</label>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                  {['Stripe', 'Venmo', 'CashApp'].map(method => (
-                    <label key={method} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method}
-                        checked={formData.paymentMethod === method}
-                        onChange={handleChange}
-                        required
-                        style={{ marginRight: '0.5rem' }}
-                      />
-                      <span style={{ display: 'flex', alignItems: 'center' }}>
-                        {paymentIcons[method]} {method}
-                      </span>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      id="stripe"
+                      name="paymentMethod"
+                      value="Stripe"
+                      checked={formData.paymentMethod === 'Stripe'}
+                      onChange={handleChange}
+                      required
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <label htmlFor="stripe" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <FaCreditCard style={{ marginRight: '0.5rem', color: '#635BFF' }} /> Stripe
                     </label>
-                  ))}
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      id="venmo"
+                      name="paymentMethod"
+                      value="Venmo"
+                      checked={formData.paymentMethod === 'Venmo'}
+                      onChange={handleChange}
+                      required
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <label htmlFor="venmo" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <FaMoneyBillWave style={{ marginRight: '0.5rem', color: '#008CFF' }} /> Venmo
+                    </label>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type="radio"
+                      id="cashapp"
+                      name="paymentMethod"
+                      value="CashApp"
+                      checked={formData.paymentMethod === 'CashApp'}
+                      onChange={handleChange}
+                      required
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <label htmlFor="cashapp" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <FaMoneyBillWave style={{ marginRight: '0.5rem', color: '#00D632' }} /> CashApp
+                    </label>
+                  </div>
                 </div>
               </div>
 
