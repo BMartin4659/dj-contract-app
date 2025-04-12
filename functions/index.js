@@ -6,9 +6,8 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // 🔁 DAILY REMINDER EMAIL FUNCTION
-exports.sendReminderEmails = functions
-  .region('us-central1')
-  .pubsub.schedule("every 24 hours")
+exports.sendReminderEmails = functions.pubsub
+  .schedule("every 24 hours")
   .onRun(async () => {
     const today = new Date();
     const targetDate = new Date();
@@ -49,9 +48,8 @@ exports.sendReminderEmails = functions
   });
 
 // 💵 RECEIPT EMAIL AFTER PAYMENT
-exports.sendReceiptOnPayment = functions
-  .region('us-central1')
-  .firestore.document("payments/{paymentId}")
+exports.sendReceiptOnPayment = functions.firestore
+  .document("payments/{paymentId}")
   .onCreate(async (snap, context) => {
     const paymentData = snap.data();
 
