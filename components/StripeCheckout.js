@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -11,7 +13,7 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-const CheckoutForm = ({ amount, onSuccess }) => {
+const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,8 @@ const CheckoutForm = ({ amount, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!stripe || !elements) return;
+    
     setLoading(true);
     setError(null);
 
@@ -26,7 +30,12 @@ const CheckoutForm = ({ amount, onSuccess }) => {
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount })
+        body: JSON.stringify({
+          amount,
+          clientEmail: contractDetails.clientEmail,
+          eventType: contractDetails.eventType,
+          eventDate: contractDetails.eventDate
+        })
       });
 
       if (!response.ok) {
@@ -34,47 +43,29 @@ const CheckoutForm = ({ amount, onSuccess }) => {
       }
 
       const { clientSecret } = await response.json();
-
-      const result = await stripe.confirmCardPayment(clientSecret, {
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
         }
       });
 
-      if (result.error) {
-        setError(result.error.message);
-        setLoading(false);
-        return;
-      }
+      if (error) throw error;
 
-      if (result.paymentIntent.status === 'succeeded') {
-        // Save payment details to Firestore
+      if (paymentIntent.status === 'succeeded') {
         await addDoc(collection(db, 'stripePayments'), {
-          paymentIntentId: result.paymentIntent.id,
+          paymentIntentId: paymentIntent.id,
           amount: amount,
-          currency: result.paymentIntent.currency,
-          clientEmail: formData.email,
-          eventType: formData.eventType,
-          eventDate: formData.eventDate,
+          currency: paymentIntent.currency,
+          ...contractDetails,
           timestamp: new Date()
         });
-        
-        onSuccess(result.paymentIntent.id);
+        onSuccess(paymentIntent.id);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Payment failed');
     } finally {
       setLoading(false);
     }
-
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      if (result.paymentIntent.status === 'succeeded') {
-        onSuccess();
-      }
-    }
-    setLoading(false);
   };
 
   return (
