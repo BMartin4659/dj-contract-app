@@ -75,16 +75,35 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 
   return (
     <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-      <CardElement options={{ style: { base: { fontSize: '16px' } } }} />
+      <CardElement options={{
+        style: {
+          base: {
+            fontSize: '16px',
+            color: '#424770',
+            fontFamily: 'Arial, sans-serif',
+            '::placeholder': {
+              color: '#aab7c4',
+            },
+            iconColor: '#635BFF',
+          },
+          invalid: {
+            color: '#9e2146',
+            iconColor: '#fa755a',
+          },
+        }
+      }} />
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <button type="submit" disabled={!stripe || loading} style={{
         marginTop: '1rem',
-        backgroundColor: '#2563eb',
+        backgroundColor: '#635BFF',
         color: '#fff',
         padding: '0.75rem 1.5rem',
         borderRadius: '6px',
         border: 'none',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        transition: 'all 0.2s ease'
       }}>
         {loading ? 'Processing...' : 'Pay Now'}
       </button>

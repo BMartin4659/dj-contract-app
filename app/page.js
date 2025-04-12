@@ -274,7 +274,7 @@ export default function DJContractForm() {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -282,12 +282,20 @@ export default function DJContractForm() {
       }}>
         <div style={{
           backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '10px',
+          padding: '25px',
+          borderRadius: '12px',
           maxWidth: '500px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+          border: '2px solid #0070f3',
         }}>
-          <p style={{ marginBottom: '15px' }}>{text}</p>
+          <h3 style={{ marginBottom: '12px', color: '#0070f3' }}>Additional Information</h3>
+          <p style={{
+            marginBottom: '20px',
+            fontSize: '16px',
+            lineHeight: '1.6',
+            color: '#333',
+            fontWeight: '500'
+          }}>{text}</p>
           <button
             onClick={onClose}
             style={{
@@ -325,34 +333,35 @@ export default function DJContractForm() {
 
   const iconStyle = {
     marginRight: '8px',
-    color: '#0070f3',
+    fontSize: '18px',
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
   };
 
   const fieldIcons = {
-    clientName: <FaUser style={iconStyle} />,
-    email: <FaEnvelope style={iconStyle} />,
-    contactPhone: <FaPhone style={iconStyle} />,
-    eventType: <FaCalendarAlt style={iconStyle} />,
-    guestCount: <FaUsers style={iconStyle} />,
-    venueName: <FaBuilding style={iconStyle} />,
+    clientName: <FaUser style={{...iconStyle, color: '#4299E1'}} />,
+    email: <FaEnvelope style={{...iconStyle, color: '#ED8936'}} />,
+    contactPhone: <FaPhone style={{...iconStyle, color: '#48BB78'}} />,
+    eventType: <FaCalendarAlt style={{...iconStyle, color: '#9F7AEA'}} />,
+    guestCount: <FaUsers style={{...iconStyle, color: '#F56565'}} />,
+    venueName: <FaBuilding style={{...iconStyle, color: '#38B2AC'}} />,
   };
 
-  const venueLocationIcon = <FaMapMarkerAlt style={iconStyle} />;
+  const venueLocationIcon = <FaMapMarkerAlt style={{...iconStyle, color: '#FC8181'}} />;
   const timeIcons = {
-    eventDate: <FaCalendarAlt style={iconStyle} />,
-    startTime: <FaClock style={iconStyle} />,
-    endTime: <FaClock style={iconStyle} />,
+    eventDate: <FaCalendarAlt style={{...iconStyle, color: '#D53F8C'}} />,
+    startTime: <FaClock style={{...iconStyle, color: '#805AD5'}} />,
+    endTime: <FaClock style={{...iconStyle, color: '#3182CE'}} />,
   };
   const serviceIcons = {
-    lighting: <FaLightbulb style={iconStyle} />,
-    photography: <FaCamera style={iconStyle} />,
-    videoVisuals: <FaVideo style={iconStyle} />,
+    lighting: <FaLightbulb style={{...iconStyle, color: '#ECC94B'}} />,
+    photography: <FaCamera style={{...iconStyle, color: '#4FD1C5'}} />,
+    videoVisuals: <FaVideo style={{...iconStyle, color: '#F687B3'}} />,
   };
-  const additionalHoursIcon = <FaClock style={iconStyle} />;
+  const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <FaCreditCard style={iconStyle} />,
-    Venmo: <FaMoneyBillWave style={iconStyle} />,
-    CashApp: <FaMoneyBillWave style={iconStyle} />,
+    Stripe: <FaCreditCard style={{...iconStyle, color: '#635BFF'}} />,
+    Venmo: <FaMoneyBillWave style={{...iconStyle, color: '#008CFF'}} />,
+    CashApp: <FaMoneyBillWave style={{...iconStyle, color: '#00D632'}} />,
   };
 
   return (
@@ -532,16 +541,37 @@ export default function DJContractForm() {
                   description: 'Slide shows, presentations, karaoke etc.',
                 },
               ].map(({ name, label, description }) => (
-                <div key={name}>
+                <div key={name} style={{ position: 'relative' }}>
                   <label style={labelStyle}>
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {serviceIcons[name]} {label}
                     </span>
-                    <span onClick={() => setInfoPopup(description)} style={{ color: '#0070f3', marginLeft: 8, cursor: 'pointer' }}>
-                      <FaInfoCircle />
-                    </span>
                   </label>
-                  <input type="checkbox" name={name} checked={formData[name]} onChange={handleChange} />
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type="checkbox"
+                      name={name}
+                      checked={formData[name]}
+                      onChange={handleChange}
+                      style={{ marginRight: '10px' }}
+                    />
+                    <span
+                      onClick={() => setInfoPopup(description)}
+                      style={{
+                        color: '#0070f3',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0, 112, 243, 0.1)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      <FaInfoCircle style={{ marginRight: '5px' }} /> Info
+                    </span>
+                  </div>
                 </div>
               ))}
 
@@ -549,7 +579,7 @@ export default function DJContractForm() {
               <div>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaClock style={{ marginRight: '8px', color: '#0070f3', fontSize: '18px' }} />
+                    <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
                     Additional Hours ($75/hr):
                   </span>
                 </label>
@@ -582,7 +612,9 @@ export default function DJContractForm() {
                     flex: '1 1 auto',
                     textAlign: 'center',
                     fontWeight: 'bold',
-                    minWidth: '40px'
+                    minWidth: '40px',
+                    fontSize: '18px',
+                    color: '#333'
                   }}>
                     {formData.additionalHours}
                   </div>
@@ -642,9 +674,13 @@ export default function DJContractForm() {
                     <FaCreditCard style={{
                       marginRight: '8px',
                       color: '#635BFF',
-                      fontSize: '20px'
+                      fontSize: '22px',
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
                     }} />
-                    <span style={{ fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal' }}>
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'Stripe' ? '#000' : '#444'
+                    }}>
                       Stripe
                     </span>
                   </div>
@@ -677,9 +713,13 @@ export default function DJContractForm() {
                     <FaMoneyBillWave style={{
                       marginRight: '8px',
                       color: '#008CFF',
-                      fontSize: '20px'
+                      fontSize: '22px',
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
                     }} />
-                    <span style={{ fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal' }}>
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'Venmo' ? '#000' : '#444'
+                    }}>
                       Venmo
                     </span>
                   </div>
@@ -712,9 +752,13 @@ export default function DJContractForm() {
                     <FaMoneyBillWave style={{
                       marginRight: '8px',
                       color: '#00D632',
-                      fontSize: '20px'
+                      fontSize: '22px',
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
                     }} />
-                    <span style={{ fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal' }}>
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'CashApp' ? '#000' : '#444'
+                    }}>
                       CashApp
                     </span>
                   </div>
@@ -722,18 +766,38 @@ export default function DJContractForm() {
               </div>
 
               {/* Terms and Conditions */}
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }}>
+              <div style={{
+                marginBottom: '1rem',
+                backgroundColor: 'rgba(255,255,255,0.7)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                }}>
                   <input
                     type="checkbox"
                     name="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onChange={handleChange}
                     required
-                    style={{ marginRight: '0.5rem', marginTop: '0.25rem' }}
+                    style={{
+                      marginRight: '0.75rem',
+                      width: '18px',
+                      height: '18px'
+                    }}
                   />
-                  <span style={{ fontSize: '0.9rem' }}>
-                    I agree to the <a href="#" style={{ color: '#0070f3' }}>terms and conditions</a>, including the cancellation policy and payment terms.
+                  <span style={{
+                    fontSize: '0.95rem',
+                    lineHeight: '1.4',
+                    fontWeight: '500',
+                    color: '#333'
+                  }}>
+                    I agree to the <a href="#" style={{ color: '#0070f3', fontWeight: 'bold' }}>terms and conditions</a>, including the cancellation policy and payment terms.
                   </span>
                 </label>
               </div>
