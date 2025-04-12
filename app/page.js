@@ -161,12 +161,41 @@ export default function DJContractForm() {
     if (!validateAddress(venueLocation)) return alert('Please enter a valid address.');
     if (!agreeToTerms) return alert('Please agree to the terms.');
     
-    if (paymentMethod === 'Stripe') {
-      // Handle Stripe payment flow
-      return; // Prevent form submission until Stripe payment completes
-    }
-
+    setIsSubmitting(true);
+    
+    // Handle all payment methods consistently
     try {
+      // Create contract first
+      const docRef = await addDoc(collection(db, 'djContracts'), {
+        eventType,
+        numberOfGuests: guestCount,
+        venueName,
+        venueLocation,
+        eventDate,
+        startTime,
+        endTime,
+        additionalHours,
+        email,
+        clientName,
+        phoneNumber: contactPhone,
+        paymentMethod,
+        depositPaid: false,
+        confirmationSent: false,
+        reminderSent: false,
+        status: 'pending',
+        createdAt: new Date()
+      });
+      
+      if (paymentMethod === 'Stripe') {
+        // Redirect to payment page with contract ID
+        router.push(`/payment/success?id=${docRef.id}`);
+        return;
+      }
+      
+      // For other payment methods, continue with email flow
+      // Then send email for non-Stripe payment methods
+      
+      // Then send email
       const emailResponse = await emailjs.send(
         process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
@@ -181,19 +210,9 @@ export default function DJContractForm() {
       );
 
       if (emailResponse.status === 200) {
-        await addDoc(collection(db, 'djContracts'), {
-          eventType,
-          numberOfGuests: guestCount,
-          venueName,
-          venueLocation,
-          eventDate,
-          additionalHours,
-          email,
-          clientName,
-          phoneNumber: contactPhone,
-          depositPaid: false,
+        // Update the document with email confirmation
+        await updateDoc(doc(db, 'djContracts', docRef.id), {
           confirmationSent: true,
-          reminderSent: false,
           status: 'emailSent'
         });
         setSubmitted(true);
@@ -210,6 +229,8 @@ export default function DJContractForm() {
     } catch (error) {
       console.error("Something went wrong:", error);
       alert("An error occurred while submitting the contract.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
