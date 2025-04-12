@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import emailjs from '@emailjs/browser';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '@/components/StripeCheckout';
 import confetti from 'canvas-confetti';
@@ -44,6 +45,7 @@ export default function DJContractForm() {
     additionalHours: 0,
   });
   
+  const router = useRouter();
   const venueLocationRef = useRef(null);
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
