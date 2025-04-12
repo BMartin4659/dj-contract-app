@@ -46,7 +46,7 @@ export default function DJContractForm() {
   
   const venueLocationRef = useRef(null);
   const [isClient, setIsClient] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
   const [showStripe, setShowStripe] = useState(false);
@@ -161,9 +161,9 @@ export default function DJContractForm() {
     if (!validateAddress(venueLocation)) return alert('Please enter a valid address.');
     if (!agreeToTerms) return alert('Please agree to the terms.');
     
+    // Set submitting state
     setIsSubmitting(true);
     
-    // Handle all payment methods consistently
     try {
       // Create contract first
       const docRef = await addDoc(collection(db, 'djContracts'), {
