@@ -35,9 +35,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount,
-          clientEmail: contractDetails?.clientEmail || 'customer@example.com',
+          clientName: contractDetails?.clientName || 'Customer',
+          email: contractDetails?.email || 'customer@example.com',
           eventType: contractDetails?.eventType || 'Event',
-          eventDate: contractDetails?.eventDate || new Date().toISOString()
+          eventDate: contractDetails?.eventDate || new Date().toISOString(),
+          venueName: contractDetails?.venueName || 'Venue'
         })
       });
 

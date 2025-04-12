@@ -153,6 +153,22 @@ export default async function handler(req, res) {
           amount,
         });
 
+        // 🔄 Update matching contract in 'djContracts' collection
+        const djContracts = await db
+          .collection('djContracts')
+          .where('email', '==', receipt_email)
+          .where('eventDate', '==', docData.eventDate)
+          .limit(1)
+          .get();
+
+        if (!djContracts.empty) {
+          await djContracts.docs[0].ref.update({
+            depositPaid: true,
+            status: 'succeeded',
+            paidAt: new Date(),
+          });
+        }
+
         console.log(`✅ Updated Firestore + emailed receipt for: ${id}`);
       } else {
         console.warn(`⚠️ No Firestore record found for intent: ${id}`);

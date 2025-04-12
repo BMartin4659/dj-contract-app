@@ -191,8 +191,8 @@ export default function DJContractForm() {
       });
       
       if (paymentMethod === 'Stripe') {
-        // Redirect to payment page with contract ID
-        router.push(`/payment/success?id=${docRef.id}`);
+        // Show Stripe checkout instead of redirecting
+        setShowStripe(true);
         return;
       }
       
@@ -208,7 +208,14 @@ export default function DJContractForm() {
           to_email: email,
           event_type: eventType,
           event_date: eventDate,
-          venue_name: venueName
+          venue_name: venueName,
+          venue_location: venueLocation,
+          start_time: startTime,
+          end_time: endTime,
+          guest_count: guestCount,
+          phone_number: contactPhone,
+          total_amount: `$${calculateTotal()}`,
+          payment_method: paymentMethod
         },
         process.env.NEXT_PUBLIC_EMAILJS_USER_ID
       );
