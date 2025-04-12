@@ -21,8 +21,12 @@ import {
   FaLightbulb, 
   FaCamera, 
   FaVideo, 
-  FaMoneyCheckAlt, 
-  FaFileContract 
+  FaCheck, 
+  FaPlus, 
+  FaMinus,
+  FaCreditCard,
+  FaMoneyBillWave,
+  FaPaypal
 } from 'react-icons/fa';
 
 export default function DJContractForm() {
@@ -50,67 +54,24 @@ export default function DJContractForm() {
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [infoPopup, setInfoPopup] = useState(null);
-  const [showStripe, setShowStripe] = useState(false);
   
-
-  // Icon mappings for the main fields.
-  const fieldIcons = {
-    clientName: <FaUser style={{ color: '#ff6347', marginRight: '0.5rem' }} />,
-    email: <FaEnvelope style={{ color: '#1e90ff', marginRight: '0.5rem' }} />,
-    contactPhone: <FaPhone style={{ color: '#32cd32', marginRight: '0.5rem' }} />,
-    eventType: <FaCalendarAlt style={{ color: '#ffa500', marginRight: '0.5rem' }} />,
-    guestCount: <FaUsers style={{ color: '#8a2be2', marginRight: '0.5rem' }} />,
-    venueName: <FaBuilding style={{ color: '#ff4500', marginRight: '0.5rem' }} />,
-  };
-
-  // Icons for time related fields.
-  const timeIcons = {
-    eventDate: <FaCalendarAlt style={{ color: '#ff1493', marginRight: '0.5rem' }} />,
-    startTime: <FaClock style={{ color: '#20b2aa', marginRight: '0.5rem' }} />,
-    endTime: <FaClock style={{ color: '#20b2aa', marginRight: '0.5rem' }} />,
-  };
-
-  // Icons for service checkboxes.
-  const serviceIcons = {
-    lighting: <FaLightbulb style={{ color: '#ffd700', marginRight: '0.5rem' }} />,
-    photography: <FaCamera style={{ color: '#ff69b4', marginRight: '0.5rem' }} />,
-    videoVisuals: <FaVideo style={{ color: '#00bfff', marginRight: '0.5rem' }} />,
-  };
-
-  // Additional icons for other fields.
-  const venueLocationIcon = <FaMapMarkerAlt style={{ color: '#dc143c', marginRight: '0.5rem' }} />;
-  const additionalHoursIcon = <FaClock style={{ color: '#6a5acd', marginRight: '0.5rem' }} />;
-  const paymentIcon = <FaMoneyCheckAlt style={{ color: '#008000', marginRight: '0.5rem' }} />;
-  const termsIcon = <FaFileContract style={{ color: '#00008b', marginRight: '0.5rem' }} />;
-
+  const [showStripe, setShowStripe] = useState(false);
+  const [infoPopup, setInfoPopup] = useState(null);
+  
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsClient(true); // This ensures the Google Places code runs only on the client
-    }
+    setIsClient(true);
   }, []);
-
-  // Loading Google Maps API and initializing the autocomplete feature
+  
   useEffect(() => {
-    if (typeof window !== 'undefined' && !window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initializeAutocomplete();
-      document.head.appendChild(script);
-    } else {
-      initializeAutocomplete();
+    if (isClient && venueLocationRef.current) {
+      initializeGooglePlaces();
     }
-  }, []);
-
-  // Function to initialize Google Places Autocomplete
-  const initializeAutocomplete = () => {
-    if (window.google && venueLocationRef.current) {
+  }, [isClient]);
+  
+  const initializeGooglePlaces = () => {
+    if (window.google && window.google.maps && window.google.maps.places) {
       const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
-        types: ['geocode'],
+        types: ['address'],
         componentRestrictions: { country: 'us' },
       });
 
@@ -197,26 +158,29 @@ export default function DJContractForm() {
       }
       
       // For other payment methods, continue with email flow
-      // Then send email for non-Stripe payment methods
       
-      // Then send email
+      // Create a clean template params object with only string values
+      const templateParams = {
+        to_name: clientName || '',
+        to_email: email || '',
+        event_type: eventType || '',
+        event_date: eventDate || '',
+        venue_name: venueName || '',
+        venue_location: venueLocation || '',
+        start_time: formData.startTime || '',
+        end_time: formData.endTime || '',
+        guest_count: String(guestCount || 0),
+        phone_number: contactPhone || '',
+        total_amount: `$${calculateTotal()}`,
+        payment_method: paymentMethod || 'Other'
+      };
+      
+      console.log("Sending email with params:", templateParams);
+      
       const emailResponse = await emailjs.send(
         process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-        {
-          to_name: clientName,
-          to_email: email,
-          event_type: eventType,
-          event_date: eventDate,
-          venue_name: venueName,
-          venue_location: venueLocation,
-          start_time: startTime,
-          end_time: endTime,
-          guest_count: guestCount,
-          phone_number: contactPhone,
-          total_amount: `$${calculateTotal()}`,
-          payment_method: paymentMethod
-        },
+        templateParams,
         process.env.NEXT_PUBLIC_EMAILJS_USER_ID
       );
 
@@ -312,66 +276,89 @@ export default function DJContractForm() {
         height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
-        alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 10000,
+        alignItems: 'center',
+        zIndex: 1000,
       }}>
         <div style={{
-          backgroundColor: '#fff',
-          padding: '2rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-          maxWidth: '400px',
-          textAlign: 'center',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          maxWidth: '500px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}>
-          <p style={{ marginBottom: '1.5rem', color: '#333' }}>{text}</p>
-          <button onClick={onClose} style={{
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '4px',
-            backgroundColor: '#2563eb',
-            color: '#fff',
-            cursor: 'pointer',
-          }}>Ok</button>
+          <p style={{ marginBottom: '15px' }}>{text}</p>
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#0070f3',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
+            Ok
+          </button>
         </div>
       </div>
     );
   }
 
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '0.5rem',
+    fontWeight: 'bold',
+    color: '#333',
+  };
+
   const inputStyle = {
+    backgroundColor: 'white',
     width: '100%',
     padding: '12px',
     marginBottom: '1rem',
     borderRadius: '8px',
     border: '1px solid #ccc',
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    color: '#000',
-    fontSize: '16px',
+    color: 'black',
   };
 
-  const labelStyle = {
-    fontWeight: 'bold',
-    color: '#111',
-    marginBottom: '0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between'
+  const iconStyle = {
+    marginRight: '8px',
+    color: '#0070f3',
   };
 
-  const linkButtonStyle = {
-    display: 'inline-block',
-    margin: '0.5rem',
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#2563eb',
-    color: '#fff',
-    textDecoration: 'none',
-    borderRadius: '10px',
-    fontWeight: 'bold'
+  const fieldIcons = {
+    clientName: <FaUser style={iconStyle} />,
+    email: <FaEnvelope style={iconStyle} />,
+    contactPhone: <FaPhone style={iconStyle} />,
+    eventType: <FaCalendarAlt style={iconStyle} />,
+    guestCount: <FaUsers style={iconStyle} />,
+    venueName: <FaBuilding style={iconStyle} />,
+  };
+
+  const venueLocationIcon = <FaMapMarkerAlt style={iconStyle} />;
+  const timeIcons = {
+    eventDate: <FaCalendarAlt style={iconStyle} />,
+    startTime: <FaClock style={iconStyle} />,
+    endTime: <FaClock style={iconStyle} />,
+  };
+  const serviceIcons = {
+    lighting: <FaLightbulb style={iconStyle} />,
+    photography: <FaCamera style={iconStyle} />,
+    videoVisuals: <FaVideo style={iconStyle} />,
+  };
+  const additionalHoursIcon = <FaClock style={iconStyle} />;
+  const paymentIcons = {
+    Stripe: <FaCreditCard style={iconStyle} />,
+    Venmo: <FaMoneyBillWave style={iconStyle} />,
+    CashApp: <FaMoneyBillWave style={iconStyle} />,
   };
 
   return (
     <>
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
+
       <div style={{
         minHeight: '100vh',
         padding: '2rem',
@@ -522,9 +509,9 @@ export default function DJContractForm() {
                   {formData.startTime &&
                     timeOptions
                       .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
-                    .map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
+                      .map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
                 </select>
               </div>
 
@@ -571,104 +558,144 @@ export default function DJContractForm() {
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   overflow: 'hidden',
-                  width: '80px',
-                  marginLeft: '0.5rem',
+                  marginLeft: '1rem',
                 }}>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: Math.max(prev.additionalHours - 1, 0) }))}
+                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: Math.max(0, prev.additionalHours - 1) }))}
                     style={{
-                      padding: '0.2rem 0.4rem',
-                      backgroundColor: 'transparent',
                       border: 'none',
-                      color: '#2563eb',
-                      fontSize: '1rem',
-                      cursor: 'pointer'
+                      background: '#f0f0f0',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
                     }}
                   >
-                    -
+                    <FaMinus />
                   </button>
-                  <span style={{
-                    padding: '0 0.4rem',
-                    minWidth: '20px',
-                    textAlign: 'center',
-                    color: '#000',
-                    fontWeight: 'bold'
-                  }}>
+                  <span style={{ padding: '0 12px', minWidth: '30px', textAlign: 'center' }}>
                     {formData.additionalHours}
                   </span>
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, additionalHours: prev.additionalHours + 1 }))}
                     style={{
-                      padding: '0.2rem 0.4rem',
-                      backgroundColor: 'transparent',
                       border: 'none',
-                      color: '#2563eb',
-                      fontSize: '1rem',
-                      cursor: 'pointer'
+                      background: '#f0f0f0',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
                     }}
                   >
-                    +
+                    <FaPlus />
                   </button>
                 </div>
               </div>
 
+              {/* Payment Method Selection */}
               <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {paymentIcon} Payment Method:
-                  </span>
-                  <span onClick={() => setInfoPopup('Select your preferred payment method for booking confirmation.')} style={{ color: '#0070f3', marginLeft: 8, cursor: 'pointer' }}>
-                    <FaInfoCircle />
-                  </span>
-                </label>
-                <select name="paymentMethod" required style={inputStyle} value={formData.paymentMethod} onChange={handleChange}>
-                  <option value="">Choose one</option>
-                  <option value="Venmo - @Bobby-Martin-64">Venmo</option>
-                  <option value="Cash App - $LiveCity">Cash App</option>
-                  <option value="Stripe">Credit/Debit Card (via Stripe)</option>
-                  <option value="Cash">Cash</option>
-                </select>
+                <label style={labelStyle}>Payment Method:</label>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  {['Stripe', 'Venmo', 'CashApp'].map(method => (
+                    <label key={method} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={method}
+                        checked={formData.paymentMethod === method}
+                        onChange={handleChange}
+                        required
+                        style={{ marginRight: '0.5rem' }}
+                      />
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {paymentIcons[method]} {method}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {termsIcon} Terms & Conditions
-                  </span>
-                  <span onClick={() => setInfoPopup('Non-refundable $100 deposit required. Remaining balance due 2 weeks before event. Cancellations within 30 days require full payment.')} style={{ color: '#0070f3', marginLeft: 8, cursor: 'pointer' }}>
-                    <FaInfoCircle />
+              {/* Terms and Conditions */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    name="agreeToTerms"
+                    checked={formData.agreeToTerms}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: '0.5rem', marginTop: '0.25rem' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>
+                    I agree to the <a href="#" style={{ color: '#0070f3' }}>terms and conditions</a>, including the cancellation policy and payment terms.
                   </span>
                 </label>
-                <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} required />
               </div>
 
-              {itemizedTotal()}
-              <button type="submit" style={{ ...inputStyle, backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer' }}>
-                Submit Contract
+              {/* Itemized Total */}
+              <div style={{
+                backgroundColor: '#f8f9fa',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+              }}>
+                <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
+                {itemizedTotal()}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s',
+                  opacity: isSubmitting ? 0.7 : 1,
+                }}
+              >
+                {isSubmitting ? 'Processing...' : 'Submit Contract'}
               </button>
             </form>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              style={{ textAlign: 'center', color: '#000' }}
-            >
-              <h2>✅ Submitted!</h2>
-              <p style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '1rem' }}>
-                🎉 Congratulations on successfully booking your event. Please submit your deposit or full payment to reserve your date.
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
+              <p style={{ marginBottom: '1rem' }}>
+                Your contract has been submitted successfully. We've sent a confirmation email to {formData.email}.
               </p>
-              {itemizedTotal()}
-              <p>Send payment to confirm your booking:</p>
-              <a href="https://venmo.com/Bobby-Martin-64" target="_blank" rel="noopener noreferrer" style={linkButtonStyle}>
-                Pay with Venmo
-              </a>
-              <a href="https://cash.app/$LiveCity" target="_blank" rel="noopener noreferrer" style={linkButtonStyle}>
-                Pay with Cash App
-              </a>
-            </motion.div>
+
+              {formData.paymentMethod === 'Venmo' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <h3>Please send your deposit via Venmo:</h3>
+                  <p>@BobbyDrake-DJ</p>
+                </div>
+              )}
+
+              {formData.paymentMethod === 'CashApp' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <h3>Please send your deposit via Cash App:</h3>
+                  <p>$BobbyDrakeDJ</p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setSubmitted(false)}
+                style={{
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  marginTop: '1.5rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Submit Another Contract
+              </button>
+            </div>
           )}
         </div>
       </div>
