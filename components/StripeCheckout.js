@@ -90,10 +90,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   );
 };
 
-export default function StripeCheckoutWrapper({ amount, onSuccess }) {
+export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetails }) {
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm amount={amount} onSuccess={onSuccess} />
+      <CheckoutForm amount={amount} onSuccess={onSuccess} contractDetails={contractDetails} />
     </Elements>
   );
 }

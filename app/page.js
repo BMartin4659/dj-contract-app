@@ -402,10 +402,11 @@ export default function DJContractForm() {
             <div className="mt-4">
               <StripeCheckout
                 amount={calculateTotal() * 100}
-                onSuccess={() => {
+                contractDetails={formData}
+                onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
                   setShowStripe(false);
-                  handleSubmit(e);
+                  router.push(`/payment/success?id=${paymentId}`);
                 }}
               />
             </div>
