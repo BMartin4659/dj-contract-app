@@ -240,6 +240,10 @@ export default function DJContractForm() {
 
   // Time options for the dropdowns
   const timeOptions = [
+    '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM',
+    '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+    '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM',
+    '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM',
     '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM',
     '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM',
     '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM',
@@ -247,14 +251,18 @@ export default function DJContractForm() {
     '12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM'
   ];
 
-  // Convert time to comparable number for logic (e.g., '8:30 PM' → 2030)
-  const convertToNumber = (t) => {
+  // Convert time to minutes for better comparison
+  const convertToMinutes = (t) => {
     if (!t) return 0;
-    const [hourMin, ampm] = t.split(' ');
-    let [h, m] = hourMin.split(':').map(Number);
-    if (ampm === 'PM' && h !== 12) h += 12;
-    if (ampm === 'AM' && h === 12) h = 0;
-    return h * 100 + m;
+    const [time, period] = t.split(' ');
+    let [hour, minute] = time.split(':').map(Number);
+
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+
+    // Adjust early morning times (12:00 AM – 2:00 AM) to come *after* 11:30 PM
+    const total = hour * 60 + minute;
+    return total < 480 ? total + 1440 : total; // if before 8:00 AM, treat as after midnight
   };
 
   const BASE = 350,
@@ -466,11 +474,14 @@ export default function DJContractForm() {
                 </label>
                 <select
                   name="startTime"
-                  value={startTime}
+                  value={formData.startTime}
                   onChange={(e) => {
-                    setStartTime(e.target.value);
-                    setEndTime(''); // reset end time when start changes
-                    setFormData(prev => ({ ...prev, startTime: e.target.value }));
+                    const value = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: value,
+                      endTime: '' // reset endTime on startTime change
+                    }));
                   }}
                   required
                   style={inputStyle}
@@ -491,18 +502,18 @@ export default function DJContractForm() {
                 </label>
                 <select
                   name="endTime"
-                  value={endTime}
-                  onChange={(e) => {
-                    setEndTime(e.target.value);
-                    setFormData(prev => ({ ...prev, endTime: e.target.value }));
-                  }}
+                  value={formData.endTime}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, endTime: e.target.value }))
+                  }
                   required
+                  disabled={!formData.startTime}
                   style={inputStyle}
-                  disabled={!startTime}
                 >
                   <option value="">Select end time</option>
-                  {timeOptions
-                    .filter((t) => convertToNumber(t) > convertToNumber(startTime))
+                  {formData.startTime &&
+                    timeOptions
+                      .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
                     .map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
