@@ -6,7 +6,6 @@ import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '@/components/StripeCheckout';
-import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { 
   FaInfoCircle, 
