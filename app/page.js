@@ -171,6 +171,16 @@ Live City DJ Contract Terms and Conditions:
         // Show Stripe checkout instead of redirecting
         setShowStripe(true);
         return;
+      } else if (paymentMethod === 'Venmo') {
+        // Redirect to Venmo
+        window.open('https://venmo.com/BobbyDrake-DJ', '_blank');
+        setSubmitted(true);
+        return;
+      } else if (paymentMethod === 'CashApp') {
+        // Redirect to CashApp
+        window.open('https://cash.app/$BobbyDrakeDJ', '_blank');
+        setSubmitted(true);
+        return;
       }
       
       // For other payment methods, continue with email flow
@@ -419,7 +429,10 @@ Live City DJ Contract Terms and Conditions:
           </p>
 
           {showStripe ? (
-            <div className="mt-4">
+            <div>
+              <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#000', marginBottom: '1.5rem' }}>
+                Complete Your Payment
+              </h2>
               <StripeCheckout
                 amount={calculateTotal() * 100}
                 contractDetails={formData}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { loadStripe } from '@stripe/stripe-js';
@@ -18,10 +18,25 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+  
+  // Extract services from contract details
+  const services = {
+    basePackage: true, // Always included
+    lighting: contractDetails?.lighting || false,
+    photography: contractDetails?.photography || false,
+    videoVisuals: contractDetails?.videoVisuals || false,
+    additionalHours: contractDetails?.additionalHours || 0
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+    
+    if (!confirmed) {
+      setError("Please confirm your services before proceeding with payment");
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -74,40 +89,151 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-      <CardElement options={{
-        style: {
-          base: {
-            fontSize: '16px',
-            color: '#424770',
-            fontFamily: 'Arial, sans-serif',
-            '::placeholder': {
-              color: '#aab7c4',
-            },
-            iconColor: '#635BFF',
-          },
-          invalid: {
-            color: '#9e2146',
-            iconColor: '#fa755a',
-          },
-        }
-      }} />
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <button type="submit" disabled={!stripe || loading} style={{
-        marginTop: '1rem',
-        backgroundColor: '#635BFF',
-        color: '#fff',
-        padding: '0.75rem 1.5rem',
-        borderRadius: '6px',
-        border: 'none',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        transition: 'all 0.2s ease'
+    <div>
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        padding: '1.5rem',
+        borderRadius: '8px',
+        marginBottom: '1.5rem'
       }}>
-        {loading ? 'Processing...' : 'Pay Now'}
-      </button>
-    </form>
+        <h3 style={{ marginBottom: '1rem', color: '#333' }}>Order Summary</h3>
+        
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0.5rem 0',
+            borderBottom: '1px solid #eee'
+          }}>
+            <span>🎶 Base Package</span>
+            <span>$350</span>
+          </div>
+          
+          {services.lighting && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '0.5rem 0',
+              borderBottom: '1px solid #eee'
+            }}>
+              <span>💡 Event Lighting</span>
+              <span>$100</span>
+            </div>
+          )}
+          
+          {services.photography && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '0.5rem 0',
+              borderBottom: '1px solid #eee'
+            }}>
+              <span>📸 Photography</span>
+              <span>$150</span>
+            </div>
+          )}
+          
+          {services.videoVisuals && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '0.5rem 0',
+              borderBottom: '1px solid #eee'
+            }}>
+              <span>📽️ Video Visuals</span>
+              <span>$100</span>
+            </div>
+          )}
+          
+          {services.additionalHours > 0 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '0.5rem 0',
+              borderBottom: '1px solid #eee'
+            }}>
+              <span>⏱️ Additional Hours ({services.additionalHours})</span>
+              <span>${services.additionalHours * 75}</span>
+            </div>
+          )}
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0.75rem 0',
+            fontWeight: 'bold',
+            marginTop: '0.5rem'
+          }}>
+            <span>Total</span>
+            <span>${amount/100}</span>
+          </div>
+        </div>
+      </div>
+      
+      <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ marginBottom: '0.75rem', color: '#333' }}>Payment Details</h3>
+          <CardElement options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                fontFamily: 'Arial, sans-serif',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+                iconColor: '#635BFF',
+              },
+              invalid: {
+                color: '#9e2146',
+                iconColor: '#fa755a',
+              },
+            }
+          }} />
+        </div>
+        
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            padding: '0.75rem',
+            backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.1)' : 'transparent',
+            borderRadius: '6px',
+            border: `1px solid ${confirmed ? '#635BFF' : '#ddd'}`
+          }}>
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              style={{ marginRight: '0.75rem' }}
+            />
+            <span>I confirm the services listed above and authorize payment</span>
+          </label>
+        </div>
+        
+        {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+        
+        <button
+          type="submit"
+          disabled={!stripe || loading || !confirmed}
+          style={{
+            width: '100%',
+            backgroundColor: confirmed ? '#635BFF' : '#a8a8a8',
+            color: '#fff',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '6px',
+            border: 'none',
+            cursor: confirmed ? 'pointer' : 'not-allowed',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {loading ? 'Processing...' : 'Pay Now'}
+        </button>
+      </form>
+    </div>
   );
 };
 
