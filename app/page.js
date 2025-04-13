@@ -881,7 +881,7 @@ Live City DJ Contract Terms and Conditions:
             }}>
               <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
               <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
-                Your contract has been submitted successfully. We've sent a confirmation email to <strong>{formData.email}</strong>.
+                Your contract has been submitted successfully. We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
               </p>
 
               {formData.paymentMethod === 'Venmo' && (
