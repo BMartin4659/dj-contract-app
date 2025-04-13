@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { loadStripe } from '@stripe/stripe-js';
@@ -87,6 +88,15 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.5 },
+      zIndex: 9999,
+    });
+  }, []);
 
   return (
     <div style={{
