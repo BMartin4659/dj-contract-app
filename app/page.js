@@ -168,18 +168,17 @@ Live City DJ Contract Terms and Conditions:
       });
       
       if (paymentMethod === 'Stripe') {
-        // Show Stripe checkout instead of redirecting
         setShowStripe(true);
         return;
       } else if (paymentMethod === 'Venmo') {
-        // Redirect to Venmo
-        window.open('https://venmo.com/BobbyDrake-DJ', '_blank');
-        setSubmitted(true);
+        window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
+        // Longer delay to ensure popup isn't blocked
+        setTimeout(() => setSubmitted(true), 1000);
         return;
       } else if (paymentMethod === 'CashApp') {
-        // Redirect to CashApp
-        window.open('https://cash.app/$BobbyDrakeDJ', '_blank');
-        setSubmitted(true);
+        window.open('https://cash.app/$LiveCity', '_blank');
+        // Longer delay to ensure popup isn't blocked
+        setTimeout(() => setSubmitted(true), 1000);
         return;
       }
       
