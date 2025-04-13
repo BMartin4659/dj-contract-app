@@ -428,8 +428,17 @@ Live City DJ Contract Terms and Conditions:
           </p>
 
           {showStripe ? (
-            <div>
-              <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#000', marginBottom: '1.5rem' }}>
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.96)',
+              padding: '2rem',
+              borderRadius: '20px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+              maxWidth: '700px',
+              margin: '0 auto',
+              backdropFilter: 'blur(5px)',
+              WebkitBackdropFilter: 'blur(5px)'
+            }}>
+              <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
                 Complete Your Payment
               </h2>
               <StripeCheckout
@@ -862,23 +871,30 @@ Live City DJ Contract Terms and Conditions:
               </button>
             </form>
           ) : (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{
+              textAlign: 'center',
+              padding: '2rem',
+              color: '#111',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '20px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+            }}>
               <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
-              <p style={{ marginBottom: '1rem' }}>
-                Your contract has been submitted successfully. We&apos;ve sent a confirmation email to {formData.email}.
+              <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
+                Your contract has been submitted successfully. We've sent a confirmation email to <strong>{formData.email}</strong>.
               </p>
 
               {formData.paymentMethod === 'Venmo' && (
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
                   <h3>Please send your deposit via Venmo:</h3>
-                  <p>@BobbyDrake-DJ</p>
+                  <p>@Bobby-Martin-64</p>
                 </div>
               )}
 
               {formData.paymentMethod === 'CashApp' && (
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
                   <h3>Please send your deposit via Cash App:</h3>
-                  <p>$BobbyDrakeDJ</p>
+                  <p>$LiveCity</p>
                 </div>
               )}
 
@@ -892,9 +908,11 @@ Live City DJ Contract Terms and Conditions:
                   border: 'none',
                   marginTop: '1.5rem',
                   cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '1rem'
                 }}
               >
-                Submit Another Contract
+                Choose Another Payment Method
               </button>
             </div>
           )}
