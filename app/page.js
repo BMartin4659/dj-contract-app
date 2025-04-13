@@ -30,6 +30,21 @@ import {
 } from 'react-icons/fa';
 
 export default function DJContractForm() {
+  // Terms and conditions text
+  const termsAndConditionsText = `
+Live City DJ Contract Terms and Conditions:
+
+1. Booking & Deposit: A non-refundable deposit of 50% is required to secure your date.
+2. Cancellation Policy: Cancellations made less than 30 days before the event forfeit the full deposit.
+3. Final Payment: Remaining balance is due on the day of the event before services begin.
+4. Equipment: DJ provides all necessary sound equipment unless otherwise specified.
+5. Venue Requirements: Client is responsible for providing adequate power supply and space.
+6. Time Extensions: Additional hours beyond contracted time will be charged at $75/hour.
+7. Force Majeure: Neither party shall be liable for failure to perform due to circumstances beyond reasonable control.
+8. Breaks: For events longer than 4 hours, DJ is entitled to a 15-minute break per 2 hours of performance.
+9. Liability: DJ is not responsible for any injuries or property damage caused by guests.
+10. Media Rights: DJ may use event photos/videos for promotional purposes unless otherwise specified.
+`;
   const [formData, setFormData] = useState({
     clientName: '',
     email: '',
@@ -57,6 +72,7 @@ export default function DJContractForm() {
   
   const [showStripe, setShowStripe] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
+  const [showTerms, setShowTerms] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
@@ -367,6 +383,7 @@ export default function DJContractForm() {
   return (
     <>
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
+      {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
 
       <div style={{
         minHeight: '100vh',
@@ -797,7 +814,7 @@ export default function DJContractForm() {
                     fontWeight: '500',
                     color: '#333'
                   }}>
-                    I agree to the <a href="#" style={{ color: '#0070f3', fontWeight: 'bold' }}>terms and conditions</a>, including the cancellation policy and payment terms.
+                    I agree to the <a onClick={(e) => { e.preventDefault(); setShowTerms(true); }} style={{ color: '#0070f3', fontWeight: 'bold', cursor: 'pointer' }}>terms and conditions</a>, including the cancellation policy and payment terms.
                   </span>
                 </label>
               </div>
