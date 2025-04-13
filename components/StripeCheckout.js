@@ -89,7 +89,17 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   };
 
   return (
-    <div>
+    <div style={{
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      color: '#111',
+      padding: '2rem',
+      borderRadius: '20px',
+      boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+      backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
+      maxWidth: '700px',
+      margin: '0 auto'
+    }}>
       <div style={{
         backgroundColor: '#f8f9fa',
         padding: '1.5rem',
@@ -177,10 +187,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             style: {
               base: {
                 fontSize: '16px',
-                color: '#424770',
+                color: '#111',
                 fontFamily: 'Arial, sans-serif',
                 '::placeholder': {
-                  color: '#aab7c4',
+                  color: '#666',
                 },
                 iconColor: '#635BFF',
               },
