@@ -102,13 +102,35 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       maxWidth: '700px',
       margin: '0 auto'
     }}>
+      <h2 style={{
+        fontSize: '1.75rem',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: '1.5rem',
+        color: '#635BFF',
+        padding: '1rem',
+        borderRadius: '8px',
+        backgroundColor: 'rgba(99, 91, 255, 0.1)',
+        border: '1px solid rgba(99, 91, 255, 0.3)'
+      }}>
+        Lock in your date — submit your payment to get the party started! 🎉
+      </h2>
       <div style={{
         backgroundColor: '#f8f9fa',
         padding: '1.5rem',
         borderRadius: '8px',
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        border: '1px solid #e9ecef',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
       }}>
-        <h3 style={{ marginBottom: '1rem', color: '#333' }}>Order Summary</h3>
+        <h3 style={{
+          marginBottom: '1rem',
+          color: '#333',
+          fontSize: '1.25rem',
+          fontWeight: 'bold',
+          borderBottom: '2px solid #635BFF',
+          paddingBottom: '0.5rem'
+        }}>Order Summary</h3>
         
         <div style={{ marginBottom: '1rem' }}>
           <div style={{
@@ -183,25 +205,51 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       </div>
       
       <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ marginBottom: '0.75rem', color: '#333' }}>Payment Details</h3>
-          <CardElement options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#111',
-                fontFamily: 'Arial, sans-serif',
-                '::placeholder': {
-                  color: '#666',
+        <div style={{
+          marginBottom: '1.5rem',
+          backgroundColor: '#f8f9fa',
+          padding: '1.5rem',
+          borderRadius: '8px',
+          border: '1px solid #e9ecef',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        }}>
+          <h3 style={{
+            marginBottom: '0.75rem',
+            color: '#333',
+            fontSize: '1.25rem',
+            fontWeight: 'bold',
+            borderBottom: '2px solid #635BFF',
+            paddingBottom: '0.5rem'
+          }}>Payment Details</h3>
+          <div style={{
+            padding: '1rem',
+            border: '1px solid #ced4da',
+            borderRadius: '6px',
+            backgroundColor: 'white',
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#635BFF', marginRight: '0.5rem' }}>🔐</span>
+              <span style={{ fontSize: '0.875rem', color: '#666' }}>Secure payment powered by Stripe</span>
+            </div>
+            <CardElement options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#111',
+                  fontFamily: 'Arial, sans-serif',
+                  '::placeholder': {
+                    color: '#666',
+                  },
+                  iconColor: '#635BFF',
                 },
-                iconColor: '#635BFF',
-              },
-              invalid: {
-                color: '#9e2146',
-                iconColor: '#fa755a',
-              },
-            }
-          }} />
+                invalid: {
+                  color: '#9e2146',
+                  iconColor: '#fa755a',
+                },
+              }
+            }} />
+          </div>
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
@@ -209,18 +257,27 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             display: 'flex',
             alignItems: 'center',
             cursor: 'pointer',
-            padding: '0.75rem',
-            backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.1)' : 'transparent',
+            padding: '1rem',
+            backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
             borderRadius: '6px',
-            border: `1px solid ${confirmed ? '#635BFF' : '#ddd'}`
+            border: `2px solid ${confirmed ? '#635BFF' : '#ddd'}`,
+            boxShadow: confirmed ? '0 2px 8px rgba(99, 91, 255, 0.2)' : 'none',
+            transition: 'all 0.2s ease'
           }}>
             <input
               type="checkbox"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
-              style={{ marginRight: '0.75rem' }}
+              style={{
+                marginRight: '0.75rem',
+                width: '20px',
+                height: '20px',
+                accentColor: '#635BFF'
+              }}
             />
-            <span>I confirm the services listed above and authorize payment</span>
+            <span style={{ fontWeight: confirmed ? 'bold' : 'normal' }}>
+              I confirm the services listed above and authorize payment
+            </span>
           </label>
         </div>
         
@@ -233,13 +290,23 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             width: '100%',
             backgroundColor: confirmed ? '#635BFF' : '#a8a8a8',
             color: '#fff',
-            padding: '0.75rem 1.5rem',
+            padding: '1rem 1.5rem',
             borderRadius: '6px',
             border: 'none',
             cursor: confirmed ? 'pointer' : 'not-allowed',
             fontWeight: 'bold',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
+            fontSize: '1.125rem',
+            boxShadow: confirmed ? '0 4px 12px rgba(99, 91, 255, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease',
+            transform: confirmed ? 'translateY(0)' : 'none',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onMouseOver={(e) => {
+            if (confirmed) e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseOut={(e) => {
+            if (confirmed) e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
           {loading ? 'Processing...' : 'Pay Now'}
