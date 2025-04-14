@@ -408,21 +408,6 @@ Live City DJ Contract Terms and Conditions:
             🎧 Live City DJ Contract
           </h1>
 
-          {/* Only show the instruction text when the form is not submitted */}
-          {!submitted && (
-            <p style={{
-              textAlign: 'center',
-              color: '#111',
-              marginBottom: '1.5rem',
-              fontSize: '1.1rem',
-              backgroundColor: 'rgba(0, 112, 243, 0.1)',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontWeight: '500'
-            }}>
-              Lock in your date — submit your payment to get the party started! 🎉
-            </p>
-          )}
 
           <p style={{ textAlign: 'center', color: '#111', marginBottom: '1.5rem' }}>
             📞 <a href="tel:+12036949388" style={{ color: '#0070f3' }}>(203) 694-9388</a> ·
