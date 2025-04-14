@@ -404,14 +404,23 @@ Live City DJ Contract Terms and Conditions:
           borderRadius: '20px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
         }}>
-          <h1 style={{ textAlign: 'center', fontSize: '2.25rem', color: '#000' }}>
+          <h1 style={{ textAlign: 'center', fontSize: '2.25rem', color: '#000', marginBottom: '1rem' }}>
             🎧 Live City DJ Contract
           </h1>
 
           {/* Only show the instruction text when the form is not submitted */}
           {!submitted && (
-            <p style={{ textAlign: 'center', color: '#111', marginBottom: '0.5rem' }}>
-              Please complete the contract form below to reserve your event date.
+            <p style={{
+              textAlign: 'center',
+              color: '#111',
+              marginBottom: '1.5rem',
+              fontSize: '1.1rem',
+              backgroundColor: 'rgba(0, 112, 243, 0.1)',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              fontWeight: '500'
+            }}>
+              Lock in your date — submit your payment to get the party started! 🎉
             </p>
           )}
 
