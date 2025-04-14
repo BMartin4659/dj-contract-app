@@ -215,12 +215,6 @@ Live City DJ Contract Terms and Conditions:
           status: 'emailSent'
         });
         setSubmitted(true);
-        confetti({
-          particleCount: 200,
-          spread: 80,
-          origin: { y: 0.6 },
-          zIndex: 9999,
-        });
       } else {
         console.error("Email failed. Contract not saved.");
         alert("Failed to send confirmation email. Contract not saved.");
