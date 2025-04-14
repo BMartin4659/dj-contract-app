@@ -88,14 +88,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     }
   };
 
-  useEffect(() => {
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.5 },
-      zIndex: 9999,
-    });
-  }, []);
+  // Removed confetti effect that was causing errors
 
   return (
     <div style={{

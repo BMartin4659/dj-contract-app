@@ -14,8 +14,6 @@
     "@stripe/react-stripe-js": "^3.6.0",
     "@stripe/stripe-js": "^7.0.0",
     "@tippyjs/react": "^4.2.6",
-    "canvas-confetti": "^1.9.3",
-    "confetti": "^2.0.6",
     "date-fns": "^4.1.0",
     "emailjs-com": "^3.2.0",
     "firebase": "^11.6.0",
