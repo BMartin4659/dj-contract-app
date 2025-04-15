@@ -99,9 +99,13 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)',
-      maxWidth: '700px',
       width: '100%',
-      margin: '0 auto'
+      maxWidth: '100%',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem',
+      boxSizing: 'border-box'
     }}>
       <div style={{
         backgroundColor: '#f8f9fa',
