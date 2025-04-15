@@ -874,27 +874,9 @@ Live City DJ Contract Terms and Conditions:
                   fontSize: '1rem',
                   borderRadius: '8px',
                   marginTop: '1rem',
-                  cursor: 'pointer'
-                }}
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  width: '100%',
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem',
-                  fontSize: '1rem',
-                  borderRadius: '8px',
-                  marginTop: '1rem',
                   cursor: 'pointer',
                   transition: 'background-color 0.3s',
-                  opacity: isSubmitting ? 0.7 : 1,
+                  opacity: isSubmitting ? 0.7 : 1
                 }}
               >
                 {isSubmitting ? 'Processing...' : 'Submit Contract'}
