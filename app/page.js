@@ -270,7 +270,15 @@ Live City DJ Contract Terms and Conditions:
 
   const itemizedTotal = () => (
     <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem', color: '#000' }}>
-      <li>🎶 Base Package: ${BASE}</li>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
+      }}>
+        <span style={{ flex: '1 1 auto' }}>🎶 Base Package</span>
+        <span style={{ whiteSpace: 'nowrap' }}>${BASE}</span>
+      </div>
       {formData.lighting && <li>💡 Lighting: ${LIGHTING}</li>}
       {formData.photography && <li>📸 Photography: ${PHOTO}</li>}
       {formData.videoVisuals && <li>📽️ Video Visuals: ${VIDEO}</li>}
@@ -398,13 +406,20 @@ Live City DJ Contract Terms and Conditions:
       }}>
         <div style={{
           maxWidth: '700px',
+          width: '100%',
           margin: '0 auto',
+          padding: '1rem',
           backgroundColor: 'rgba(255,255,255,0.9)',
-          padding: '2.5rem',
           borderRadius: '20px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
         }}>
-          <h1 style={{ textAlign: 'center', fontSize: '2.25rem', color: '#000', marginBottom: '1rem' }}>
+          <h1 style={{
+            textAlign: 'center',
+            fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
+            color: '#000',
+            marginBottom: '1rem',
+            lineHeight: '1.2'
+          }}>
             🎧 Live City DJ Contract
           </h1>
           <p style={{
@@ -851,13 +866,32 @@ Live City DJ Contract Terms and Conditions:
                 type="submit"
                 disabled={isSubmitting}
                 style={{
+                  width: '100%',
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  marginTop: '1rem',
+                  cursor: 'pointer'
+                }}
+                type="submit"
+                disabled={isSubmitting}
+                style={{
                   backgroundColor: '#0070f3',
                   color: 'white',
                   padding: '1rem',
                   borderRadius: '8px',
                   border: 'none',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
+                  width: '100%',
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  marginTop: '1rem',
                   cursor: 'pointer',
                   transition: 'background-color 0.3s',
                   opacity: isSubmitting ? 0.7 : 1,
