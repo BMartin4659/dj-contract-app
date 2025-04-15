@@ -92,14 +92,15 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 
   return (
     <div style={{
-      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      backgroundColor: 'rgba(255,255,255,0.95)',
       color: '#111',
-      padding: '2rem',
+      padding: '2rem 1rem',
       borderRadius: '20px',
       boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)',
       maxWidth: '700px',
+      width: '100%',
       margin: '0 auto'
     }}>
       <div style={{
@@ -113,7 +114,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         <h3 style={{
           marginBottom: '1rem',
           color: '#333',
-          fontSize: '1.25rem',
+          fontSize: 'clamp(1.2rem, 5vw, 2rem)',
           fontWeight: 'bold',
           borderBottom: '2px solid #635BFF',
           paddingBottom: '0.5rem'
@@ -203,7 +204,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           <h3 style={{
             marginBottom: '0.75rem',
             color: '#333',
-            fontSize: '1.25rem',
+            fontSize: 'clamp(1.2rem, 5vw, 2rem)',
             fontWeight: 'bold',
             borderBottom: '2px solid #635BFF',
             paddingBottom: '0.5rem'
@@ -282,7 +283,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             border: 'none',
             cursor: confirmed ? 'pointer' : 'not-allowed',
             fontWeight: 'bold',
-            fontSize: '1.125rem',
+            fontSize: 'clamp(1rem, 4vw, 1.5rem)',
             boxShadow: confirmed ? '0 4px 12px rgba(99, 91, 255, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
             transition: 'all 0.2s ease',
             transform: confirmed ? 'translateY(0)' : 'none',

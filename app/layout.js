@@ -35,7 +35,18 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <div style={{
+          minHeight: '100vh',
+          width: '100%',
+          padding: '1rem',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+        }}>
+          {children}
+        </div>
       </body>
     </html>
   );
