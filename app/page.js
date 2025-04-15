@@ -407,6 +407,15 @@ Live City DJ Contract Terms and Conditions:
           <h1 style={{ textAlign: 'center', fontSize: '2.25rem', color: '#000', marginBottom: '1rem' }}>
             🎧 Live City DJ Contract
           </h1>
+          <p style={{
+            textAlign: 'center',
+            fontSize: '1rem',
+            color: '#444',
+            marginTop: '0.25rem',
+            marginBottom: '1rem'
+          }}>
+            Lock in your date — submit your payment to get the party started! 🎉
+          </p>
 
 
           <p style={{ textAlign: 'center', color: '#111', marginBottom: '1.5rem' }}>

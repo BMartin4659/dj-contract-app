@@ -102,19 +102,6 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       maxWidth: '700px',
       margin: '0 auto'
     }}>
-      <h2 style={{
-        fontSize: '1.75rem',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: '1.5rem',
-        color: '#635BFF',
-        padding: '1rem',
-        borderRadius: '8px',
-        backgroundColor: 'rgba(99, 91, 255, 0.1)',
-        border: '1px solid rgba(99, 91, 255, 0.3)'
-      }}>
-        Lock in your date — submit your payment to get the party started! 🎉
-      </h2>
       <div style={{
         backgroundColor: '#f8f9fa',
         padding: '1.5rem',
