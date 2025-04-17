@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -45,7 +45,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       // Add timeout to prevent freezing
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const response = await fetch('/api/create-payment-intent', {
+      const baseURL = process.env.NEXT_PUBLIC_VERCEL_URL
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : '';
+      const response = await fetch(`${baseURL}/api/create-payment-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,7 +57,8 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           email: contractDetails?.email || 'customer@example.com',
           eventType: contractDetails?.eventType || 'Event',
           eventDate: contractDetails?.eventDate || new Date().toISOString(),
-          venueName: contractDetails?.venueName || 'Venue'
+          venueName: contractDetails?.venueName || 'Venue',
+          contractId: contractDetails?.contractId
         })
       });
 
@@ -72,12 +76,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
-        await addDoc(collection(db, 'stripePayments'), {
-          paymentIntentId: paymentIntent.id,
-          amount: amount,
-          currency: paymentIntent.currency,
-          ...contractDetails,
-          timestamp: new Date()
+        // Update the contract document with payment status
+        await updateDoc(doc(db, 'djContracts', contractDetails.contractId), {
+          depositPaid: true,
+          paymentId: paymentIntent.id
         });
         onSuccess(paymentIntent.id);
       }
@@ -102,6 +104,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       width: '100%',
       maxWidth: '100%',
       margin: '0 auto',
+      '@media (max-width: 480px)': {
+        padding: '1rem',
+        borderRadius: '12px'
+      },
       display: 'flex',
       flexDirection: 'column',
       gap: '1rem',
@@ -227,7 +233,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             <CardElement options={{
               style: {
                 base: {
-                  fontSize: '16px',
+                  fontSize: 'clamp(14px, 3vw, 16px)',
                   color: '#111',
                   fontFamily: 'Arial, sans-serif',
                   '::placeholder': {
