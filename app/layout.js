@@ -1,12 +1,8 @@
-import Script from 'next/script';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Ensure the API key is defined
-const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-if (!googleMapsApiKey) {
-  console.warn("Google Maps API key is not defined. Please check your .env.local file.");
-}
+// Remove API key check since we're not loading the script here
+// Let individual components handle their own script loading
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,14 +29,12 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        {/* Load Google Maps API with the Places library */}
-        {/* Global Google Maps API load with async loading */}
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&loading=async`}
-          strategy="afterInteractive"
-        />
+        {/* Google Maps API is now loaded in individual components that need it */}
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <div style={{
           minHeight: '100vh',
           width: '100%',

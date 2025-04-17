@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
@@ -68,38 +68,295 @@ Live City DJ Contract Terms and Conditions:
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [mapsLoaded, setMapsLoaded] = useState(false);
+  const [mapsError, setMapsError] = useState(null);
   
   const [showStripe, setShowStripe] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
   
+  // Convert time to minutes for better comparison
+  const convertToMinutes = useCallback((t) => {
+    if (!t) return 0;
+    const [time, period] = t.split(' ');
+    let [hour, minute] = time.split(':').map(Number);
+
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+
+    // Adjust early morning times (12:00 AM – 2:00 AM) to come *after* 11:30 PM
+    const total = hour * 60 + minute;
+    return total < 480 ? total + 1440 : total; // if before 8:00 AM, treat as after midnight
+  }, []);
+
+  // Calculate hours between two time strings
+  const calculateHoursBetween = useCallback((startTime, endTime) => {
+    if (!startTime || !endTime) return 0;
+    
+    // Convert both times to minutes
+    const startMinutes = convertToMinutes(startTime);
+    const endMinutes = convertToMinutes(endTime);
+    
+    // Calculate difference in minutes and convert to hours
+    const diffMinutes = endMinutes - startMinutes;
+    return diffMinutes / 60;
+  }, [convertToMinutes]);
+
+  // Calculate additional hours beyond base package (4 hours)
+  const calculateAdditionalHours = useCallback((startTime, endTime) => {
+    const totalHours = calculateHoursBetween(startTime, endTime);
+    const basePackageHours = 4;
+    
+    return Math.max(0, Math.ceil(totalHours - basePackageHours));
+  }, [calculateHoursBetween]);
+  
+  const handleEndTimeChange = (endTime) => {
+    // Calculate additional hours based on time difference
+    const additionalHours = calculateAdditionalHours(formData.startTime, endTime);
+    
+    // Update form data with both new end time and calculated additional hours
+    setFormData((prev) => ({ 
+      ...prev, 
+      endTime,
+      additionalHours
+    }));
+  };
+  
+  // Set isClient to true when running on client side
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
+  // Load Google Maps API using a singleton pattern to prevent multiple inclusions
   useEffect(() => {
-    if (isClient && venueLocationRef.current) {
-      initializeGooglePlaces();
-    }
+    // Only run on client-side
+    if (!isClient) return;
+    
+    // Set up a global namespace for our app
+    window.DJContractApp = window.DJContractApp || {};
+    
+    // Function to initialize the autocomplete once API is loaded
+    const initializeAutocomplete = () => {
+      try {
+        if (!venueLocationRef.current) {
+          console.warn("Venue location input reference is null");
+          return;
+        }
+        
+        console.log("Initializing Autocomplete...");
+        const autocomplete = new window.google.maps.places.Autocomplete(
+          venueLocationRef.current, 
+          { types: ['address'], componentRestrictions: { country: 'us' } }
+        );
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          console.log("Place selected:", place);
+          if (place && place.formatted_address) {
+            setFormData(prev => ({
+              ...prev,
+              venueLocation: place.formatted_address
+            }));
+          }
+        });
+        
+        console.log("Autocomplete initialized successfully");
+        return autocomplete;
+      } catch (error) {
+        console.error("Error initializing autocomplete:", error);
+        setMapsError("Failed to initialize address autocomplete");
+        return null;
+      }
+    };
+    
+    // Function to load the API only once
+    const loadGoogleMapsApiSingleton = () => {
+      return new Promise((resolve, reject) => {
+        // If API is already loaded, resolve immediately
+        if (window.google?.maps?.places) {
+          console.log("Google Maps API already loaded, using existing instance");
+          setMapsLoaded(true);
+          resolve();
+          return;
+        }
+        
+        // Check if we're already loading the API
+        if (window.DJContractApp.mapsLoading) {
+          console.log("Google Maps API is already being loaded by another component");
+          
+          // If we have a callback queue, add our resolver to it
+          if (!window.DJContractApp.mapsCallbacks) {
+            window.DJContractApp.mapsCallbacks = [];
+          }
+          
+          window.DJContractApp.mapsCallbacks.push(() => {
+            console.log("Maps loaded via callback");
+            setMapsLoaded(true);
+            resolve();
+          });
+          return;
+        }
+        
+        // Mark that we're loading the API
+        window.DJContractApp.mapsLoading = true;
+        
+        // Initialize callbacks array
+        window.DJContractApp.mapsCallbacks = [];
+        
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        console.log("Google Maps API Key available:", !!apiKey);
+        console.log("API Key length:", apiKey ? apiKey.length : 0);
+        
+        if (!apiKey) {
+          console.error("No Google Maps API key provided");
+          setMapsError("Missing API key");
+          reject(new Error("Missing API key"));
+          return;
+        }
+        
+        console.log("Loading Google Maps API (first load)...");
+        
+        // Check if there's already a script tag
+        const existingScript = document.getElementById('google-maps-script');
+        if (existingScript) {
+          console.log("Found existing script tag, removing to prevent duplicates");
+          existingScript.remove();
+        }
+        
+        const script = document.createElement('script');
+        script.id = 'google-maps-script';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsCallback`;
+        console.log("Maps script URL created (without showing full API key)");
+        script.async = true;
+        script.defer = true;
+        
+        // Define the callback function globally
+        window.googleMapsCallback = () => {
+          console.log("Google Maps API loaded via callback");
+          window.DJContractApp.mapsLoading = false;
+          setMapsLoaded(true);
+          
+          // Call all the callbacks that were waiting
+          if (window.DJContractApp.mapsCallbacks && window.DJContractApp.mapsCallbacks.length > 0) {
+            console.log(`Calling ${window.DJContractApp.mapsCallbacks.length} pending callbacks`);
+            window.DJContractApp.mapsCallbacks.forEach(callback => callback());
+            window.DJContractApp.mapsCallbacks = [];
+          }
+          
+          resolve();
+        };
+        
+        script.onerror = (error) => {
+          console.error("Error loading Google Maps API:", error);
+          window.DJContractApp.mapsLoading = false;
+          setMapsError("Failed to load Google Maps");
+          reject(error);
+        };
+        
+        document.head.appendChild(script);
+        console.log("Google Maps script tag added to document head");
+      });
+    };
+    
+    // Main execution
+    let autocompleteInstance = null;
+    
+    loadGoogleMapsApiSingleton()
+      .then(() => {
+        autocompleteInstance = initializeAutocomplete();
+      })
+      .catch(err => {
+        console.error("Google Maps loading failed:", err);
+      });
+    
+    // Cleanup function
+    return () => {
+      if (autocompleteInstance && typeof autocompleteInstance.unbindAll === 'function') {
+        console.log("Cleaning up autocomplete instance");
+        autocompleteInstance.unbindAll();
+      }
+    };
   }, [isClient]);
   
-  const initializeGooglePlaces = () => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-      });
+  // Effect to calculate additional hours whenever times change
+  useEffect(() => {
+    if (formData.startTime && formData.endTime) {
+      const calculatedHours = calculateAdditionalHours(formData.startTime, formData.endTime);
+      if (calculatedHours !== formData.additionalHours) {
+        setFormData(prev => ({
+          ...prev,
+          additionalHours: calculatedHours
+        }));
+      }
+    }
+  }, [formData.startTime, formData.endTime, calculateAdditionalHours, formData.additionalHours]);
 
+  // Helper function to manually initialize Maps API
+  const initializeMapsAPI = () => {
+    if (typeof window === 'undefined') return;
+    
+    console.log('Manual Maps initialization triggered');
+    // First check if API is already available
+    if (window.google?.maps?.places) {
+      console.log('Maps API already loaded, just initializing autocomplete');
+      setMapsLoaded(true);
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        venueLocationRef.current,
+        { types: ['address'], componentRestrictions: { country: 'us' } }
+      );
+      
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        if (place.geometry) {
+        if (place && place.formatted_address) {
           setFormData(prev => ({
             ...prev,
-            venueLocation: place.formatted_address,
+            venueLocation: place.formatted_address
           }));
         }
       });
+      
+      return;
     }
+    
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error('No Maps API key found');
+      setMapsError('Missing API key');
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.id = 'google-maps-script-manual';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.onload = () => {
+      console.log('Maps API loaded manually');
+      setMapsLoaded(true);
+      
+      if (venueLocationRef.current) {
+        const autocomplete = new window.google.maps.places.Autocomplete(
+          venueLocationRef.current,
+          { types: ['address'], componentRestrictions: { country: 'us' } }
+        );
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place && place.formatted_address) {
+            setFormData(prev => ({
+              ...prev,
+              venueLocation: place.formatted_address
+            }));
+          }
+        });
+      }
+    };
+    
+    script.onerror = (error) => {
+      console.error('Error loading Maps API manually:', error);
+      setMapsError('Failed to load Maps API');
+    };
+    
+    document.head.appendChild(script);
   };
 
   const handleChange = (e) => {
@@ -171,12 +428,12 @@ Live City DJ Contract Terms and Conditions:
         return;
       } else if (paymentMethod === 'Venmo') {
         window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
-        // Longer delay to ensure popup isn't blocked
+        // Longer delay to ensure popup isn&apos;t blocked
         setTimeout(() => setSubmitted(true), 1000);
         return;
       } else if (paymentMethod === 'CashApp') {
         window.open('https://cash.app/$LiveCity', '_blank');
-        // Longer delay to ensure popup isn't blocked
+        // Longer delay to ensure popup isn&apos;t blocked
         setTimeout(() => setSubmitted(true), 1000);
         return;
       }
@@ -239,20 +496,6 @@ Live City DJ Contract Terms and Conditions:
     '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM',
     '12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM'
   ];
-
-  // Convert time to minutes for better comparison
-  const convertToMinutes = (t) => {
-    if (!t) return 0;
-    const [time, period] = t.split(' ');
-    let [hour, minute] = time.split(':').map(Number);
-
-    if (period === 'PM' && hour !== 12) hour += 12;
-    if (period === 'AM' && hour === 12) hour = 0;
-
-    // Adjust early morning times (12:00 AM – 2:00 AM) to come *after* 11:30 PM
-    const total = hour * 60 + minute;
-    return total < 480 ? total + 1440 : total; // if before 8:00 AM, treat as after midnight
-  };
 
   const BASE = 350,
     LIGHTING = 100,
@@ -407,8 +650,8 @@ Live City DJ Contract Terms and Conditions:
         <div style={{
           maxWidth: '700px',
           width: '100%',
-          margin: '0 auto',
-          padding: '1rem',
+          margin: '2rem auto',
+          padding: '2rem',
           backgroundColor: 'rgba(255,255,255,0.9)',
           borderRadius: '20px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
@@ -417,26 +660,107 @@ Live City DJ Contract Terms and Conditions:
             textAlign: 'center',
             fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
             color: '#000',
-            marginBottom: '1rem',
+            marginTop: '0.5rem',
+            marginBottom: '2rem',
             lineHeight: '1.2'
           }}>
             🎧 Live City DJ Contract
           </h1>
-          <p style={{
-            textAlign: 'center',
-            fontSize: '1rem',
-            color: '#444',
-            marginTop: '0.25rem',
-            marginBottom: '1rem'
+
+          {/* Contact Information Cards */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            margin: '0 auto 1.75rem',
+            flexWrap: 'wrap'
           }}>
-            Lock in your date — submit your payment to get the party started! 🎉
-          </p>
-
-
-          <p style={{ textAlign: 'center', color: '#111', marginBottom: '1.5rem' }}>
-            📞 <a href="tel:+12036949388" style={{ color: '#0070f3' }}>(203) 694-9388</a> ·
-            📧 <a href="mailto:therealdjbobbydrake@gmail.com" style={{ color: '#0070f3' }}>therealdjbobbydrake@gmail.com</a>
-          </p>
+            <a 
+              href="tel:+12036949388" 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px 20px',
+                backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                borderRadius: '12px',
+                color: '#222',
+                textDecoration: 'none',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                border: '1px solid rgba(0, 112, 243, 0.2)',
+                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+              }}
+            >
+              <div style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                borderRadius: '50%',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '12px',
+                fontSize: '16px'
+              }}>
+                📞
+              </div>
+              <span>(203) 694-9388</span>
+            </a>
+            
+            <a 
+              href="mailto:therealdjbobbydrake@gmail.com" 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px 20px',
+                backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                borderRadius: '12px',
+                color: '#222',
+                textDecoration: 'none',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                border: '1px solid rgba(0, 112, 243, 0.2)',
+                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+              }}
+            >
+              <div style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                borderRadius: '50%',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '12px',
+                fontSize: '16px'
+              }}>
+                📧
+              </div>
+              <span>therealdjbobbydrake@gmail.com</span>
+            </a>
+          </div>
 
           {showStripe ? (
             <div style={{
@@ -485,20 +809,120 @@ Live City DJ Contract Terms and Conditions:
 
             <div>
             <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                {venueLocationIcon} Venue Location
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {venueLocationIcon} Venue Location
+                  </div>
+                  {mapsLoaded ? (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#38A169', 
+                      backgroundColor: 'rgba(56, 161, 105, 0.1)', 
+                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ marginRight: '4px' }}>✓</span> Autocomplete ready
+                    </span>
+                  ) : mapsError ? (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#E53E3E', 
+                      backgroundColor: 'rgba(229, 62, 62, 0.1)', 
+                      padding: '3px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      {mapsError}
+                    </span>
+                  ) : (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#718096', 
+                      backgroundColor: 'rgba(113, 128, 150, 0.1)', 
+                      padding: '3px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      Loading autocomplete...
+                    </span>
+                  )}
                 </span>
-                  </label>
+            </label>
+            <div style={{ position: 'relative' }}>
                 <input
-                  ref={venueLocationRef}
+                  ref={(element) => {
+                    // Log when the ref is attached
+                    if (element && !venueLocationRef.current) {
+                      console.log("Venue location input ref attached");
+                    }
+                    venueLocationRef.current = element;
+                  }}
                   name="venueLocation"
                   type="text"
+                  autoComplete="off"
                   value={formData.venueLocation}
                   onChange={handleChange}
+                  onFocus={() => {
+                    // Log status when field receives focus
+                    console.log("Venue field focused. Google Maps loaded:", !!window.google?.maps?.places);
+                    if (!window.google?.maps?.places) {
+                      // Try to manually initialize if Maps isn't available
+                      initializeMapsAPI();
+                    }
+                  }}
                   required
-                  style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
+                  placeholder="Start typing your address..."
+                  style={{
+                    backgroundColor: 'white', 
+                    width: '100%', 
+                    padding: '12px', 
+                    paddingRight: '30px',
+                    marginBottom: '1rem', 
+                    borderRadius: '8px', 
+                    border: `1px solid ${mapsError ? '#E53E3E' : '#ccc'}`, 
+                    color: 'black',
+                    boxShadow: mapsLoaded ? '0 0 0 1px rgba(56, 161, 105, 0.3)' : 'none'
+                  }}
                 />
+                <div style={{ 
+                  position: 'absolute', 
+                  right: '10px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none'
+                }}>
+                  {mapsLoaded ? (
+                    <span style={{ color: '#38A169' }}>✓</span>
+                  ) : mapsError ? (
+                    <span style={{ color: '#E53E3E' }}>!</span>
+                  ) : (
+                    <span style={{ color: '#718096' }}>⟳</span>
+                  )}
+                </div>
               </div>
+              {mapsError && (
+                <div style={{
+                  marginTop: '-0.5rem',
+                  marginBottom: '1rem',
+                  fontSize: '12px',
+                  color: '#E53E3E',
+                  padding: '4px 8px',
+                  backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                  borderRadius: '4px'
+                }}>
+                  Address autocomplete unavailable. Please enter the full address manually.
+                </div>
+              )}
+              
+              {/* Instructions for troubleshooting */}
+              <div style={{
+                fontSize: '12px',
+                color: '#666',
+                marginTop: '4px'
+              }}>
+                If autocomplete isn&apos;t working, please refresh the page. Type a street address for best results.
+              </div>
+            </div>
 
 
               {/* Event Date */}
@@ -508,69 +932,206 @@ Live City DJ Contract Terms and Conditions:
                     {timeIcons['eventDate']} Event Date:
                   </span>
                 </label>
-                <input
-                  name="eventDate"
-                  type="date"
-                  required
-                  style={inputStyle}
-                  value={formData.eventDate}
-                  onChange={handleChange}
-                />
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <div style={{
+                    position: 'relative',
+                    flex: '1',
+                    maxWidth: '260px'
+                  }}>
+                    <input
+                      name="eventDate"
+                      type="date"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        fontSize: '14px',
+                        color: '#2D3748',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                      value={formData.eventDate}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {formData.eventDate && (
+                    <div style={{
+                      backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                      color: '#3182CE',
+                      padding: '7px 12px',
+                      borderRadius: '5px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      border: '1px solid rgba(66, 153, 225, 0.2)',
+                      letterSpacing: '0.3px'
+                    }}>
+                      {new Date(formData.eventDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Start Time */}
+              {/* Start and End Time - Combined Row */}
               <div>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['startTime']} Start Time:
+                    <FaClock style={{...iconStyle, color: '#4299E1'}} /> Event Time:
                   </span>
                 </label>
-                <select
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFormData((prev) => ({
-                      ...prev,
-                      startTime: value,
-                      endTime: '' // reset endTime on startTime change
-                    }));
-                  }}
-                  required
-                  style={inputStyle}
-                >
-                  <option value="">Select start time</option>
-                  {timeOptions.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* End Time */}
-              <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['endTime']} End Time:
-                  </span>
-                </label>
-                <select
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, endTime: e.target.value }))
-                  }
-                  required
-                  disabled={!formData.startTime}
-                  style={inputStyle}
-                >
-                  <option value="">Select end time</option>
-                  {formData.startTime &&
-                    timeOptions
-                      .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
-                      .map((t) => (
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                  alignItems: 'center'
+                }}>
+                  {/* Start Time */}
+                  <div style={{ 
+                    flex: '1 1 200px',
+                    minWidth: '150px',
+                  }}>
+                    <label style={{ 
+                      fontSize: '12px', 
+                      color: '#718096', 
+                      marginBottom: '3px',
+                      display: 'block'
+                    }}>
+                      Start:
+                    </label>
+                    <select
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          startTime: value,
+                          endTime: '' // reset endTime on startTime change
+                        }));
+                      }}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        border: '1px solid #ccc',
+                        backgroundColor: 'white',
+                        color: 'black',
+                      }}
+                    >
+                      <option value="">Select</option>
+                      {timeOptions.map((t) => (
                         <option key={t} value={t}>{t}</option>
                       ))}
-                </select>
+                    </select>
+                  </div>
+                  
+                  {/* End Time */}
+                  <div style={{ 
+                    flex: '1 1 200px',
+                    minWidth: '150px',
+                  }}>
+                    <label style={{ 
+                      fontSize: '12px', 
+                      color: '#718096', 
+                      marginBottom: '3px',
+                      display: 'block'
+                    }}>
+                      End:
+                    </label>
+                    <select
+                      name="endTime"
+                      value={formData.endTime}
+                      onChange={(e) => handleEndTimeChange(e.target.value)}
+                      required
+                      disabled={!formData.startTime}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        border: '1px solid #ccc',
+                        backgroundColor: 'white',
+                        color: 'black',
+                        opacity: formData.startTime ? 1 : 0.6
+                      }}
+                    >
+                      <option value="">Select</option>
+                      {formData.startTime &&
+                        timeOptions
+                          .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
+                          .map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                    </select>
+                  </div>
+                  
+                  {/* Duration Display */}
+                  {formData.startTime && formData.endTime && (
+                    <div style={{
+                      flex: '1 1 200px',
+                      backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px'
+                    }}>
+                      <div style={{ fontWeight: 'bold', color: '#2B6CB0' }}>
+                        {Math.round(calculateHoursBetween(formData.startTime, formData.endTime) * 10) / 10} hrs total
+                      </div>
+                      {calculateAdditionalHours(formData.startTime, formData.endTime) > 0 && (
+                        <div style={{ fontSize: '12px', color: '#4A5568' }}>
+                          Base: 4h + {calculateAdditionalHours(formData.startTime, formData.endTime)}h additional
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Early morning warning */}
+                {formData.endTime && formData.endTime.includes('AM') && ['12:', '1:', '2:'].some(h => formData.endTime.startsWith(h)) && (
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#805AD5',
+                    marginTop: '4px',
+                    padding: '6px',
+                    backgroundColor: 'rgba(128, 90, 213, 0.1)',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <FaInfoCircle style={{ marginRight: '6px', color: '#805AD5' }} />
+                    <span>Early morning times (12AM-2AM) are treated as after midnight for billing purposes.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Features Section */}
+              <div>
+                <h3 style={{ 
+                  fontSize: '16px', 
+                  fontWeight: 'bold',
+                  margin: '1.5rem 0 0.75rem',
+                  color: '#2D3748',
+                  borderBottom: '1px solid #E2E8F0',
+                  paddingBottom: '0.5rem'
+                }}>
+                  Additional Services
+                </h3>
               </div>
 
               {[
@@ -627,9 +1188,23 @@ Live City DJ Contract Terms and Conditions:
               {/* Stylish Additional Hours Selector */}
               <div>
                 <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
-                    Additional Hours ($75/hr):
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
+                      Additional Hours ($75/hr):
+                    </div>
+                    {formData.startTime && formData.endTime && calculateHoursBetween(formData.startTime, formData.endTime) > 4 && (
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: '#4299E1', 
+                        backgroundColor: 'rgba(66, 153, 225, 0.1)', 
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 'normal'
+                      }}>
+                        Auto-calculated based on time selection
+                      </span>
+                    )}
                   </span>
                 </label>
                 <div style={{
@@ -663,7 +1238,8 @@ Live City DJ Contract Terms and Conditions:
                     fontWeight: 'bold',
                     minWidth: '40px',
                     fontSize: '18px',
-                    color: '#333'
+                    color: '#333',
+                    position: 'relative'
                   }}>
                     {formData.additionalHours}
                   </div>

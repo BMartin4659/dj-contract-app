@@ -13,6 +13,26 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
+// Add notice about HTTPS requirement
+const StripeHttpsNotice = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return (
+      <div style={{
+        backgroundColor: '#FFF9C4',
+        padding: '8px 12px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        color: '#5D4037',
+        marginBottom: '12px',
+        border: '1px solid #FFE082'
+      }}>
+        <strong>Development Mode:</strong> Stripe is running in test mode. In production, HTTPS is required.
+      </div>
+    );
+  }
+  return null;
+};
+
 const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -45,9 +65,20 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       // Add timeout to prevent freezing
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const baseURL = process.env.NEXT_PUBLIC_VERCEL_URL
-        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-        : '';
+      // Determine base URL - ensure HTTPS in production
+      let baseURL = '';
+      if (typeof window !== 'undefined') {
+        // In browser context
+        const protocol = window.location.protocol === 'https:' || process.env.NODE_ENV === 'production' 
+          ? 'https' 
+          : window.location.protocol.replace(':', '');
+        const host = process.env.NEXT_PUBLIC_VERCEL_URL || window.location.host;
+        baseURL = `${protocol}://${host}`;
+      } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+        // In server context with Vercel
+        baseURL = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+      }
+      
       const response = await fetch(`${baseURL}/api/create-payment-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,6 +144,8 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       gap: '1rem',
       boxSizing: 'border-box'
     }}>
+      <StripeHttpsNotice />
+      
       <div style={{
         backgroundColor: '#f8f9fa',
         padding: '1.5rem',
