@@ -671,9 +671,9 @@ Live City DJ Contract Terms and Conditions:
   };
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <FaCreditCard style={{...iconStyle, color: '#635BFF'}} />,
-    Venmo: <SiVenmo style={{ marginRight: '10px', fontSize: '20px', color: '#008CFF' }} />,
-    CashApp: <SiCashapp style={{ marginRight: '10px', fontSize: '20px', color: '#00D632' }} />,
+    Stripe: <FaCreditCard style={{...iconStyle, color: '#635BFF', fontSize: '24px'}} />,
+    Venmo: <SiVenmo style={{ marginRight: '10px', fontSize: '28px', color: '#008CFF' }} />,
+    CashApp: <SiCashapp style={{ marginRight: '10px', fontSize: '24px', color: '#00D632' }} />,
   };
 
   // Add this to improve responsive layout behavior
@@ -1538,7 +1538,15 @@ Live City DJ Contract Terms and Conditions:
               <div className="payment-method-options-container" style={{ marginBottom: '20px' }}>
                 <label style={{ ...labelStyle, marginBottom: '10px' }}>Payment Method:</label>
                 <div className="payment-method-options">
-                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <div className="payment-method-option" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    marginBottom: '10px',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    backgroundColor: formData.paymentMethod === 'stripe' ? 'rgba(99, 91, 255, 0.1)' : 'transparent',
+                    transition: 'background-color 0.2s'
+                  }}>
                     <input
                       type="radio"
                       id="stripe"
@@ -1546,7 +1554,7 @@ Live City DJ Contract Terms and Conditions:
                       value="stripe"
                       checked={formData.paymentMethod === 'stripe'}
                       onChange={handleChange}
-                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
+                      style={{ marginRight: '12px', cursor: 'pointer', width: '20px', height: '20px' }}
                     />
                     <label 
                       htmlFor="stripe" 
@@ -1555,14 +1563,23 @@ Live City DJ Contract Terms and Conditions:
                         alignItems: 'center', 
                         cursor: 'pointer',
                         fontWeight: formData.paymentMethod === 'stripe' ? 'bold' : 'normal',
-                        color: formData.paymentMethod === 'stripe' ? '#0070f3' : 'inherit'
+                        color: formData.paymentMethod === 'stripe' ? '#0070f3' : '#333',
+                        fontSize: '16px'
                       }}
                     >
-                      <FaCreditCard style={{ marginRight: '10px', fontSize: '20px' }} /> Stripe (Credit Card)
+                      <FaCreditCard style={{ marginRight: '12px', fontSize: '24px', color: '#635BFF' }} /> Stripe (Credit Card)
                     </label>
                   </div>
                   
-                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <div className="payment-method-option" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    marginBottom: '10px',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    backgroundColor: formData.paymentMethod === 'venmo' ? 'rgba(0, 140, 255, 0.1)' : 'transparent',
+                    transition: 'background-color 0.2s'
+                  }}>
                     <input
                       type="radio"
                       id="venmo"
@@ -1570,7 +1587,7 @@ Live City DJ Contract Terms and Conditions:
                       value="venmo"
                       checked={formData.paymentMethod === 'venmo'}
                       onChange={handleChange}
-                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
+                      style={{ marginRight: '12px', cursor: 'pointer', width: '20px', height: '20px' }}
                     />
                     <label 
                       htmlFor="venmo" 
@@ -1579,14 +1596,22 @@ Live City DJ Contract Terms and Conditions:
                         alignItems: 'center', 
                         cursor: 'pointer',
                         fontWeight: formData.paymentMethod === 'venmo' ? 'bold' : 'normal',
-                        color: formData.paymentMethod === 'venmo' ? '#0070f3' : 'inherit'
+                        color: formData.paymentMethod === 'venmo' ? '#0070f3' : '#333',
+                        fontSize: '16px'
                       }}
                     >
-                      <SiVenmo style={{ marginRight: '10px', fontSize: '20px', color: '#008CFF' }} /> Venmo
+                      <SiVenmo style={{ marginRight: '12px', fontSize: '28px', color: '#008CFF' }} /> Venmo
                     </label>
                   </div>
                   
-                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="payment-method-option" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    backgroundColor: formData.paymentMethod === 'cashapp' ? 'rgba(0, 214, 50, 0.1)' : 'transparent',
+                    transition: 'background-color 0.2s'
+                  }}>
                     <input
                       type="radio"
                       id="cashapp"
@@ -1594,7 +1619,7 @@ Live City DJ Contract Terms and Conditions:
                       value="cashapp"
                       checked={formData.paymentMethod === 'cashapp'}
                       onChange={handleChange}
-                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
+                      style={{ marginRight: '12px', cursor: 'pointer', width: '20px', height: '20px' }}
                     />
                     <label 
                       htmlFor="cashapp" 
@@ -1603,10 +1628,11 @@ Live City DJ Contract Terms and Conditions:
                         alignItems: 'center', 
                         cursor: 'pointer',
                         fontWeight: formData.paymentMethod === 'cashapp' ? 'bold' : 'normal',
-                        color: formData.paymentMethod === 'cashapp' ? '#0070f3' : 'inherit'
+                        color: formData.paymentMethod === 'cashapp' ? '#0070f3' : '#333',
+                        fontSize: '16px'
                       }}
                     >
-                      <SiCashapp style={{ marginRight: '10px', fontSize: '20px', color: '#00D632' }} /> CashApp
+                      <SiCashapp style={{ marginRight: '12px', fontSize: '24px', color: '#00D632' }} /> CashApp
                     </label>
                   </div>
                 </div>
