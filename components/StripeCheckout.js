@@ -127,18 +127,14 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     <div style={{
       backgroundColor: 'rgba(255,255,255,0.95)',
       color: '#111',
-      padding: '2rem 1rem',
-      borderRadius: '20px',
+      padding: '1.5rem 1rem',
+      borderRadius: '16px',
       boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)',
       width: '100%',
       maxWidth: '100%',
       margin: '0 auto',
-      '@media (max-width: 480px)': {
-        padding: '1rem',
-        borderRadius: '12px'
-      },
       display: 'flex',
       flexDirection: 'column',
       gap: '1rem',
@@ -148,22 +144,22 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       
       <div style={{
         backgroundColor: '#f8f9fa',
-        padding: '1.5rem',
+        padding: '1.25rem',
         borderRadius: '8px',
-        marginBottom: '1.5rem',
+        marginBottom: '1.25rem',
         border: '1px solid #e9ecef',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
       }}>
         <h3 style={{
-          marginBottom: '1rem',
+          marginBottom: '0.75rem',
           color: '#333',
-          fontSize: 'clamp(1.2rem, 5vw, 2rem)',
+          fontSize: 'clamp(1.1rem, 4vw, 1.5rem)',
           fontWeight: 'bold',
           borderBottom: '2px solid #635BFF',
           paddingBottom: '0.5rem'
         }}>Order Summary</h3>
         
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '0.75rem' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -235,11 +231,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
+      <form onSubmit={handleSubmit} style={{ marginTop: '0.75rem' }}>
         <div style={{
-          marginBottom: '1.5rem',
+          marginBottom: '1.25rem',
           backgroundColor: '#f8f9fa',
-          padding: '1.5rem',
+          padding: '1.25rem',
           borderRadius: '8px',
           border: '1px solid #e9ecef',
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
@@ -247,13 +243,13 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           <h3 style={{
             marginBottom: '0.75rem',
             color: '#333',
-            fontSize: 'clamp(1.2rem, 5vw, 2rem)',
+            fontSize: 'clamp(1.1rem, 4vw, 1.5rem)',
             fontWeight: 'bold',
             borderBottom: '2px solid #635BFF',
             paddingBottom: '0.5rem'
           }}>Payment Details</h3>
           <div style={{
-            padding: '1rem',
+            padding: '0.875rem',
             border: '1px solid #ced4da',
             borderRadius: '6px',
             backgroundColor: 'white',
@@ -266,7 +262,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             <CardElement options={{
               style: {
                 base: {
-                  fontSize: 'clamp(14px, 3vw, 16px)',
+                  fontSize: '16px',
                   color: '#111',
                   fontFamily: 'Arial, sans-serif',
                   '::placeholder': {
@@ -278,17 +274,18 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
                   color: '#9e2146',
                   iconColor: '#fa755a',
                 },
-              }
+              },
+              hidePostalCode: true
             }} />
           </div>
         </div>
         
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '1.25rem' }}>
           <label style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             cursor: 'pointer',
-            padding: '1rem',
+            padding: '0.875rem',
             backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
             borderRadius: '6px',
             border: `2px solid ${confirmed ? '#635BFF' : '#ddd'}`,
@@ -301,18 +298,23 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
               onChange={(e) => setConfirmed(e.target.checked)}
               style={{
                 marginRight: '0.75rem',
+                marginTop: '0.125rem',
                 width: '20px',
                 height: '20px',
                 accentColor: '#635BFF'
               }}
             />
-            <span style={{ fontWeight: confirmed ? 'bold' : 'normal' }}>
+            <span style={{ 
+              fontWeight: confirmed ? 'bold' : 'normal',
+              fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+              lineHeight: '1.4'
+            }}>
               I confirm the services listed above and authorize payment
             </span>
           </label>
         </div>
         
-        {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+        {error && <p style={{ color: 'red', marginBottom: '1rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>{error}</p>}
         
         <button
           type="submit"
@@ -321,12 +323,12 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             width: '100%',
             backgroundColor: confirmed ? '#635BFF' : '#a8a8a8',
             color: '#fff',
-            padding: '1rem 1.5rem',
+            padding: '0.875rem 1.25rem',
             borderRadius: '6px',
             border: 'none',
             cursor: confirmed ? 'pointer' : 'not-allowed',
             fontWeight: 'bold',
-            fontSize: 'clamp(1rem, 4vw, 1.5rem)',
+            fontSize: 'clamp(0.95rem, 4vw, 1.25rem)',
             boxShadow: confirmed ? '0 4px 12px rgba(99, 91, 255, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
             transition: 'all 0.2s ease',
             transform: confirmed ? 'translateY(0)' : 'none',
