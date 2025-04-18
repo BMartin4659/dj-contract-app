@@ -847,11 +847,12 @@ Live City DJ Contract Terms and Conditions:
       <div style={{
         minHeight: '100vh',
         padding: '0',
-        backgroundImage: "url('/dj-background.jpg')",
+        backgroundImage: "url('/dj-background-fix.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
+        backgroundColor: '#1a1a1a', /* Fallback if image fails to load */
         fontFamily: 'Helvetica Neue, Segoe UI, Roboto, sans-serif',
         overflow: 'auto',
         display: 'flex',
@@ -893,7 +894,7 @@ Live City DJ Contract Terms and Conditions:
             <div style={{
               display: 'flex',
               justifyContent: 'center',
-              gap: '12px',
+              gap: '8px',
               margin: '0 auto 1.5rem',
               flexWrap: 'wrap',
               maxWidth: '100%'
@@ -903,7 +904,7 @@ Live City DJ Contract Terms and Conditions:
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '10px 16px',
+                  padding: '8px 12px',
                   backgroundColor: 'rgba(0, 112, 243, 0.08)',
                   borderRadius: '12px',
                   color: '#222',
@@ -912,10 +913,9 @@ Live City DJ Contract Terms and Conditions:
                   transition: 'all 0.2s ease',
                   border: '1px solid rgba(0, 112, 243, 0.2)',
                   boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
-                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                  flex: '1 1 auto',
-                  minWidth: '140px',
-                  maxWidth: '300px',
+                  fontSize: '0.9rem',
+                  flex: '0 1 auto',
+                  minWidth: '120px',
                   justifyContent: 'center'
                 }}
                 onMouseOver={e => {
@@ -933,13 +933,13 @@ Live City DJ Contract Terms and Conditions:
                   backgroundColor: '#0070f3',
                   color: 'white',
                   borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
+                  width: '24px',
+                  height: '24px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: '8px',
-                  fontSize: '14px'
+                  marginRight: '5px',
+                  fontSize: '12px'
                 }}>
                   📞
                 </div>
@@ -951,7 +951,7 @@ Live City DJ Contract Terms and Conditions:
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '10px 16px',
+                  padding: '8px 12px',
                   backgroundColor: 'rgba(0, 112, 243, 0.08)',
                   borderRadius: '12px',
                   color: '#222',
@@ -960,10 +960,10 @@ Live City DJ Contract Terms and Conditions:
                   transition: 'all 0.2s ease',
                   border: '1px solid rgba(0, 112, 243, 0.2)',
                   boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
-                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+                  fontSize: '0.9rem',
                   flex: '1 1 auto',
-                  minWidth: '140px',
-                  maxWidth: '300px',
+                  maxWidth: '220px',
+                  overflow: 'hidden',
                   justifyContent: 'center'
                 }}
                 onMouseOver={e => {
@@ -981,13 +981,14 @@ Live City DJ Contract Terms and Conditions:
                   backgroundColor: '#0070f3',
                   color: 'white',
                   borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
+                  width: '24px',
+                  height: '24px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: '8px',
-                  fontSize: '14px'
+                  marginRight: '5px',
+                  fontSize: '12px',
+                  flexShrink: 0
                 }}>
                   📧
                 </div>
@@ -1489,14 +1490,23 @@ Live City DJ Contract Terms and Conditions:
                 }}>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: Math.max(0, prev.additionalHours - 1) }))}
+                    onClick={() => {
+                      // Ensure we don't go below 0
+                      const newValue = Math.max(0, formData.additionalHours - 1);
+                      setFormData(prev => ({ ...prev, additionalHours: newValue }));
+                    }}
                     style={{
                       border: 'none',
                       background: '#f0f0f0',
                       padding: '12px 18px',
                       cursor: 'pointer',
                       transition: 'background 0.2s',
-                      flex: '0 0 auto'
+                      flex: '0 0 auto',
+                      height: '48px',
+                      width: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
                     onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
@@ -1517,14 +1527,22 @@ Live City DJ Contract Terms and Conditions:
                   </div>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, additionalHours: prev.additionalHours + 1 }))}
+                    onClick={() => {
+                      const newValue = formData.additionalHours + 1;
+                      setFormData(prev => ({ ...prev, additionalHours: newValue }));
+                    }}
                     style={{
                       border: 'none',
                       background: '#f0f0f0',
                       padding: '12px 18px',
                       cursor: 'pointer',
                       transition: 'background 0.2s',
-                      flex: '0 0 auto'
+                      flex: '0 0 auto',
+                      height: '48px',
+                      width: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
                     onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
