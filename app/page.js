@@ -846,7 +846,7 @@ Live City DJ Contract Terms and Conditions:
       <div style={{
         minHeight: '100vh',
         padding: '0',
-        backgroundImage: "url('/dj-background.jpg')",
+        backgroundImage: "url('/dj-background-new.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

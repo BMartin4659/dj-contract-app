@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="preload" href="/dj-background.jpg" as="image" />
+        <link rel="preload" href="/dj-background-new.jpg" as="image" />
         {/* Google Maps API is now loaded in individual components that need it */}
       </head>
       <body 
