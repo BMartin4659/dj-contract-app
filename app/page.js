@@ -868,9 +868,9 @@ Live City DJ Contract Terms and Conditions:
           width: '100%',
           margin: '1rem auto',
           padding: '1.5rem 1rem',
-          backgroundColor: 'rgba(255,255,255,0.75)',
+          backgroundColor: 'rgba(255,255,255,0.92)',
           borderRadius: '20px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
           overflow: 'hidden',
           position: 'relative',
           transform: 'translateZ(0)',
@@ -1455,38 +1455,33 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               ))}
 
-              {/* Stylish Additional Hours Selector */}
+              {/* Additional Hours (manually added) */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '20px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
-                      <strong>Additional Hours ($75/hr):</strong>
-                    </div>
-                    {formData.startTime && formData.endTime && calculateHoursBetween(formData.startTime, formData.endTime) > 4 && (
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: '#4299E1', 
-                        backgroundColor: 'rgba(66, 153, 225, 0.1)', 
-                        padding: '3px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 'normal'
-                      }}>
-                        Auto-calculated based on time selection
-                      </span>
-                    )}
-                  </span>
+                <label style={{ display: 'block', fontWeight: '600', color: '#222', marginBottom: '10px' }}>
+                  Additional Hours ($75/hr):
+                  {formData.startTime && formData.endTime && calculateHoursBetween(formData.startTime, formData.endTime) > 4 && (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#4299E1', 
+                      backgroundColor: 'rgba(66, 153, 225, 0.1)', 
+                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 'normal',
+                      marginLeft: '10px'
+                    }}>
+                      Auto-calculated based on time selection
+                    </span>
+                  )}
                 </label>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  maxWidth: '180px',
-                  border: '1px solid #ddd',
+                  justifyContent: 'space-between',
                   borderRadius: '8px',
+                  border: '1px solid #ddd',
                   overflow: 'hidden',
-                  background: 'white',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  boxSizing: 'border-box'
+                  maxWidth: '200px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
                 }}>
                   <button
                     type="button"
@@ -1497,21 +1492,28 @@ Live City DJ Contract Terms and Conditions:
                     }}
                     style={{
                       border: 'none',
-                      background: '#f0f0f0',
+                      background: '#f5f5f5',
                       padding: '12px 18px',
                       cursor: 'pointer',
-                      transition: 'background 0.2s',
+                      transition: 'all 0.2s ease',
                       flex: '0 0 auto',
                       height: '48px',
                       width: '48px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      borderRight: '1px solid #e0e0e0'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
-                    onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = '#e8e8e8';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = '#f5f5f5';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
                   >
-                    <FaMinus style={{ color: '#e53e3e' }} />
+                    <FaMinus style={{ color: '#e53e3e', fontSize: '16px' }} />
                   </button>
                   <div style={{
                     padding: '10px 20px',
@@ -1521,7 +1523,8 @@ Live City DJ Contract Terms and Conditions:
                     minWidth: '60px',
                     fontSize: '22px',
                     color: '#333',
-                    position: 'relative'
+                    position: 'relative',
+                    background: 'white'
                   }}>
                     {formData.additionalHours}
                   </div>
@@ -1533,21 +1536,28 @@ Live City DJ Contract Terms and Conditions:
                     }}
                     style={{
                       border: 'none',
-                      background: '#f0f0f0',
+                      background: '#f5f5f5',
                       padding: '12px 18px',
                       cursor: 'pointer',
-                      transition: 'background 0.2s',
+                      transition: 'all 0.2s ease',
                       flex: '0 0 auto',
                       height: '48px',
                       width: '48px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      borderLeft: '1px solid #e0e0e0'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#e0e0e0'}
-                    onMouseOut={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = '#e8e8e8';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = '#f5f5f5';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
                   >
-                    <FaPlus style={{ color: '#38a169' }} />
+                    <FaPlus style={{ color: '#38a169', fontSize: '16px' }} />
                   </button>
                 </div>
               </div>

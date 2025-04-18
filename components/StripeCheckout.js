@@ -125,11 +125,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 
   return (
     <div style={{
-      backgroundColor: 'rgba(255,255,255,0.75)',
+      backgroundColor: 'rgba(255,255,255,0.92)',
       color: '#111',
       padding: '1.5rem 1rem',
       borderRadius: '16px',
-      boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+      boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)',
       width: '100%',
