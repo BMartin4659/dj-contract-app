@@ -25,8 +25,12 @@ import {
   FaMinus,
   FaCreditCard,
   FaMoneyBillWave,
-  FaPaypal
+  FaPaypal,
+  FaDollarSign,
+  FaRegCreditCard
 } from 'react-icons/fa';
+import { BsStripe } from 'react-icons/bs';
+import { SiVenmo, SiCashapp } from 'react-icons/si';
 
 export default function DJContractForm() {
   // Terms and conditions text
@@ -401,6 +405,9 @@ Live City DJ Contract Terms and Conditions:
     // Set submitting state
     setIsSubmitting(true);
     
+    // Scroll to top for better mobile experience
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     try {
       // Create contract first
       const docRef = await addDoc(collection(db, 'djContracts'), {
@@ -427,14 +434,44 @@ Live City DJ Contract Terms and Conditions:
         setShowStripe(true);
         return;
       } else if (paymentMethod === 'Venmo') {
-        window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
-        // Longer delay to ensure popup isn&apos;t blocked
-        setTimeout(() => setSubmitted(true), 1000);
+        // On mobile, use deep linking when possible
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const venmoDeepLink = 'venmo://paycharge?txn=pay&recipients=Bobby-Martin-64';
+        
+        if (isMobile) {
+          // Try deep linking first
+          window.location.href = venmoDeepLink;
+          
+          // Fallback after a short delay if deep linking fails
+          setTimeout(() => {
+            window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
+          }, 1000);
+        } else {
+          window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
+        }
+        
+        // Longer delay to ensure popup isn't blocked
+        setTimeout(() => setSubmitted(true), 1500);
         return;
       } else if (paymentMethod === 'CashApp') {
-        window.open('https://cash.app/$LiveCity', '_blank');
-        // Longer delay to ensure popup isn&apos;t blocked
-        setTimeout(() => setSubmitted(true), 1000);
+        // On mobile, use deep linking when possible
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const cashAppDeepLink = 'cash://app/pay/$LiveCity';
+        
+        if (isMobile) {
+          // Try deep linking first
+          window.location.href = cashAppDeepLink;
+          
+          // Fallback after a short delay if deep linking fails
+          setTimeout(() => {
+            window.open('https://cash.app/$LiveCity', '_blank');
+          }, 1000);
+        } else {
+          window.open('https://cash.app/$LiveCity', '_blank');
+        }
+        
+        // Longer delay to ensure popup isn't blocked
+        setTimeout(() => setSubmitted(true), 1500);
         return;
       }
       
@@ -587,17 +624,23 @@ Live City DJ Contract Terms and Conditions:
     display: 'block',
     marginBottom: '0.5rem',
     fontWeight: 'bold',
-    color: '#333',
+    color: '#222',
   };
 
   const inputStyle = {
     backgroundColor: 'white',
     width: '100%',
     padding: '12px',
-    marginBottom: '1rem',
+    marginBottom: '0.75rem',
     borderRadius: '8px',
-    border: '1px solid #ccc',
+    border: '1px solid #bbb',
     color: 'black',
+    fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    boxSizing: 'border-box',
+    maxWidth: '100%',
+    overflowX: 'hidden',
+    textOverflow: 'ellipsis'
   };
 
   const iconStyle = {
@@ -605,6 +648,33 @@ Live City DJ Contract Terms and Conditions:
     fontSize: '18px',
     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
   };
+
+  // Custom Venmo and CashApp icons as SVG components
+  const SIVenmo = ({ style }) => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      width="1.5em" 
+      height="1.5em" 
+      style={{...style, minWidth: '20px', minHeight: '20px'}} 
+      fill="#008CFF"
+    >
+      <path d="M19.5 2A1.5 1.5 0 0 1 21 3.5v17a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-17A1.5 1.5 0 0 1 4.5 2h15zm-4.5 5c-.89 0-1.68.59-1.94 1.47L9.83 17h3l1.06-4.5c.32-1.34 1.62-2.47 3.07-2.47.59 0 1.1.13 1.54.36V8.14c-.24-.06-.4-.14-.75-.14-1.54 0-2.8.88-3.25 2.25l-.23.75h3.11L17 12.75h-2.94L12.75 17h-2.7l2.25-8.43c.36-1.36 1.92-2.57 3.43-2.57.38 0 .72.05.98.13l.29.1V7z" />
+    </svg>
+  );
+
+  const SICashApp = ({ style }) => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      width="1.5em" 
+      height="1.5em" 
+      style={{...style, minWidth: '20px', minHeight: '20px'}} 
+      fill="#00D632"
+    >
+      <path d="M11.97 22a7.45 7.45 0 0 1-6.4-3.68c-.53-.92-.88-1.35-1.84-1.35-.27 0-.5-.2-.5-.52V13.6c0-.27.2-.38.5-.38.65 0 1.3.12 1.5 1.03.83 3.66 2.82 5.32 7.11 5.32 3.83 0 6.16-1.54 6.16-5.1 0-2.19-.76-3.71-6.12-4.1-4.43-.34-8.78-.87-8.78-6.13C3.6 1.43 5.82 0 10.84 0c3.18 0 6.8 1.13 7.19 5.14.04.28-.19.47-.48.47h-2.03c-.26 0-.44-.12-.48-.36C14.8 3 13.21 2.23 10.8 2.23c-3.6 0-4.17 1.53-4.17 3.07 0 3.11 3.95 3.18 7.9 3.52 4.34.36 7.04 1.47 7.04 6.6 0 4.69-3.4 6.58-9.6 6.58z" />
+    </svg>
+  );
 
   const fieldIcons = {
     clientName: <FaUser style={{...iconStyle, color: '#4299E1'}} />,
@@ -629,9 +699,172 @@ Live City DJ Contract Terms and Conditions:
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
     Stripe: <FaCreditCard style={{...iconStyle, color: '#635BFF'}} />,
-    Venmo: <FaMoneyBillWave style={{...iconStyle, color: '#008CFF'}} />,
-    CashApp: <FaMoneyBillWave style={{...iconStyle, color: '#00D632'}} />,
+    Venmo: <SIVenmo style={{ marginRight: '10px', fontSize: '20px' }} />,
+    CashApp: <SICashApp style={{ marginRight: '10px', fontSize: '20px' }} />,
   };
+
+  // Add this to improve responsive layout behavior
+  useEffect(() => {
+    // Function to handle iOS viewport issues with virtual keyboard
+    const handleResize = () => {
+      // Fix for iOS virtual keyboard
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        document.documentElement.style.height = `${window.innerHeight}px`;
+        
+        // Additional fix for form positioning when keyboard appears
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'SELECT' || activeElement.tagName === 'TEXTAREA')) {
+          // Scroll to the active element with some offset
+          setTimeout(() => {
+            activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    // Add listeners for input focus events
+    const allInputs = document.querySelectorAll('input, select, textarea');
+    allInputs.forEach(input => {
+      input.addEventListener('focus', handleResize);
+    });
+    
+    // Initial call
+    handleResize();
+    
+    // Create and add a meta viewport tag to prevent scaling issues
+    const metaViewport = document.createElement('meta');
+    metaViewport.name = 'viewport';
+    metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+    document.head.appendChild(metaViewport);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      
+      // Clean up focus listeners
+      allInputs.forEach(input => {
+        input.removeEventListener('focus', handleResize);
+      });
+      
+      // Remove the meta tag when component unmounts
+      if (document.head.contains(metaViewport)) {
+        document.head.removeChild(metaViewport);
+      }
+    };
+  }, []);
+
+  // Add event listener to handle input focus events
+  const handleInputFocus = (e) => {
+    // After a short delay to allow the keyboard to appear
+    setTimeout(() => {
+      // Scroll the element into view
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  };
+
+  // To be used with form elements
+  const focusProps = {
+    onFocus: handleInputFocus,
+    style: { fontSize: '16px' }
+  };
+
+  // Add custom CSS to handle mobile-specific issues and prevent horizontal scrolling
+  useEffect(() => {
+    // Add viewport meta tag to prevent horizontal scrolling
+    const viewportMeta = document.createElement('meta');
+    viewportMeta.name = 'viewport';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+    document.head.appendChild(viewportMeta);
+    
+    // Create a style tag for custom CSS
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `
+      @media screen and (max-width: 480px) {
+        html, body {
+          overflow-x: hidden !important;
+          position: relative !important;
+          width: 100% !important;
+          max-width: 100vw !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        .form-container {
+          padding: 1rem 0.75rem !important;
+          width: 92% !important;
+          margin: 1rem auto !important;
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+          box-sizing: border-box !important;
+        }
+        
+        .payment-method-option span {
+          font-size: 14px !important;
+        }
+        
+        input, select, textarea {
+          font-size: 16px !important; /* Prevents iOS zoom */
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        
+        .itemized-total-container {
+          padding: 0.75rem !important;
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+          box-sizing: border-box !important;
+        }
+        
+        .main-wrapper {
+          overflow-x: hidden !important;
+          max-width: 100vw !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .payment-method-options {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .form-radio-label {
+          display: flex;
+          align-items: center;
+          padding: 5px 0;
+          cursor: pointer;
+          font-size: 16px;
+        }
+
+        .form-radio-label:hover {
+          color: #0070f3;
+        }
+
+        .form-radio-input:checked + .form-radio-label {
+          font-weight: bold;
+          color: #0070f3;
+        }
+
+        .form-radio-input {
+          margin-right: 10px;
+        }
+
+        .venmo-info {
+          margin-top: 1rem;
+          font-size: 1rem;
+        }
+      }
+    `;
+    document.head.appendChild(styleTag);
+    
+    return () => {
+      document.head.removeChild(styleTag);
+      document.head.removeChild(viewportMeta);
+    };
+  }, []);
 
   return (
     <>
@@ -640,140 +873,173 @@ Live City DJ Contract Terms and Conditions:
 
       <div style={{
         minHeight: '100vh',
-        padding: '2rem',
+        padding: '0',
         backgroundImage: "url('/dj-background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
         fontFamily: 'Helvetica Neue, Segoe UI, Roboto, sans-serif',
-      }}>
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'manipulation',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+      }} className="vertical-scroll-container smooth-scroll">
         <div style={{
-          maxWidth: '700px',
-          width: '100%',
+          maxWidth: '600px',
+          width: '92%',
           margin: '2rem auto',
-          padding: '2rem',
-          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: '1.5rem 1rem',
+          backgroundColor: 'rgba(255,255,255,0.92)',
           borderRadius: '20px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
-        }}>
-          <h1 style={{
-            textAlign: 'center',
-            fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
-            color: '#000',
-            marginTop: '0.5rem',
-            marginBottom: '2rem',
-            lineHeight: '1.2'
-          }}>
-            🎧 Live City DJ Contract
-          </h1>
+          boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+          overflow: 'hidden',
+          position: 'relative',
+          transform: 'translateZ(0)',
+          WebkitBackfaceVisibility: 'hidden',
+          WebkitTransformStyle: 'preserve-3d',
+          boxSizing: 'border-box',
+        }} className="form-container">
+          <div className="sticky-form-header">
+            <h1 style={{
+              textAlign: 'center',
+              fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
+              color: '#000',
+              marginTop: '0.5rem',
+              marginBottom: '1.5rem',
+              lineHeight: '1.2'
+            }}>
+              🎧 Live City DJ Contract
+            </h1>
 
-          {/* Contact Information Cards */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '16px',
-            margin: '0 auto 1.75rem',
-            flexWrap: 'wrap'
-          }}>
-            <a 
-              href="tel:+12036949388" 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '12px 20px',
-                backgroundColor: 'rgba(0, 112, 243, 0.08)',
-                borderRadius: '12px',
-                color: '#222',
-                textDecoration: 'none',
-                fontWeight: '500',
-                transition: 'all 0.2s ease',
-                border: '1px solid rgba(0, 112, 243, 0.2)',
-                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)'
-              }}
-              onMouseOver={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
-              }}
-            >
-              <div style={{
-                backgroundColor: '#0070f3',
-                color: 'white',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px',
-                fontSize: '16px'
-              }}>
-                📞
-              </div>
-              <span>(203) 694-9388</span>
-            </a>
-            
-            <a 
-              href="mailto:therealdjbobbydrake@gmail.com" 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '12px 20px',
-                backgroundColor: 'rgba(0, 112, 243, 0.08)',
-                borderRadius: '12px',
-                color: '#222',
-                textDecoration: 'none',
-                fontWeight: '500',
-                transition: 'all 0.2s ease',
-                border: '1px solid rgba(0, 112, 243, 0.2)',
-                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)'
-              }}
-              onMouseOver={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
-              }}
-            >
-              <div style={{
-                backgroundColor: '#0070f3',
-                color: 'white',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px',
-                fontSize: '16px'
-              }}>
-                📧
-              </div>
-              <span>therealdjbobbydrake@gmail.com</span>
-            </a>
+            {/* Contact Information Cards */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '12px',
+              margin: '0 auto 1.5rem',
+              flexWrap: 'wrap',
+              maxWidth: '100%'
+            }}>
+              <a 
+                href="tel:+12036949388" 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 16px',
+                  backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                  borderRadius: '12px',
+                  color: '#222',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  border: '1px solid rgba(0, 112, 243, 0.2)',
+                  boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
+                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+                  flex: '1 1 auto',
+                  minWidth: '140px',
+                  maxWidth: '300px',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+                }}
+              >
+                <div style={{
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '8px',
+                  fontSize: '14px'
+                }}>
+                  📞
+                </div>
+                <span>(203) 694-9388</span>
+              </a>
+              
+              <a 
+                href="mailto:therealdjbobbydrake@gmail.com" 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 16px',
+                  backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                  borderRadius: '12px',
+                  color: '#222',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  border: '1px solid rgba(0, 112, 243, 0.2)',
+                  boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
+                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+                  flex: '1 1 auto',
+                  minWidth: '140px',
+                  maxWidth: '300px',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+                }}
+              >
+                <div style={{
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '8px',
+                  fontSize: '14px'
+                }}>
+                  📧
+                </div>
+                <span style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>therealdjbobbydrake@gmail.com</span>
+              </a>
+            </div>
           </div>
 
           {showStripe ? (
             <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.96)',
-              padding: '2rem',
+              backgroundColor: 'rgba(255,255,255,0.92)',
+              padding: '1.5rem',
               borderRadius: '20px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-              maxWidth: '700px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+              maxWidth: '580px',
+              width: '95%',
               margin: '0 auto',
               backdropFilter: 'blur(5px)',
               WebkitBackdropFilter: 'blur(5px)'
             }}>
-              <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
+              <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.5rem, 4vw, 1.75rem)', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
                 Complete Your Payment
               </h2>
               <StripeCheckout
@@ -787,7 +1053,14 @@ Live City DJ Contract Terms and Conditions:
               />
             </div>
           ) : !submitted ? (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+            <form onSubmit={handleSubmit} style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '0.75rem', 
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box'
+            }} className="form-group">
               {['clientName', 'email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
                 <div key={field}>
                   <label style={labelStyle}>
@@ -803,6 +1076,7 @@ Live City DJ Contract Terms and Conditions:
                     style={inputStyle}
                     value={formData[field]}
                     onChange={handleChange}
+                    onFocus={handleInputFocus}
                   />
                 </div>
               ))}
@@ -862,13 +1136,15 @@ Live City DJ Contract Terms and Conditions:
                   autoComplete="off"
                   value={formData.venueLocation}
                   onChange={handleChange}
-                  onFocus={() => {
+                  onFocus={(e) => {
                     // Log status when field receives focus
                     console.log("Venue field focused. Google Maps loaded:", !!window.google?.maps?.places);
                     if (!window.google?.maps?.places) {
                       // Try to manually initialize if Maps isn't available
                       initializeMapsAPI();
                     }
+                    // Also perform the input focus behavior for scrolling
+                    handleInputFocus(e);
                   }}
                   required
                   placeholder="Start typing your address..."
@@ -935,12 +1211,13 @@ Live City DJ Contract Terms and Conditions:
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  flexWrap: 'wrap'
                 }}>
                   <div style={{
                     position: 'relative',
-                    flex: '1',
-                    maxWidth: '260px'
+                    flex: '1 1 auto',
+                    minWidth: '210px'
                   }}>
                     <input
                       name="eventDate"
@@ -948,18 +1225,20 @@ Live City DJ Contract Terms and Conditions:
                       required
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: '10px 12px',
                         borderRadius: '6px',
                         border: '1px solid #E2E8F0',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                        fontSize: '14px',
+                        fontSize: '16px', // Prevents iOS zoom
                         color: '#2D3748',
                         backgroundColor: 'white',
                         cursor: 'pointer',
-                        outline: 'none'
+                        outline: 'none',
+                        appearance: 'textfield'
                       }}
                       value={formData.eventDate}
                       onChange={handleChange}
+                      onFocus={handleInputFocus}
                     />
                   </div>
                   {formData.eventDate && (
@@ -972,7 +1251,11 @@ Live City DJ Contract Terms and Conditions:
                       fontWeight: '600',
                       whiteSpace: 'nowrap',
                       border: '1px solid rgba(66, 153, 225, 0.2)',
-                      letterSpacing: '0.3px'
+                      letterSpacing: '0.3px',
+                      flex: '1 1 auto',
+                      textAlign: 'center',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
                     }}>
                       {new Date(formData.eventDate).toLocaleDateString('en-US', { 
                         weekday: 'long', 
@@ -996,15 +1279,19 @@ Live City DJ Contract Terms and Conditions:
                   display: 'flex',
                   gap: '12px',
                   flexWrap: 'wrap',
-                  alignItems: 'center'
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box'
                 }}>
                   {/* Start Time */}
                   <div style={{ 
-                    flex: '1 1 200px',
-                    minWidth: '150px',
+                    flex: '1 1 140px',
+                    minWidth: '120px',
                   }}>
                     <label style={{ 
-                      fontSize: '12px', 
+                      fontSize: '0.8rem', 
                       color: '#718096', 
                       marginBottom: '3px',
                       display: 'block'
@@ -1023,13 +1310,17 @@ Live City DJ Contract Terms and Conditions:
                         }));
                       }}
                       required
+                      onFocus={handleInputFocus}
                       style={{
                         width: '100%',
-                        padding: '8px',
+                        padding: '10px 8px',
                         borderRadius: '6px',
                         border: '1px solid #ccc',
                         backgroundColor: 'white',
                         color: 'black',
+                        fontSize: '16px', // Prevents iOS zoom
+                        textAlign: 'center',
+                        appearance: 'menulist'
                       }}
                     >
                       <option value="">Select</option>
@@ -1041,11 +1332,11 @@ Live City DJ Contract Terms and Conditions:
                   
                   {/* End Time */}
                   <div style={{ 
-                    flex: '1 1 200px',
-                    minWidth: '150px',
+                    flex: '1 1 140px',
+                    minWidth: '120px',
                   }}>
                     <label style={{ 
-                      fontSize: '12px', 
+                      fontSize: '0.8rem', 
                       color: '#718096', 
                       marginBottom: '3px',
                       display: 'block'
@@ -1058,14 +1349,18 @@ Live City DJ Contract Terms and Conditions:
                       onChange={(e) => handleEndTimeChange(e.target.value)}
                       required
                       disabled={!formData.startTime}
+                      onFocus={handleInputFocus}
                       style={{
                         width: '100%',
-                        padding: '8px',
+                        padding: '10px 8px',
                         borderRadius: '6px',
                         border: '1px solid #ccc',
                         backgroundColor: 'white',
                         color: 'black',
-                        opacity: formData.startTime ? 1 : 0.6
+                        opacity: formData.startTime ? 1 : 0.6,
+                        fontSize: '16px', // Prevents iOS zoom
+                        textAlign: 'center',
+                        appearance: 'menulist'
                       }}
                     >
                       <option value="">Select</option>
@@ -1081,14 +1376,15 @@ Live City DJ Contract Terms and Conditions:
                   {/* Duration Display */}
                   {formData.startTime && formData.endTime && (
                     <div style={{
-                      flex: '1 1 200px',
+                      flex: '1 1 140px',
                       backgroundColor: 'rgba(66, 153, 225, 0.1)',
                       padding: '8px 12px',
                       borderRadius: '6px',
                       fontSize: '13px',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '2px'
+                      gap: '2px',
+                      marginTop: '22px' // To align with selects
                     }}>
                       <div style={{ fontWeight: 'bold', color: '#2B6CB0' }}>
                         {Math.round(calculateHoursBetween(formData.startTime, formData.endTime) * 10) / 10} hrs total
@@ -1186,12 +1482,12 @@ Live City DJ Contract Terms and Conditions:
               ))}
 
               {/* Stylish Additional Hours Selector */}
-              <div>
+              <div style={{ marginBottom: '20px' }}>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
-                      Additional Hours ($75/hr):
+                      <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '20px', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }} />
+                      <strong>Additional Hours ($75/hr):</strong>
                     </div>
                     {formData.startTime && formData.endTime && calculateHoursBetween(formData.startTime, formData.endTime) > 4 && (
                       <span style={{ 
@@ -1210,10 +1506,13 @@ Live City DJ Contract Terms and Conditions:
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  maxWidth: '150px',
+                  maxWidth: '180px',
                   border: '1px solid #ddd',
                   borderRadius: '8px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  background: 'white',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  boxSizing: 'border-box'
                 }}>
                   <button
                     type="button"
@@ -1221,7 +1520,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: 'none',
                       background: '#f0f0f0',
-                      padding: '10px 15px',
+                      padding: '12px 18px',
                       cursor: 'pointer',
                       transition: 'background 0.2s',
                       flex: '0 0 auto'
@@ -1232,12 +1531,12 @@ Live City DJ Contract Terms and Conditions:
                     <FaMinus style={{ color: '#e53e3e' }} />
                   </button>
                   <div style={{
-                    padding: '10px 15px',
+                    padding: '10px 20px',
                     flex: '1 1 auto',
                     textAlign: 'center',
                     fontWeight: 'bold',
-                    minWidth: '40px',
-                    fontSize: '18px',
+                    minWidth: '60px',
+                    fontSize: '22px',
                     color: '#333',
                     position: 'relative'
                   }}>
@@ -1249,7 +1548,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: 'none',
                       background: '#f0f0f0',
-                      padding: '10px 15px',
+                      padding: '12px 18px',
                       cursor: 'pointer',
                       transition: 'background 0.2s',
                       flex: '0 0 auto'
@@ -1262,130 +1561,80 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               </div>
 
-              {/* Stylish Payment Method Selection */}
-              <div>
-                <label style={labelStyle}>Payment Method:</label>
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginBottom: '1rem',
-                  flexWrap: 'wrap'
-                }}>
-                  {/* Stripe Option */}
-                  <div
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
-                      borderRadius: '8px',
-                      padding: '10px 15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Stripe' ? '#f0f4ff' : 'white',
-                      transition: 'all 0.2s ease',
-                      minWidth: '120px'
-                    }}
-                  >
+              {/* Payment Method Selection */}
+              <div className="payment-method-options-container" style={{ marginBottom: '20px' }}>
+                <label style={{ ...labelStyle, marginBottom: '10px' }}>Payment Method:</label>
+                <div className="payment-method-options">
+                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                     <input
                       type="radio"
                       id="stripe"
                       name="paymentMethod"
-                      value="Stripe"
-                      checked={formData.paymentMethod === 'Stripe'}
+                      value="stripe"
+                      checked={formData.paymentMethod === 'stripe'}
                       onChange={handleChange}
-                      required
-                      style={{ marginRight: '10px' }}
+                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
                     />
-                    <FaCreditCard style={{
-                      marginRight: '8px',
-                      color: '#635BFF',
-                      fontSize: '22px',
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
-                    }} />
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
-                      color: formData.paymentMethod === 'Stripe' ? '#000' : '#444'
-                    }}>
-                      Stripe
-                    </span>
+                    <label 
+                      htmlFor="stripe" 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        cursor: 'pointer',
+                        fontWeight: formData.paymentMethod === 'stripe' ? 'bold' : 'normal',
+                        color: formData.paymentMethod === 'stripe' ? '#0070f3' : 'inherit'
+                      }}
+                    >
+                      <FaCreditCard style={{ marginRight: '10px', fontSize: '20px' }} /> Stripe (Credit Card)
+                    </label>
                   </div>
                   
-                  {/* Venmo Option */}
-                  <div
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
-                      borderRadius: '8px',
-                      padding: '10px 15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
-                      transition: 'all 0.2s ease',
-                      minWidth: '120px'
-                    }}
-                  >
+                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                     <input
                       type="radio"
                       id="venmo"
                       name="paymentMethod"
-                      value="Venmo"
-                      checked={formData.paymentMethod === 'Venmo'}
+                      value="venmo"
+                      checked={formData.paymentMethod === 'venmo'}
                       onChange={handleChange}
-                      required
-                      style={{ marginRight: '10px' }}
+                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
                     />
-                    <FaMoneyBillWave style={{
-                      marginRight: '8px',
-                      color: '#008CFF',
-                      fontSize: '22px',
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
-                    }} />
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
-                      color: formData.paymentMethod === 'Venmo' ? '#000' : '#444'
-                    }}>
-                      Venmo
-                    </span>
+                    <label 
+                      htmlFor="venmo" 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        cursor: 'pointer',
+                        fontWeight: formData.paymentMethod === 'venmo' ? 'bold' : 'normal',
+                        color: formData.paymentMethod === 'venmo' ? '#0070f3' : 'inherit'
+                      }}
+                    >
+                      <SIVenmo style={{ marginRight: '10px', fontSize: '20px' }} /> Venmo
+                    </label>
                   </div>
                   
-                  {/* CashApp Option */}
-                  <div
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
-                      borderRadius: '8px',
-                      padding: '10px 15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
-                      transition: 'all 0.2s ease',
-                      minWidth: '120px'
-                    }}
-                  >
+                  <div className="payment-method-option" style={{ display: 'flex', alignItems: 'center' }}>
                     <input
                       type="radio"
                       id="cashapp"
                       name="paymentMethod"
-                      value="CashApp"
-                      checked={formData.paymentMethod === 'CashApp'}
+                      value="cashapp"
+                      checked={formData.paymentMethod === 'cashapp'}
                       onChange={handleChange}
-                      required
-                      style={{ marginRight: '10px' }}
+                      style={{ marginRight: '10px', cursor: 'pointer', width: '18px', height: '18px' }}
                     />
-                    <FaMoneyBillWave style={{
-                      marginRight: '8px',
-                      color: '#00D632',
-                      fontSize: '22px',
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
-                    }} />
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
-                      color: formData.paymentMethod === 'CashApp' ? '#000' : '#444'
-                    }}>
-                      CashApp
-                    </span>
+                    <label 
+                      htmlFor="cashapp" 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        cursor: 'pointer',
+                        fontWeight: formData.paymentMethod === 'cashapp' ? 'bold' : 'normal',
+                        color: formData.paymentMethod === 'cashapp' ? '#0070f3' : 'inherit'
+                      }}
+                    >
+                      <SICashApp style={{ marginRight: '10px', fontSize: '20px' }} /> CashApp
+                    </label>
                   </div>
                 </div>
               </div>
@@ -1393,7 +1642,7 @@ Live City DJ Contract Terms and Conditions:
               {/* Terms and Conditions */}
               <div style={{
                 marginBottom: '1rem',
-                backgroundColor: 'rgba(255,255,255,0.7)',
+                backgroundColor: 'rgba(255,255,255,0.9)',
                 padding: '12px',
                 borderRadius: '8px',
                 border: '1px solid #ddd',
@@ -1401,7 +1650,7 @@ Live City DJ Contract Terms and Conditions:
               }}>
                 <label style={{
                   display: 'flex',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   cursor: 'pointer',
                 }}>
                   <input
@@ -1412,12 +1661,13 @@ Live City DJ Contract Terms and Conditions:
                     required
                     style={{
                       marginRight: '0.75rem',
+                      marginTop: '0.25rem',
                       width: '18px',
                       height: '18px'
                     }}
                   />
                   <span style={{
-                    fontSize: '0.95rem',
+                    fontSize: 'clamp(0.85rem, 2.5vw, 0.95rem)',
                     lineHeight: '1.4',
                     fontWeight: '500',
                     color: '#333'
@@ -1429,12 +1679,16 @@ Live City DJ Contract Terms and Conditions:
 
               {/* Itemized Total */}
               <div style={{
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'rgba(255,255,255,0.9)',
                 padding: '1rem',
                 borderRadius: '8px',
                 marginBottom: '1.5rem',
-              }}>
-                <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                boxSizing: 'border-box',
+                maxWidth: '100%',
+                overflowX: 'hidden'
+              }} className="itemized-total-container">
+                <h3 style={{ marginBottom: '0.5rem', color: '#000', fontWeight: 'bold' }}>Event Package Summary:</h3>
                 {itemizedTotal()}
               </div>
 
@@ -1442,17 +1696,24 @@ Live City DJ Contract Terms and Conditions:
                 type="submit"
                 disabled={isSubmitting}
                 style={{
-                  width: '100%',
+                  width: 'auto',
+                  minWidth: '200px',
+                  maxWidth: '300px',
+                  margin: '0 auto',
+                  display: 'block',
                   backgroundColor: '#0070f3',
                   color: 'white',
                   border: 'none',
-                  padding: '1rem',
-                  fontSize: '1rem',
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1.1rem',
                   borderRadius: '8px',
-                  marginTop: '1rem',
+                  marginTop: '0.5rem',
                   cursor: 'pointer',
                   transition: 'background-color 0.3s',
-                  opacity: isSubmitting ? 0.7 : 1
+                  opacity: isSubmitting ? 0.7 : 1,
+                  fontWeight: 'bold',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 {isSubmitting ? 'Processing...' : 'Submit Contract'}
@@ -1461,13 +1722,16 @@ Live City DJ Contract Terms and Conditions:
           ) : (
             <div style={{
               textAlign: 'center',
-              padding: '2rem',
+              padding: '1.5rem',
               color: '#111',
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: 'rgba(255,255,255,0.92)',
               borderRadius: '20px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+              boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+              maxWidth: '580px',
+              width: '95%',
+              margin: '0 auto'
             }}>
-              <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
+              <h2 style={{ color: '#0070f3', marginBottom: '1rem', fontSize: 'clamp(1.25rem, 5vw, 1.75rem)' }}>🎉 Thank You!</h2>
               <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
                 Your contract has been submitted successfully. We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
               </p>
