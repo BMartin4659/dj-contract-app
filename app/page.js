@@ -755,49 +755,48 @@ Live City DJ Contract Terms and Conditions:
     // Create a style tag for custom CSS
     const styleTag = document.createElement('style');
     styleTag.innerHTML = `
-      @media screen and (max-width: 480px) {
-        html, body {
-          overflow-x: hidden !important;
-          position: relative !important;
-          width: 100% !important;
-          max-width: 100vw !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        
-        .form-container {
-          padding: 1rem 0.75rem !important;
-          width: 92% !important;
-          margin: 1rem auto !important;
-          max-width: 100% !important;
-          overflow-x: hidden !important;
-          box-sizing: border-box !important;
-        }
-        
-        .payment-method-option span {
-          font-size: 14px !important;
-        }
-        
-        input, select, textarea {
-          font-size: 16px !important; /* Prevents iOS zoom */
-          max-width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        
-        .itemized-total-container {
-          padding: 0.75rem !important;
-          max-width: 100% !important;
-          overflow-x: hidden !important;
-          box-sizing: border-box !important;
-        }
-        
-        .main-wrapper {
-          overflow-x: hidden !important;
-          max-width: 100vw !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
+      html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      .form-container {
+        padding: 1rem 0.75rem !important;
+        width: 100% !important;
+        margin: 1rem auto !important;
+        max-width: 700px !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+      }
+      
+      .payment-method-option span {
+        font-size: 14px !important;
+      }
+      
+      input, select, textarea {
+        font-size: 16px !important; /* Prevents iOS zoom */
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      
+      .itemized-total-container {
+        padding: 0.75rem !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+      }
+      
+      .main-wrapper {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
 
+      @media screen and (max-width: 480px) {
         .payment-method-options {
           display: flex;
           flex-direction: column;
@@ -847,30 +846,31 @@ Live City DJ Contract Terms and Conditions:
       <div style={{
         minHeight: '100vh',
         padding: '0',
-        backgroundImage: "url('/dj-background-fix.jpg')",
+        backgroundImage: "url('/dj-background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
         backgroundColor: '#1a1a1a', /* Fallback if image fails to load */
         fontFamily: 'Helvetica Neue, Segoe UI, Roboto, sans-serif',
-        overflow: 'auto',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         WebkitOverflowScrolling: 'touch',
         touchAction: 'manipulation',
+        width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
       }} className="vertical-scroll-container smooth-scroll">
         <div style={{
-          maxWidth: '600px',
-          width: '92%',
-          margin: '2rem auto',
+          maxWidth: '700px',
+          width: '100%',
+          margin: '1rem auto',
           padding: '1.5rem 1rem',
-          backgroundColor: 'rgba(255,255,255,0.92)',
+          backgroundColor: 'rgba(255,255,255,0.75)',
           borderRadius: '20px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
           overflow: 'hidden',
           position: 'relative',
           transform: 'translateZ(0)',

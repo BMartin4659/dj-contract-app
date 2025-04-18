@@ -34,11 +34,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="preload" href="/dj-background-fix.jpg" as="image" />
+        <link rel="preload" href="/dj-background.jpg" as="image" />
         {/* Google Maps API is now loaded in individual components that need it */}
       </head>
       <body 
