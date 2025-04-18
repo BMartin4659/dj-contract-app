@@ -855,29 +855,32 @@ Live City DJ Contract Terms and Conditions:
   }, []);
 
   return (
-    <>
-      {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
-      {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
-
-      <div style={{
-        minHeight: '100vh',
-        padding: '0',
-        backgroundImage: "url('/dj-background-new.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#1a1a1a', /* Fallback if image fails to load */
-        fontFamily: 'Helvetica Neue, Segoe UI, Roboto, sans-serif',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        WebkitOverflowScrolling: 'touch',
-        touchAction: 'manipulation',
-        width: '100%',
-        maxWidth: '100vw',
-        overflowX: 'hidden',
-      }} className="vertical-scroll-container smooth-scroll mobile-background">
+    <div className="main-wrapper">
+      <div className="mobile-background"></div>
+      <div className="form-container" style={{
+        maxWidth: '650px',
+        width: '95%',
+        margin: '1rem auto',
+        padding: '2rem',
+        borderRadius: '15px',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        WebkitBackfaceVisibility: 'hidden',
+        MozBackfaceVisibility: 'hidden',
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        transform: 'translate3d(0, 0, 0)',
+        WebkitPerspective: '1000',
+        perspective: '1000',
+        WebkitTransformStyle: 'preserve-3d',
+        boxSizing: 'border-box',
+      }}>
+        <div className="form-header">
+          <h1>DJ Service Agreement</h1>
+          <p>Fill out the form below to book your event with Blackout Productions.</p>
+        </div>
+        {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
+        {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
+        
         <div style={{
           maxWidth: '700px',
           width: '100%',
@@ -892,7 +895,7 @@ Live City DJ Contract Terms and Conditions:
           WebkitBackfaceVisibility: 'hidden',
           WebkitTransformStyle: 'preserve-3d',
           boxSizing: 'border-box',
-        }} className="form-container">
+        }} className="form-group">
           <div className="sticky-form-header">
             <h1 style={{
               textAlign: 'center',
@@ -1812,6 +1815,6 @@ Live City DJ Contract Terms and Conditions:
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

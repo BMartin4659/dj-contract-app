@@ -45,14 +45,15 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
         style={{ 
-          overflowX: "hidden",
-          maxWidth: "100vw",
-          width: "100%",
-          position: "relative",
-          backgroundImage: "url('/dj-background-new.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
+          overflowX: "hidden !important",
+          maxWidth: "100vw !important",
+          width: "100% !important",
+          backgroundImage: "url('/dj-background-new.jpg') !important",
+          backgroundSize: "cover !important",
+          backgroundPosition: "center !important",
+          backgroundRepeat: "no-repeat !important",
+          backgroundAttachment: "fixed !important",
+          minHeight: "100vh !important"
         }}
       >
         <div style={{
@@ -70,7 +71,7 @@ export default function RootLayout({ children }) {
           {children}
         </div>
 
-        {/* Script to fix iOS 100vh issue */}
+        {/* Script to fix iOS viewport issues */}
         <Script id="ios-viewport-fix" strategy="afterInteractive">
           {`
             function setAppHeight() {
@@ -101,6 +102,45 @@ export default function RootLayout({ children }) {
                 e.preventDefault();
               }
             }, { passive: false });
+            
+            // Fix mobile background image issues
+            function fixMobileBackground() {
+              // Add a direct background to body as fallback
+              document.body.style.backgroundImage = "url('/dj-background-new.jpg')";
+              document.body.style.backgroundSize = "cover";
+              document.body.style.backgroundPosition = "center center";
+              document.body.style.backgroundRepeat = "no-repeat";
+              
+              // Check if iOS
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+              if (isIOS) {
+                document.body.style.backgroundAttachment = "scroll";
+                
+                // Create a pseudo element as iOS fallback
+                const style = document.createElement('style');
+                style.innerHTML = \`
+                  body::before {
+                    content: "";
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: -1;
+                    background: url('/dj-background-new.jpg') center center no-repeat;
+                    background-size: cover;
+                  }
+                \`;
+                document.head.appendChild(style);
+              }
+            }
+            
+            // Run on load and on resize
+            window.addEventListener('load', fixMobileBackground);
+            window.addEventListener('resize', fixMobileBackground);
+            
+            // Run immediately
+            fixMobileBackground();
           `}
         </Script>
       </body>
