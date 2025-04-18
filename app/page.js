@@ -649,33 +649,6 @@ Live City DJ Contract Terms and Conditions:
     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
   };
 
-  // Custom Venmo and CashApp icons as SVG components
-  const SIVenmo = ({ style }) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      width="1.5em" 
-      height="1.5em" 
-      style={{...style, minWidth: '20px', minHeight: '20px'}} 
-      fill="#008CFF"
-    >
-      <path d="M19.5 2A1.5 1.5 0 0 1 21 3.5v17a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-17A1.5 1.5 0 0 1 4.5 2h15zm-4.5 5c-.89 0-1.68.59-1.94 1.47L9.83 17h3l1.06-4.5c.32-1.34 1.62-2.47 3.07-2.47.59 0 1.1.13 1.54.36V8.14c-.24-.06-.4-.14-.75-.14-1.54 0-2.8.88-3.25 2.25l-.23.75h3.11L17 12.75h-2.94L12.75 17h-2.7l2.25-8.43c.36-1.36 1.92-2.57 3.43-2.57.38 0 .72.05.98.13l.29.1V7z" />
-    </svg>
-  );
-
-  const SICashApp = ({ style }) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      width="1.5em" 
-      height="1.5em" 
-      style={{...style, minWidth: '20px', minHeight: '20px'}} 
-      fill="#00D632"
-    >
-      <path d="M11.97 22a7.45 7.45 0 0 1-6.4-3.68c-.53-.92-.88-1.35-1.84-1.35-.27 0-.5-.2-.5-.52V13.6c0-.27.2-.38.5-.38.65 0 1.3.12 1.5 1.03.83 3.66 2.82 5.32 7.11 5.32 3.83 0 6.16-1.54 6.16-5.1 0-2.19-.76-3.71-6.12-4.1-4.43-.34-8.78-.87-8.78-6.13C3.6 1.43 5.82 0 10.84 0c3.18 0 6.8 1.13 7.19 5.14.04.28-.19.47-.48.47h-2.03c-.26 0-.44-.12-.48-.36C14.8 3 13.21 2.23 10.8 2.23c-3.6 0-4.17 1.53-4.17 3.07 0 3.11 3.95 3.18 7.9 3.52 4.34.36 7.04 1.47 7.04 6.6 0 4.69-3.4 6.58-9.6 6.58z" />
-    </svg>
-  );
-
   const fieldIcons = {
     clientName: <FaUser style={{...iconStyle, color: '#4299E1'}} />,
     email: <FaEnvelope style={{...iconStyle, color: '#ED8936'}} />,
@@ -699,8 +672,8 @@ Live City DJ Contract Terms and Conditions:
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
     Stripe: <FaCreditCard style={{...iconStyle, color: '#635BFF'}} />,
-    Venmo: <SIVenmo style={{ marginRight: '10px', fontSize: '20px' }} />,
-    CashApp: <SICashApp style={{ marginRight: '10px', fontSize: '20px' }} />,
+    Venmo: <SiVenmo style={{ marginRight: '10px', fontSize: '20px', color: '#008CFF' }} />,
+    CashApp: <SiCashapp style={{ marginRight: '10px', fontSize: '20px', color: '#00D632' }} />,
   };
 
   // Add this to improve responsive layout behavior
@@ -1609,7 +1582,7 @@ Live City DJ Contract Terms and Conditions:
                         color: formData.paymentMethod === 'venmo' ? '#0070f3' : 'inherit'
                       }}
                     >
-                      <SIVenmo style={{ marginRight: '10px', fontSize: '20px' }} /> Venmo
+                      <SiVenmo style={{ marginRight: '10px', fontSize: '20px', color: '#008CFF' }} /> Venmo
                     </label>
                   </div>
                   
@@ -1633,7 +1606,7 @@ Live City DJ Contract Terms and Conditions:
                         color: formData.paymentMethod === 'cashapp' ? '#0070f3' : 'inherit'
                       }}
                     >
-                      <SICashApp style={{ marginRight: '10px', fontSize: '20px' }} /> CashApp
+                      <SiCashapp style={{ marginRight: '10px', fontSize: '20px', color: '#00D632' }} /> CashApp
                     </label>
                   </div>
                 </div>
