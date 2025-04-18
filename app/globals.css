@@ -292,6 +292,34 @@ input[type="radio"] {
   }
 }
 
+/* Mobile Background Fix */
+.mobile-background {
+  background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+  .mobile-background {
+    background-attachment: scroll;
+    background-position: center center !important;
+    background-size: cover !important;
+    position: relative;
+  }
+  
+  .mobile-background::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    z-index: -1;
+  }
+}
+
 /* Prevent horizontal overflow for all elements */
 * {
   max-width: 100vw;

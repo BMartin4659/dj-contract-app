@@ -48,7 +48,11 @@ export default function RootLayout({ children }) {
           overflowX: "hidden",
           maxWidth: "100vw",
           width: "100%",
-          position: "relative"
+          position: "relative",
+          backgroundImage: "url('/dj-background-new.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         }}
       >
         <div style={{

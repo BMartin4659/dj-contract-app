@@ -795,6 +795,22 @@ Live City DJ Contract Terms and Conditions:
         width: 100% !important;
         box-sizing: border-box !important;
       }
+      
+      /* Mobile background fix */
+      @media screen and (max-width: 768px) {
+        body:before {
+          content: "";
+          display: block;
+          position: fixed;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          z-index: -10;
+          background: url('/dj-background-new.jpg') no-repeat center center;
+          background-size: cover;
+        }
+      }
 
       @media screen and (max-width: 480px) {
         .payment-method-options {
@@ -848,9 +864,8 @@ Live City DJ Contract Terms and Conditions:
         padding: '0',
         backgroundImage: "url('/dj-background-new.jpg')",
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
         backgroundColor: '#1a1a1a', /* Fallback if image fails to load */
         fontFamily: 'Helvetica Neue, Segoe UI, Roboto, sans-serif',
         overflow: 'hidden',
@@ -862,7 +877,7 @@ Live City DJ Contract Terms and Conditions:
         width: '100%',
         maxWidth: '100vw',
         overflowX: 'hidden',
-      }} className="vertical-scroll-container smooth-scroll">
+      }} className="vertical-scroll-container smooth-scroll mobile-background">
         <div style={{
           maxWidth: '700px',
           width: '100%',
