@@ -861,7 +861,7 @@ Live City DJ Contract Terms and Conditions:
         maxWidth: '650px',
         width: '95%',
         margin: '1rem auto',
-        padding: '2rem',
+        padding: '1.5rem 1rem',
         borderRadius: '15px',
         boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
         backgroundColor: 'rgba(255,255,255,0.92)',
@@ -874,204 +874,185 @@ Live City DJ Contract Terms and Conditions:
         WebkitTransformStyle: 'preserve-3d',
         boxSizing: 'border-box',
       }}>
-        <div className="form-header">
-          <h1>DJ Service Agreement</h1>
-          <p>Fill out the form below to book your event with Blackout Productions.</p>
-        </div>
         {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
         {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
         
-        <div style={{
-          maxWidth: '700px',
-          width: '100%',
-          margin: '1rem auto',
-          padding: '1.5rem 1rem',
-          backgroundColor: 'rgba(255,255,255,0.92)',
-          borderRadius: '20px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-          overflow: 'hidden',
-          position: 'relative',
-          transform: 'translateZ(0)',
-          WebkitBackfaceVisibility: 'hidden',
-          WebkitTransformStyle: 'preserve-3d',
-          boxSizing: 'border-box',
-        }} className="form-group">
-          <div className="sticky-form-header">
-            <h1 style={{
-              textAlign: 'center',
-              fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
-              color: '#000',
-              marginTop: '0.5rem',
-              marginBottom: '1.5rem',
-              lineHeight: '1.2'
-            }}>
-              🎧 Live City DJ Contract
-            </h1>
+        <div className="sticky-form-header">
+          <h1 style={{
+            textAlign: 'center',
+            fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
+            color: '#000',
+            marginTop: '0.5rem',
+            marginBottom: '1.5rem',
+            lineHeight: '1.2'
+          }}>
+            🎧 Live City DJ Contract
+          </h1>
 
-            {/* Contact Information Cards */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '8px',
-              margin: '0 auto 1.5rem',
-              flexWrap: 'wrap',
-              maxWidth: '100%'
-            }}>
-              <a 
-                href="tel:+12036949388" 
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  backgroundColor: 'rgba(0, 112, 243, 0.08)',
-                  borderRadius: '12px',
-                  color: '#222',
-                  textDecoration: 'none',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid rgba(0, 112, 243, 0.2)',
-                  boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
-                  fontSize: '0.9rem',
-                  flex: '0 1 auto',
-                  minWidth: '120px',
-                  justifyContent: 'center'
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
-                }}
-              >
-                <div style={{
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '5px',
-                  fontSize: '12px'
-                }}>
-                  📞
-                </div>
-                <span>(203) 694-9388</span>
-              </a>
-              
-              <a 
-                href="mailto:therealdjbobbydrake@gmail.com" 
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  backgroundColor: 'rgba(0, 112, 243, 0.08)',
-                  borderRadius: '12px',
-                  color: '#222',
-                  textDecoration: 'none',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid rgba(0, 112, 243, 0.2)',
-                  boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
-                  fontSize: '0.9rem',
-                  flex: '1 1 auto',
-                  maxWidth: '220px',
-                  overflow: 'hidden',
-                  justifyContent: 'center'
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
-                }}
-              >
-                <div style={{
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '5px',
-                  fontSize: '12px',
-                  flexShrink: 0
-                }}>
-                  📧
-                </div>
-                <span style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>therealdjbobbydrake@gmail.com</span>
-              </a>
-            </div>
+          {/* Contact Information Cards */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '8px',
+            margin: '0 auto 1.5rem',
+            flexWrap: 'wrap',
+            maxWidth: '100%'
+          }}>
+            <a 
+              href="tel:+12036949388" 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '8px 12px',
+                backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                borderRadius: '12px',
+                color: '#222',
+                textDecoration: 'none',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                border: '1px solid rgba(0, 112, 243, 0.2)',
+                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
+                fontSize: '0.9rem',
+                flex: '0 1 auto',
+                minWidth: '120px',
+                justifyContent: 'center'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+              }}
+            >
+              <div style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '5px',
+                fontSize: '12px'
+              }}>
+                📞
+              </div>
+              <span>(203) 694-9388</span>
+            </a>
+            
+            <a 
+              href="mailto:therealdjbobbydrake@gmail.com" 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '8px 12px',
+                backgroundColor: 'rgba(0, 112, 243, 0.08)',
+                borderRadius: '12px',
+                color: '#222',
+                textDecoration: 'none',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                border: '1px solid rgba(0, 112, 243, 0.2)',
+                boxShadow: '0 2px 6px rgba(0, 112, 243, 0.05)',
+                fontSize: '0.9rem',
+                flex: '1 1 auto',
+                maxWidth: '220px',
+                overflow: 'hidden',
+                justifyContent: 'center'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 243, 0.15)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 112, 243, 0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 112, 243, 0.05)';
+              }}
+            >
+              <div style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '5px',
+                fontSize: '12px',
+                flexShrink: 0
+              }}>
+                📧
+              </div>
+              <span style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>therealdjbobbydrake@gmail.com</span>
+            </a>
           </div>
+        </div>
 
-          {showStripe ? (
-            <div style={{
-              backgroundColor: 'rgba(255,255,255,0.92)',
-              padding: '1.5rem',
-              borderRadius: '20px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-              maxWidth: '580px',
-              width: '95%',
-              margin: '0 auto',
-              backdropFilter: 'blur(5px)',
-              WebkitBackdropFilter: 'blur(5px)'
-            }}>
-              <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.5rem, 4vw, 1.75rem)', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
-                Complete Your Payment
-              </h2>
-              <StripeCheckout
-                amount={calculateTotal() * 100}
-                contractDetails={formData}
-                onSuccess={(paymentId) => {
-                  // Handle successful payment before form submission
-                  setShowStripe(false);
-                  router.push(`/payment/success?id=${paymentId}`);
-                }}
-              />
-            </div>
-          ) : !submitted ? (
-            <form onSubmit={handleSubmit} style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '0.75rem', 
-              width: '100%',
-              maxWidth: '100%',
-              boxSizing: 'border-box'
-            }} className="form-group">
-              {['clientName', 'email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
-                <div key={field}>
-                  <label style={labelStyle}>
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons[field]} 
-                      {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                    </span>
-                  </label>
-                  <input
-                    name={field}
-                    type={field.includes('guest') ? 'number' : 'text'}
-                    required
-                    style={inputStyle}
-                    value={formData[field]}
-                    onChange={handleChange}
-                    onFocus={handleInputFocus}
-                  />
-                </div>
-              ))}
+        {showStripe ? (
+          <div style={{
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            padding: '1.5rem',
+            borderRadius: '20px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+            maxWidth: '580px',
+            width: '95%',
+            margin: '0 auto',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)'
+          }}>
+            <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.5rem, 4vw, 1.75rem)', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
+              Complete Your Payment
+            </h2>
+            <StripeCheckout
+              amount={calculateTotal() * 100}
+              contractDetails={formData}
+              onSuccess={(paymentId) => {
+                // Handle successful payment before form submission
+                setShowStripe(false);
+                router.push(`/payment/success?id=${paymentId}`);
+              }}
+            />
+          </div>
+        ) : !submitted ? (
+          <form onSubmit={handleSubmit} style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '0.75rem', 
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }} className="form-group">
+            {['clientName', 'email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
+              <div key={field}>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {fieldIcons[field]} 
+                    {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                  </span>
+                </label>
+                <input
+                  name={field}
+                  type={field.includes('guest') ? 'number' : 'text'}
+                  required
+                  style={inputStyle}
+                  value={formData[field]}
+                  onChange={handleChange}
+                  onFocus={handleInputFocus}
+                />
+              </div>
+            ))}
 
             <div>
             <label style={labelStyle}>
