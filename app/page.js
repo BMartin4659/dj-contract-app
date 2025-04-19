@@ -283,6 +283,11 @@ Live City DJ Contract Terms and Conditions:
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         return;
+      } else if (paymentMethod === 'PayPal') {
+        window.open('https://www.paypal.biz/livecity', '_blank');
+        // Longer delay to ensure popup isn't blocked
+        setTimeout(() => setSubmitted(true), 1000);
+        return;
       }
       
       // For other payment methods, continue with email flow
@@ -379,6 +384,7 @@ Live City DJ Contract Terms and Conditions:
     Stripe: <BsStripe style={{ fontSize: '28px', color: '#635BFF' }} />,
     Venmo: <SiVenmo style={{ fontSize: '28px', color: '#008CFF' }} />,
     CashApp: <SiCashapp style={{ fontSize: '28px', color: '#00D632' }} />,
+    PayPal: <FaPaypal style={{ fontSize: '28px', color: '#0079C1' }} />,
   };
 
   const itemizedTotal = () => (
@@ -393,7 +399,7 @@ Live City DJ Contract Terms and Conditions:
         <span style={{ whiteSpace: 'nowrap' }}>${BASE}</span>
       </div>
       {formData.lighting && <li>💡 Lighting: ${LIGHTING}</li>}
-      {formData.photography && <li>📸 Photography: ${PHOTO}</li>}
+      {formData.photography && <li>📸 Event Photography: ${PHOTO}</li>}
       {formData.videoVisuals && <li>📽️ Video Visuals: ${VIDEO}</li>}
       {formData.additionalHours > 0 && (
         <li>⏱️ Additional Hours: ${formData.additionalHours * EXTRA_HOUR}</li>
@@ -555,6 +561,13 @@ Live City DJ Contract Terms and Conditions:
               <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
                 <h3>Please send your deposit via Cash App:</h3>
                 <p>$LiveCity</p>
+              </div>
+            )}
+
+            {formData.paymentMethod === 'PayPal' && (
+              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
+                <h3>Please send your deposit via PayPal:</h3>
+                <p>LiveCity (https://www.paypal.biz/livecity)</p>
               </div>
             )}
           </div>
@@ -744,7 +757,7 @@ Live City DJ Contract Terms and Conditions:
                 },
                 {
                   name: 'photography',
-                  label: 'Photography',
+                  label: 'Event Photography',
                   price: '$150',
                   description: 'Includes 50 high-quality candid shots delivered within 48 hours.',
                   icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
@@ -1065,6 +1078,50 @@ Live City DJ Contract Terms and Conditions:
                       top: '10px',
                       right: '10px',
                       backgroundColor: '#00D632',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FaCheck color="white" size={12} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* PayPal Option */}
+                <div
+                  onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
+                  style={{
+                    border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0079C1' : '#ddd'}`,
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: formData.paymentMethod === 'PayPal' ? '#f0f9ff' : 'white',
+                    transition: 'all 0.2s ease',
+                    boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 121, 193, 0.15)' : 'none',
+                    height: '100px'
+                  }}
+                >
+                  {paymentIcons.PayPal}
+                  <span style={{
+                    fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
+                    color: formData.paymentMethod === 'PayPal' ? '#000' : '#444',
+                    marginTop: '8px'
+                  }}>
+                    PayPal
+                  </span>
+                  {formData.paymentMethod === 'PayPal' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      backgroundColor: '#0079C1',
                       borderRadius: '50%',
                       width: '20px',
                       height: '20px',
