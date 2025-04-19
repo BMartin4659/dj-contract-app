@@ -7,7 +7,6 @@ import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
-import { motion } from 'framer-motion';
 import { 
   FaInfoCircle, 
   FaUser, 
@@ -699,20 +698,18 @@ Live City DJ Contract Terms and Conditions:
                 description: 'Slide shows, presentations, karaoke etc.',
               },
             ].map(({ name, label, description }) => (
-              <div key={name} style={{ position: 'relative' }}>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {serviceIcons[name]} {label}
-                  </span>
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <input
-                    type="checkbox"
-                    name={name}
-                    checked={formData[name]}
-                    onChange={handleChange}
-                    style={{ marginRight: '10px' }}
-                  />
+              <div key={name} style={{ position: 'relative', marginBottom: '10px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '5px'
+                }}>
+                  <label style={{...labelStyle, marginBottom: 0}}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {serviceIcons[name]} {label}
+                    </span>
+                  </label>
                   <span
                     onClick={() => setInfoPopup(description)}
                     style={{
@@ -728,6 +725,37 @@ Live City DJ Contract Terms and Conditions:
                     }}
                   >
                     <FaInfoCircle style={{ marginRight: '5px' }} /> Info
+                  </span>
+                </div>
+                <div style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.05)' : 'transparent',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: `1px solid ${formData[name] ? '#0070f3' : '#ddd'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onClick={() => setFormData(prev => ({ ...prev, [name]: !prev[name] }))}
+                >
+                  <input
+                    type="checkbox"
+                    name={name}
+                    checked={formData[name]}
+                    onChange={handleChange}
+                    style={{ 
+                      marginRight: '10px',
+                      width: '18px',
+                      height: '18px',
+                      accentColor: '#0070f3'
+                    }}
+                  />
+                  <span style={{
+                    fontWeight: formData[name] ? '600' : 'normal',
+                    color: formData[name] ? '#0070f3' : '#555'
+                  }}>
+                    Add this service
                   </span>
                 </div>
               </div>
@@ -795,45 +823,38 @@ Live City DJ Contract Terms and Conditions:
               </div>
             </div>
 
-            {/* Stylish Payment Method Selection */}
+            {/* Redesigned Payment Method Selection */}
             <div>
-              <label style={labelStyle}>Payment Method:</label>
+              <label style={{...labelStyle, marginBottom: '12px'}}>Payment Method:</label>
               <div style={{
-                display: 'flex',
-                gap: '10px',
-                marginBottom: '1rem',
-                flexWrap: 'wrap'
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                gap: '12px',
+                marginBottom: '1.5rem'
               }}>
                 {/* Stripe Option */}
                 <div
                   onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
                   style={{
                     border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
-                    borderRadius: '8px',
-                    padding: '10px 15px',
+                    borderRadius: '12px',
+                    padding: '15px',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: 'pointer',
-                    backgroundColor: formData.paymentMethod === 'Stripe' ? '#f0f4ff' : 'white',
+                    backgroundColor: formData.paymentMethod === 'Stripe' ? '#f5f5ff' : 'white',
                     transition: 'all 0.2s ease',
-                    minWidth: '120px'
+                    boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(99, 91, 255, 0.15)' : 'none',
+                    height: '100px'
                   }}
                 >
-                  <input
-                    type="radio"
-                    id="stripe"
-                    name="paymentMethod"
-                    value="Stripe"
-                    checked={formData.paymentMethod === 'Stripe'}
-                    onChange={handleChange}
-                    required
-                    style={{ marginRight: '10px' }}
-                  />
                   <FaCreditCard style={{
-                    marginRight: '8px',
                     color: '#635BFF',
-                    fontSize: '22px',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+                    fontSize: '28px',
+                    marginBottom: '8px',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
                   }} />
                   <span style={{
                     fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
@@ -841,6 +862,22 @@ Live City DJ Contract Terms and Conditions:
                   }}>
                     Stripe
                   </span>
+                  {formData.paymentMethod === 'Stripe' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      backgroundColor: '#635BFF',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FaCheck color="white" size={12} />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Venmo Option */}
@@ -848,31 +885,24 @@ Live City DJ Contract Terms and Conditions:
                   onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
                   style={{
                     border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
-                    borderRadius: '8px',
-                    padding: '10px 15px',
+                    borderRadius: '12px',
+                    padding: '15px',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: 'pointer',
                     backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
                     transition: 'all 0.2s ease',
-                    minWidth: '120px'
+                    boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 140, 255, 0.15)' : 'none',
+                    height: '100px'
                   }}
                 >
-                  <input
-                    type="radio"
-                    id="venmo"
-                    name="paymentMethod"
-                    value="Venmo"
-                    checked={formData.paymentMethod === 'Venmo'}
-                    onChange={handleChange}
-                    required
-                    style={{ marginRight: '10px' }}
-                  />
-                  <FaMoneyBillWave style={{
-                    marginRight: '8px',
+                  <SiVenmo style={{
                     color: '#008CFF',
-                    fontSize: '22px',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+                    fontSize: '28px',
+                    marginBottom: '8px',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
                   }} />
                   <span style={{
                     fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
@@ -880,6 +910,22 @@ Live City DJ Contract Terms and Conditions:
                   }}>
                     Venmo
                   </span>
+                  {formData.paymentMethod === 'Venmo' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      backgroundColor: '#008CFF',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FaCheck color="white" size={12} />
+                    </div>
+                  )}
                 </div>
                 
                 {/* CashApp Option */}
@@ -887,31 +933,24 @@ Live City DJ Contract Terms and Conditions:
                   onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
                   style={{
                     border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
-                    borderRadius: '8px',
-                    padding: '10px 15px',
+                    borderRadius: '12px',
+                    padding: '15px',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: 'pointer',
                     backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
                     transition: 'all 0.2s ease',
-                    minWidth: '120px'
+                    boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 214, 50, 0.15)' : 'none',
+                    height: '100px'
                   }}
                 >
-                  <input
-                    type="radio"
-                    id="cashapp"
-                    name="paymentMethod"
-                    value="CashApp"
-                    checked={formData.paymentMethod === 'CashApp'}
-                    onChange={handleChange}
-                    required
-                    style={{ marginRight: '10px' }}
-                  />
-                  <FaMoneyBillWave style={{
-                    marginRight: '8px',
+                  <SiCashapp style={{
                     color: '#00D632',
-                    fontSize: '22px',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+                    fontSize: '28px',
+                    marginBottom: '8px',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
                   }} />
                   <span style={{
                     fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
@@ -919,45 +958,104 @@ Live City DJ Contract Terms and Conditions:
                   }}>
                     CashApp
                   </span>
+                  {formData.paymentMethod === 'CashApp' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      backgroundColor: '#00D632',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FaCheck color="white" size={12} />
+                    </div>
+                  )}
                 </div>
+                
+                <input 
+                  type="hidden" 
+                  name="paymentMethod" 
+                  value={formData.paymentMethod} 
+                  required 
+                />
               </div>
             </div>
 
-            {/* Terms and Conditions */}
+            {/* Redesigned Terms and Conditions */}
             <div style={{
-              marginBottom: '1rem',
-              backgroundColor: 'rgba(255,255,255,0.7)',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              marginBottom: '1.5rem',
+              backgroundColor: 'rgba(255,255,255,0.8)',
+              padding: '16px',
+              borderRadius: '12px',
+              border: formData.agreeToTerms ? '2px solid #0070f3' : '1px solid #ddd',
+              boxShadow: formData.agreeToTerms ? '0 4px 12px rgba(0, 112, 243, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+              transition: 'all 0.2s ease'
             }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-              }}>
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    marginRight: '0.75rem',
-                    width: '18px',
-                    height: '18px'
-                  }}
-                />
-                <span style={{
-                  fontSize: '0.95rem',
-                  lineHeight: '1.4',
-                  fontWeight: '500',
-                  color: '#333'
+              <div 
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setFormData(prev => ({...prev, agreeToTerms: !prev.agreeToTerms}))}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '4px',
+                  border: formData.agreeToTerms ? '2px solid #0070f3' : '2px solid #ccc',
+                  backgroundColor: formData.agreeToTerms ? '#0070f3' : 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '12px',
+                  marginTop: '2px',
+                  transition: 'all 0.2s ease'
                 }}>
-                  I agree to the <a onClick={(e) => { e.preventDefault(); setShowTerms(true); }} style={{ color: '#0070f3', fontWeight: 'bold', cursor: 'pointer' }}>terms and conditions</a>, including the cancellation policy and payment terms.
-                </span>
-              </label>
+                  {formData.agreeToTerms && <FaCheck color="white" size={14} />}
+                </div>
+                <div>
+                  <input
+                    type="checkbox"
+                    name="agreeToTerms"
+                    checked={formData.agreeToTerms}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      position: 'absolute',
+                      opacity: 0,
+                      width: 0,
+                      height: 0
+                    }}
+                  />
+                  <p style={{
+                    fontSize: '1rem',
+                    lineHeight: '1.5',
+                    fontWeight: '500',
+                    color: '#333',
+                    margin: 0
+                  }}>
+                    I agree to the <a 
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        setShowTerms(true); 
+                      }} 
+                      style={{ 
+                        color: '#0070f3', 
+                        fontWeight: 'bold', 
+                        cursor: 'pointer',
+                        textDecoration: 'underline' 
+                      }}
+                    >
+                      terms and conditions
+                    </a>, including the cancellation policy and payment terms.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Itemized Total */}

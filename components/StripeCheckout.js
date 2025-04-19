@@ -13,26 +13,6 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-// Add notice about HTTPS requirement
-const StripeHttpsNotice = () => {
-  if (process.env.NODE_ENV !== 'production') {
-    return (
-      <div style={{
-        backgroundColor: '#FFF9C4',
-        padding: '8px 12px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        color: '#5D4037',
-        marginBottom: '12px',
-        border: '1px solid #FFE082'
-      }}>
-        <strong>Development Mode:</strong> Stripe is running in test mode. In production, HTTPS is required.
-      </div>
-    );
-  }
-  return null;
-};
-
 const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -131,8 +111,6 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       gap: '1rem',
       boxSizing: 'border-box'
     }}>
-      <StripeHttpsNotice />
-      
       <div style={{
         backgroundColor: '#f8f9fa',
         padding: '1.5rem',
@@ -340,4 +318,4 @@ export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetai
       <CheckoutForm amount={amount} onSuccess={onSuccess} contractDetails={contractDetails} />
     </Elements>
   );
-}
+} 
