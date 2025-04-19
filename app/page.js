@@ -377,9 +377,9 @@ Live City DJ Contract Terms and Conditions:
   };
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <BsStripe style={{ fontSize: '24px', color: '#635BFF' }} />,
-    Venmo: <SiVenmo style={{ fontSize: '24px', color: '#008CFF' }} />,
-    CashApp: <SiCashapp style={{ fontSize: '24px', color: '#00D632' }} />,
+    Stripe: <BsStripe style={{ fontSize: '28px', color: '#635BFF' }} />,
+    Venmo: <SiVenmo style={{ fontSize: '28px', color: '#008CFF' }} />,
+    CashApp: <SiCashapp style={{ fontSize: '28px', color: '#00D632' }} />,
   };
 
   const itemizedTotal = () => (
@@ -639,11 +639,23 @@ Live City DJ Contract Terms and Conditions:
                 value={formData.startTime}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFormData((prev) => ({
-                    ...prev,
-                    startTime: value,
-                    endTime: '' // reset endTime on startTime change
-                  }));
+                  
+                  if (formData.endTime) {
+                    // If end time already exists, calculate new additional hours
+                    const additionalHours = calculateAdditionalHours(value, formData.endTime);
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: value,
+                      additionalHours
+                    }));
+                  } else {
+                    // If no end time yet, just update start time
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: value,
+                      endTime: '' // reset endTime on startTime change
+                    }));
+                  }
                 }}
                 required
                 style={inputStyle}
@@ -665,9 +677,7 @@ Live City DJ Contract Terms and Conditions:
               <select
                 name="endTime"
                 value={formData.endTime}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, endTime: e.target.value }))
-                }
+                onChange={(e) => handleEndTimeChange(e.target.value)}
                 required
                 disabled={!formData.startTime}
                 style={inputStyle}
@@ -680,6 +690,18 @@ Live City DJ Contract Terms and Conditions:
                       <option key={t} value={t}>{t}</option>
                     ))}
               </select>
+              {formData.startTime && formData.endTime && (
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: formData.additionalHours > 0 ? '#0070f3' : '#666',
+                  marginTop: '0.5rem',
+                  fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
+                }}>
+                  {formData.additionalHours > 0 
+                    ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
+                    : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
+                </div>
+              )}
             </div>
 
             {/* Additional Services Header */}
@@ -825,6 +847,15 @@ Live City DJ Contract Terms and Conditions:
                   <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
                   Additional Hours ($75/hr):
                 </span>
+                {formData.additionalHours > 0 && (
+                  <span style={{
+                    fontSize: '0.8rem',
+                    color: '#0070f3',
+                    fontWeight: '500'
+                  }}>
+                    Auto-calculated from your time selection
+                  </span>
+                )}
               </label>
               <div style={{ 
                 marginTop: '8px',
@@ -838,7 +869,7 @@ Live City DJ Contract Terms and Conditions:
                   gap: '8px'
                 }}>
                   {[0, 1, 2, 3, 4].map(num => (
-                    <button
+                    <motion.button
                       key={num}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, additionalHours: num }))}
@@ -857,19 +888,54 @@ Live City DJ Contract Terms and Conditions:
                         fontSize: '16px',
                         boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
                       }}
+                      animate={formData.additionalHours === num ? {
+                        scale: [1, 1.1, 1],
+                        transition: { duration: 0.3 }
+                      } : {}}
                     >
                       {num}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
                 
                 {formData.additionalHours > 0 && (
                   <div style={{
-                    fontSize: '0.9rem',
-                    color: '#0070f3',
-                    fontWeight: '500'
+                    backgroundColor: 'rgba(0, 112, 243, 0.05)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginTop: '12px',
+                    border: '1px solid rgba(0, 112, 243, 0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
                   }}>
-                    +${formData.additionalHours * 75} for {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span style={{
+                        fontSize: '0.9rem',
+                        color: '#333',
+                        fontWeight: '500'
+                      }}>
+                        <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
+                        {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
+                      </span>
+                      <span style={{
+                        fontSize: '0.9rem',
+                        color: '#0070f3',
+                        fontWeight: 'bold'
+                      }}>
+                        +${formData.additionalHours * EXTRA_HOUR}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: '0.8rem',
+                      color: '#666'
+                    }}>
+                      Auto-calculated from {formData.startTime} to {formData.endTime}
+                    </div>
                   </div>
                 )}
               </div>

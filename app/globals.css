@@ -680,34 +680,34 @@ a {
 
 /* Terms and conditions container */
 .terms-container {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  max-height: 300px;
+  background-color: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #ddd;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .terms-container h3 {
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  color: #222;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #2d3748;
 }
 
-.terms-container p,
-.terms-container ul {
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
+.terms-container p {
+  margin-bottom: 12px;
 }
 
 .terms-container ul {
-  padding-left: 1.5rem;
+  padding-left: 20px;
+  margin-bottom: 12px;
 }
 
 .terms-container li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 6px;
 }
 
 /* Itemized total section */
