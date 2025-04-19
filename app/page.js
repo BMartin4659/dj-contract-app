@@ -7,7 +7,6 @@ import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
-import { motion } from 'framer-motion';
 import { 
   FaInfoCircle, 
   FaUser, 
@@ -869,7 +868,7 @@ Live City DJ Contract Terms and Conditions:
                   gap: '8px'
                 }}>
                   {[0, 1, 2, 3, 4].map(num => (
-                    <motion.button
+                    <button
                       key={num}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, additionalHours: num }))}
@@ -888,13 +887,9 @@ Live City DJ Contract Terms and Conditions:
                         fontSize: '16px',
                         boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
                       }}
-                      animate={formData.additionalHours === num ? {
-                        scale: [1, 1.1, 1],
-                        transition: { duration: 0.3 }
-                      } : {}}
                     >
                       {num}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
                 
