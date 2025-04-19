@@ -1,113 +1,71 @@
 import Stripe from 'stripe';
-import { getFirestore, collection, addDoc } from 'firebase-admin/firestore';
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
-import nodemailer from 'nodemailer';
-import PDFDocument from 'pdfkit';
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin
-if (!getFirestore.apps?.length) {
-  initializeApp({
-    credential: applicationDefault(),
-  });
+// Initialize Firebase Admin if it hasn't been initialized
+let app;
+try {
+  app = initializeApp();
+} catch (error) {
+  if (!/already exists|duplicate app/.test(error.message)) {
+    console.error('Firebase admin initialization error', error.stack);
+  }
 }
-
 const db = getFirestore();
+
+// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-const generateInvoicePDF = (details) => {
-  const doc = new PDFDocument();
-  const buffers = [];
-  doc.on('data', buffers.push.bind(buffers));
-  
-  doc.fontSize(20).text('Live City DJ Invoice', { align: 'center' })
-     .fontSize(12)
-     .text(`Client: ${details.clientName}`)
-     .text(`Event: ${details.eventType}`)
-     .text(`Date: ${new Date(details.eventDate).toLocaleDateString()}`)
-     .text(`Venue: ${details.venueName}`)
-     .text(`Amount: $${(details.amount / 100).toFixed(2)}`);
-  
-  doc.end();
-  return Buffer.concat(buffers);
-};
-
-const sendConfirmationEmail = async (email, clientName, pdfBuffer) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_SENDER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-
-  await transporter.sendMail({
-    from: `Live City DJ <${process.env.EMAIL_SENDER}>`,
-    to: email,
-    subject: 'Booking Confirmation & Invoice',
-    text: `Thank you for your booking, ${clientName}!`,
-    attachments: [{
-      filename: 'invoice.pdf',
-      content: pdfBuffer
-    }]
-  });
-};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { amount } = req.body;
-
-  if (!amount || typeof amount !== 'number') {
-    return res.status(400).json({ message: 'Amount is required and must be a number' });
+    return res.status(405).end('Method Not Allowed');
   }
 
   try {
-    const { amount, email, clientName, eventType, eventDate, venueName } = req.body;
-
-    // Validate required fields
-    if (!email || !clientName || !eventType || !eventDate || !venueName) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    const { amount, clientName, email, eventType, eventDate, venueName } = req.body;
+    
+    // Validate input
+    if (!amount) {
+      return res.status(400).json({ error: 'Missing required payment information' });
     }
 
-    // Create Stripe payment intent
+    // Create payment intent with metadata
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: amount,
       currency: 'usd',
-      receipt_email: email,
-      metadata: { clientName, eventType, eventDate, venueName },
-      automatic_payment_methods: { enabled: true },
+      description: `${eventType || 'DJ Service'} at ${venueName || 'Event Venue'} on ${eventDate || 'Event Date'}`,
+      metadata: {
+        clientName: clientName || 'Client',
+        email: email || 'No email',
+        eventType: eventType || 'DJ Service',
+        eventDate: eventDate || 'No date provided',
+        venueName: venueName || 'No venue provided'
+      },
+      receipt_email: email
     });
 
-    // Store payment in Firestore
-    await addDoc(collection(db, 'stripePayments'), {
-      clientName,
-      email,
-      eventType,
-      eventDate: new Date(eventDate),
-      venueName,
-      amount,
-      paymentIntentId: paymentIntent.id,
-      created: new Date(),
-      status: 'paid'
+    // Store payment intent in Firestore
+    await db.collection('paymentIntents').add({
+      id: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      amount: amount,
+      clientName: clientName || 'Client',
+      email: email || 'No email',
+      eventType: eventType || 'DJ Service',
+      eventDate: eventDate || 'No date provided',
+      venueName: venueName || 'No venue provided',
+      status: paymentIntent.status,
+      createdAt: new Date()
     });
 
-    // Generate PDF invoice
-    const pdfBuffer = await generateInvoicePDF({
-      clientName,
-      amount,
-      eventType,
-      eventDate,
-      venueName
-    });
-
-    // Send confirmation email
-    await sendConfirmationEmail(email, clientName, pdfBuffer);
-
+    // Return client secret to the client
     res.status(200).json({ clientSecret: paymentIntent.client_secret });
-  } catch (err) {
-    console.error('Stripe error:', err);
-    res.status(500).json({ message: 'Internal Server Error' });
+    
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ 
+      error: 'Error creating payment',
+      details: error.message 
+    });
   }
 }

@@ -27,6 +27,7 @@ import {
   FaMoneyBillWave,
   FaPaypal
 } from 'react-icons/fa';
+import Header from './Header';
 
 const termsAndConditionsText = `
 Live City DJ Contract Terms and Conditions:
@@ -264,66 +265,7 @@ export default function DJContractForm() {
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
 
-      {/* ——— Header ——— */}
-      <h1
-        style={{
-          textAlign: "center",
-          fontSize: "clamp(1.75rem, 6vw, 3rem)",
-          color: "#111",
-          marginBottom: "2rem",
-          lineHeight: 1.2,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "0.5rem",
-        }}
-      >
-        🎧 <span>Live&nbsp;City&nbsp;DJ&nbsp;Contract</span>
-      </h1>
-
-      {/* ——— Contact ribbon ——— */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "2rem",
-          marginBottom: "2.5rem",
-          fontSize: "1rem",
-          flexWrap: "wrap",
-          padding: "1rem",
-          marginTop: "1rem",
-        }}
-      >
-        <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <FaPhone style={{ color: "#0070f3" }} />
-          <a
-            href="tel:+12036949388"
-            style={{ color: "#0070f3", textDecoration: "none" }}
-          >
-            (203) 694‑9388
-          </a>
-        </span>
-
-        <span
-          style={{
-            height: "16px",
-            width: "1px",
-            background: "#ccc",
-            display: "inline-block",
-          }}
-        />
-
-        <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <FaEnvelope style={{ color: "#0070f3" }} />
-          <a
-            href="mailto:therealdjbobbydrake@gmail.com"
-            style={{ color: "#0070f3", textDecoration: "none" }}
-          >
-            therealdjbobbydrake@gmail.com
-          </a>
-        </span>
-      </div>
+      <Header />
 
       {showStripe ? (
         <div className="payment-container">

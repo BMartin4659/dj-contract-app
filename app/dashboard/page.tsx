@@ -6,6 +6,7 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { parseISO, isAfter, format, compareAsc } from "date-fns";
+import Header from "@/components/Header";
 
 interface DjContract {
   id: string;
@@ -48,6 +49,8 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6 text-white">
+      <Header />
+      
       <h1 className="text-3xl font-bold">🎧 DJ Dashboard</h1>
 
       {upcomingGigs.length > 0 && (
