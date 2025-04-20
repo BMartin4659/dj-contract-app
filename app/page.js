@@ -501,14 +501,14 @@ Live City DJ Contract Terms and Conditions:
   }
 
   return (
-    <div className="form-container">
+    <div className="form-container" style={{ background: 'transparent' }}>
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
       
-      <div className="main-content" style={{ display: 'flex', justifyContent: 'center' }}>
+      <div className="main-content" style={{ display: 'flex', justifyContent: 'center', background: 'transparent' }}>
         {showStripe ? (
           <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
             padding: '2rem',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
@@ -536,7 +536,7 @@ Live City DJ Contract Terms and Conditions:
             textAlign: 'center',
             padding: '2rem',
             color: '#111',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
             maxWidth: '600px',
@@ -578,7 +578,7 @@ Live City DJ Contract Terms and Conditions:
             <Header />
             
             <form onSubmit={handleSubmit} style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.96)',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
               padding: '2.5rem',
               borderRadius: '20px',
               boxShadow: '0 8px 30px rgba(0,0,0,0.2)',

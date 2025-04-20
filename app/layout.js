@@ -32,7 +32,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
+    <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw", background: "transparent" }}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="theme-color" content="#0070f3" />
@@ -53,23 +53,11 @@ export default function RootLayout({ children }) {
           backgroundPosition: "center !important",
           backgroundRepeat: "no-repeat !important",
           backgroundAttachment: "fixed !important",
-          minHeight: "100vh !important"
+          minHeight: "100vh !important",
+          background: "transparent"
         }}
       >
-        <div style={{
-          minHeight: '100vh',
-          width: '100%',
-          padding: '0',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          overflowX: 'hidden',
-          maxWidth: '100vw'
-        }}>
-          {children}
-        </div>
+        {children}
 
         {/* Script to fix iOS viewport issues */}
         <Script id="ios-viewport-fix" strategy="afterInteractive">
