@@ -695,6 +695,14 @@ Live City DJ Contract Terms and Conditions:
               {/* Add Header at the top of the form */}
               <Header />
               
+              {/* Spacer div between email address and client name */}
+              <div style={{ 
+                height: '20px', 
+                marginBottom: '20px', 
+                borderBottom: '1px solid #e0e0e0',
+                opacity: 0.5
+              }}></div>
+              
               {/* Client Information Section */}
               <div className="form-group">
                 <label htmlFor="clientName" className="required-field">Client Name</label>
