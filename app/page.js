@@ -869,8 +869,8 @@ Live City DJ Contract Terms and Conditions:
             padding: '2rem',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '600px',
-            width: '85%',
+            maxWidth: '800px',
+            width: '90%',
             margin: '2rem auto 0 auto'
           }}>
             <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
@@ -894,8 +894,8 @@ Live City DJ Contract Terms and Conditions:
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '600px',
-            width: '85%',
+            maxWidth: '800px',
+            width: '90%',
             margin: '2rem auto 0 auto'
           }}>
             <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
@@ -926,8 +926,8 @@ Live City DJ Contract Terms and Conditions:
           </div>
         ) : (
           <div style={{ 
-            maxWidth: '600px',
-            width: '85%',
+            maxWidth: '800px',
+            width: '90%',
             margin: '2rem auto 3rem auto'
           }}>
             <form onSubmit={handleSubmit} style={{
@@ -967,126 +967,196 @@ Live City DJ Contract Terms and Conditions:
                 />
               </div>
 
-              {['email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
-                <div key={field}>
+              {/* Two-column grid for contact information */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div>
                   <label style={labelStyle}>
                     <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons[field]} 
-                      {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                      {fieldIcons['email']} Email:
                     </span>
                   </label>
                   <input
-                    name={field}
-                    type={field.includes('guest') ? 'number' : 'text'}
+                    name="email"
+                    type="email"
                     required
                     style={inputStyle}
-                    value={formData[field]}
+                    value={formData.email}
                     onChange={handleChange}
                   />
                 </div>
-              ))}
-
-              <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {venueLocationIcon} Venue Location
-                  </span>
-                </label>
-                <div style={{ position: 'relative' }}>
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons['contactPhone']} Contact Phone:
+                    </span>
+                  </label>
                   <input
-                    ref={venueLocationRef}
-                    name="venueLocation"
-                    type="text"
-                    value={formData.venueLocation}
-                    onChange={handleChange}
+                    name="contactPhone"
+                    type="tel"
                     required
-                    placeholder="Enter venue address powered by Google"
-                    style={{ 
-                      backgroundColor: 'white', 
-                      width: '100%', 
-                      padding: '12px 36px 12px 12px', 
-                      marginBottom: '1rem', 
-                      borderRadius: '8px', 
-                      border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
-                      color: 'black',
-                      transition: 'all 0.2s ease'
-                    }}
+                    style={inputStyle}
+                    value={formData.contactPhone}
+                    onChange={handleChange}
                   />
-                  <div style={{ 
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    color: '#888',
-                    fontSize: '14px'
-                  }}>
-                    <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
-                  </div>
-                  <p style={{ 
-                    fontSize: '0.75rem', 
-                    color: mapsError ? '#e53e3e' : '#666', 
-                    marginTop: '-0.75rem',
-                    marginBottom: '1rem'
-                  }}>
-                    {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
-                  </p>
                 </div>
               </div>
 
-              {/* Event Date */}
-              <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['eventDate']} Event Date:
-                  </span>
-                </label>
-                <input
-                  name="eventDate"
-                  type="date"
-                  required
-                  style={inputStyle}
-                  value={formData.eventDate}
-                  onChange={handleChange}
-                />
+              {/* Two-column grid for event details */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons['eventType']} Event Type:
+                    </span>
+                  </label>
+                  <input
+                    name="eventType"
+                    type="text"
+                    required
+                    style={inputStyle}
+                    value={formData.eventType}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons['guestCount']} Guest Count:
+                    </span>
+                  </label>
+                  <input
+                    name="guestCount"
+                    type="number"
+                    required
+                    style={inputStyle}
+                    value={formData.guestCount}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
-              {/* Start Time */}
-              <div>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['startTime']} Start Time:
-                  </span>
-                </label>
-                <select
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    
-                    if (formData.endTime) {
-                      // If end time already exists, calculate new additional hours
-                      const additionalHours = calculateAdditionalHours(value, formData.endTime);
-                      setFormData((prev) => ({
-                        ...prev,
-                        startTime: value,
-                        additionalHours
-                      }));
-                    } else {
-                      // If no end time yet, just update start time
-                      setFormData((prev) => ({
-                        ...prev,
-                        startTime: value,
-                        endTime: '' // reset endTime on startTime change
-                      }));
-                    }
-                  }}
-                  required
-                  style={inputStyle}
-                >
-                  <option value="">Select start time</option>
-                  {timeOptions.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+              {/* Two-column grid for venue information */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons['venueName']} Venue Name:
+                    </span>
+                  </label>
+                  <input
+                    name="venueName"
+                    type="text"
+                    required
+                    style={inputStyle}
+                    value={formData.venueName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {venueLocationIcon} Venue Location:
+                    </span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      ref={venueLocationRef}
+                      name="venueLocation"
+                      type="text"
+                      value={formData.venueLocation}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter venue address powered by Google"
+                      style={{ 
+                        backgroundColor: 'white', 
+                        width: '100%', 
+                        padding: '12px 36px 12px 12px', 
+                        marginBottom: '1rem', 
+                        borderRadius: '8px', 
+                        border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
+                        color: 'black',
+                        transition: 'all 0.2s ease'
+                      }}
+                    />
+                    <div style={{ 
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      color: '#888',
+                      fontSize: '14px'
+                    }}>
+                      <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
+                    </div>
+                    <p style={{ 
+                      fontSize: '0.75rem', 
+                      color: mapsError ? '#e53e3e' : '#666', 
+                      marginTop: '-0.75rem',
+                      marginBottom: '1rem'
+                    }}>
+                      {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Two-column grid for date and time selection */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                {/* Event Date */}
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {timeIcons['eventDate']} Event Date:
+                    </span>
+                  </label>
+                  <input
+                    name="eventDate"
+                    type="date"
+                    required
+                    style={inputStyle}
+                    value={formData.eventDate}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Start Time */}
+                <div>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {timeIcons['startTime']} Start Time:
+                    </span>
+                  </label>
+                  <select
+                    name="startTime"
+                    value={formData.startTime}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      
+                      if (formData.endTime) {
+                        // If end time already exists, calculate new additional hours
+                        const additionalHours = calculateAdditionalHours(value, formData.endTime);
+                        setFormData((prev) => ({
+                          ...prev,
+                          startTime: value,
+                          additionalHours
+                        }));
+                      } else {
+                        // If no end time yet, just update start time
+                        setFormData((prev) => ({
+                          ...prev,
+                          startTime: value,
+                          endTime: '' // reset endTime on startTime change
+                        }));
+                      }
+                    }}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="">Select start time</option>
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* End Time */}
