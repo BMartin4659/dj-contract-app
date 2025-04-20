@@ -7,6 +7,7 @@ import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/fi
 import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
+import EnvChecker from '../components/EnvChecker';
 import { 
   FaInfoCircle, 
   FaUser, 
@@ -735,17 +736,19 @@ Live City DJ Contract Terms and Conditions:
   }
 
   return (
-    <div className="main-wrapper" style={{ 
-      width: '100%', 
-      position: 'relative',
-      minHeight: '100vh',
-      overflowX: 'hidden',
+    <div className="main-wrapper" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
       paddingBottom: '2rem'
     }}>
+      {/* Development Environment Indicator */}
+      {process.env.NODE_ENV === 'development' && <EnvChecker />}
+      
       {showConfirmation && (
         <PaymentConfirmationBanner 
           paymentMethod={formData.paymentMethod} 
-          onClose={() => setShowConfirmation(false)} 
+          onClose={() => setShowConfirmation(false)}
         />
       )}
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
