@@ -226,18 +226,42 @@ Live City DJ Contract Terms and Conditions:
       }
     };
   }, []);
-
+  
+  // Google Maps Places API initialization
   useEffect(() => {
     if (isClient && venueLocationRef.current) {
-      initializeGooglePlaces();
+      // Check if Google Maps API is loaded
+      if (window.google && window.google.maps && window.google.maps.places) {
+        initializeGooglePlaces();
+        setMapsLoaded(true);
+      } else {
+        // Wait for API to load with a timeout
+        let attempts = 0;
+        const checkGoogleMapsLoaded = setInterval(() => {
+          attempts++;
+          if (window.google && window.google.maps && window.google.maps.places) {
+            clearInterval(checkGoogleMapsLoaded);
+            initializeGooglePlaces();
+            setMapsLoaded(true);
+          } else if (attempts > 10) {
+            // After 5 seconds (10 attempts x 500ms), show error
+            clearInterval(checkGoogleMapsLoaded);
+            setMapsError('Google Maps could not be loaded. Please enter address manually.');
+            console.error('Google Maps API failed to load');
+          }
+        }, 500);
+        
+        return () => clearInterval(checkGoogleMapsLoaded);
+      }
     }
   }, [isClient]);
   
   const initializeGooglePlaces = () => {
-    if (window.google && window.google.maps && window.google.maps.places) {
+    try {
       const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' },
+        fields: ['formatted_address', 'geometry', 'name'],
       });
 
       autocomplete.addListener('place_changed', () => {
@@ -249,6 +273,9 @@ Live City DJ Contract Terms and Conditions:
           }));
         }
       });
+    } catch (error) {
+      console.error('Error initializing Google Places Autocomplete:', error);
+      setMapsError('Error initializing address autocomplete. Please enter address manually.');
     }
   };
 
@@ -741,15 +768,44 @@ Live City DJ Contract Terms and Conditions:
                     {venueLocationIcon} Venue Location
                   </span>
                 </label>
-                <input
-                  ref={venueLocationRef}
-                  name="venueLocation"
-                  type="text"
-                  value={formData.venueLocation}
-                  onChange={handleChange}
-                  required
-                  style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    ref={venueLocationRef}
+                    name="venueLocation"
+                    type="text"
+                    value={formData.venueLocation}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter venue address for autocomplete"
+                    style={{ 
+                      backgroundColor: 'white', 
+                      width: '100%', 
+                      padding: '12px 36px 12px 12px', 
+                      marginBottom: '1rem', 
+                      borderRadius: '8px', 
+                      border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
+                      color: 'black',
+                      transition: 'all 0.2s ease'
+                    }}
+                  />
+                  <div style={{ 
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    color: '#888',
+                    fontSize: '14px'
+                  }}>
+                    <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
+                  </div>
+                  <p style={{ 
+                    fontSize: '0.75rem', 
+                    color: mapsError ? '#e53e3e' : '#666', 
+                    marginTop: '-0.75rem',
+                    marginBottom: '1rem'
+                  }}>
+                    {mapsError || (mapsLoaded ? 'Start typing for address suggestions' : 'Loading Google Maps...')}
+                  </p>
+                </div>
               </div>
 
               {/* Event Date */}

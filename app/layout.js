@@ -57,6 +57,12 @@ export default function RootLayout({ children }) {
       >
         {children}
 
+        {/* Google Maps Places API for address autocomplete */}
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+          strategy="beforeInteractive"
+        />
+
         <Script id="ios-viewport-fix" strategy="afterInteractive">
           {`
             function setAppHeight() {
