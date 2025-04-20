@@ -677,31 +677,69 @@ Live City DJ Contract Terms and Conditions:
         padding: '20px',
         textAlign: 'center',
         position: 'relative',
-        width: '100%'
+        width: '100%',
+        background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
+        color: 'white'
       }}>
-        <h1 style={{ color: '#0070f3', marginBottom: '1rem' }}>Booking Submitted!</h1>
-        <p style={{ fontSize: '1.2rem', maxWidth: '600px', marginBottom: '2rem' }}>
-          Thank you! Your DJ booking request has been submitted successfully. You will receive a confirmation email shortly.
-          We look forward to celebrating with you!
-        </p>
-        <button
-          onClick={() => {
-            setFormData(initialFormData);
-            setSubmitted(false);
-          }}
-          style={{
-            backgroundColor: '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            padding: '10px 20px',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            marginBottom: '20px'
-          }}
-        >
-          Book Another Event
-        </button>
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          padding: '40px',
+          borderRadius: '16px',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+          maxWidth: '90%',
+          width: '600px'
+        }}>
+          <div style={{ marginBottom: '20px' }}>
+            <span role="img" aria-label="celebration" style={{ fontSize: '64px' }}>🎉</span>
+          </div>
+          <h1 style={{ 
+            color: '#3b82f6', 
+            marginBottom: '1.5rem', 
+            fontSize: '2.5rem', 
+            fontWeight: 'bold',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          }}>
+            Booking Submitted!
+          </h1>
+          <p style={{ 
+            fontSize: '1.25rem', 
+            lineHeight: '1.6',
+            marginBottom: '2rem',
+            color: '#333',
+            fontWeight: '500'
+          }}>
+            Thank you! Your DJ booking request has been submitted successfully. You will receive a confirmation email shortly.
+            We look forward to celebrating with you!
+          </p>
+          <button
+            onClick={() => {
+              setFormData(initialFormData);
+              setSubmitted(false);
+            }}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 30px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            Book Another Event
+          </button>
+        </div>
       </div>
     );
   }
