@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import emailjs from '@emailjs/browser';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
@@ -27,10 +27,55 @@ import {
   FaMoneyBillWave,
   FaPaypal,
   FaDollarSign,
-  FaRegCreditCard
+  FaRegCreditCard,
+  FaCheckCircle,
+  FaVenusMars
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
+import { v4 as uuidv4 } from 'uuid';
+
+// Payment confirmation banner component
+const PaymentConfirmation = ({ show, message }) => {
+  if (!show) return null;
+  
+  return (
+    <div className="payment-confirmation-banner">
+      <div className="payment-confirmation-content">
+        <FaCheckCircle style={{ color: 'green', marginRight: '10px', fontSize: '20px' }} />
+        <span>{message || 'Payment initiated successfully!'}</span>
+      </div>
+    </div>
+  );
+};
+
+// Payment confirmation banner component
+const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
+  const getMessage = () => {
+    switch(paymentMethod) {
+      case 'Stripe':
+        return 'Redirecting to Stripe for secure payment...';
+      case 'Venmo':
+        return 'Redirecting to Venmo. Complete your payment to confirm booking.';
+      case 'CashApp':
+        return 'Redirecting to Cash App. Complete your payment to confirm booking.';
+      case 'PayPal':
+        return 'Redirecting to PayPal. Complete your payment to confirm booking.';
+      default:
+        return 'Processing your payment...';
+    }
+  };
+
+  return (
+    <div className="payment-confirmation-banner">
+      <div className="confirmation-content">
+        <h3>Payment Initiated</h3>
+        <p>{getMessage()}</p>
+        <button onClick={onClose} className="close-btn">×</button>
+      </div>
+    </div>
+  );
+};
 
 export default function DJContractForm() {
   // Terms and conditions text
@@ -83,6 +128,7 @@ Live City DJ Contract Terms and Conditions:
   const [infoPopup, setInfoPopup] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
   const [modalText, setModalText] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
@@ -231,38 +277,79 @@ Live City DJ Contract Terms and Conditions:
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const {
-      clientName, email, contactPhone, eventType, guestCount,
-      venueName, venueLocation, eventDate, startTime, endTime,
-      paymentMethod, lighting, photography, videoVisuals, agreeToTerms,
-      additionalHours
-    } = formData;
-
-    if (!venueLocation) return alert('Please select a venue location.');
-    if (!validateEmail(email)) return alert('Enter a valid email.');
-    if (!validatePhone(contactPhone)) return alert('Enter a valid phone number.');
-    if (!validateAddress(venueLocation)) return alert('Please enter a valid address.');
-    if (!agreeToTerms) return alert('Please agree to the terms.');
     
+    // Validate required fields
+    let errors = {};
+    if (!formData.clientName) errors.clientName = 'Client name is required';
+    if (!formData.email) errors.clientEmail = 'Email is required';
+    if (!formData.contactPhone) errors.clientPhone = 'Phone number is required';
+    if (!formData.eventType) errors.eventType = 'Event type is required';
+    if (!formData.guestCount) errors.guestCount = 'Guest count is required';
+    if (!formData.venueName) errors.venueName = 'Venue name is required';
+    if (!formData.venueLocation) errors.venueLocation = 'Venue location is required';
+    if (!formData.eventDate) errors.eventDate = 'Event date is required';
+    if (!formData.startTime) errors.startTime = 'Start time is required';
+    if (!formData.endTime) errors.endTime = 'End time is required';
+    
+    // Validate email format
+    if (formData.email && !validateEmail(formData.email)) {
+      errors.clientEmail = 'Please enter a valid email address';
+    }
+    
+    // Validate phone format
+    if (formData.contactPhone && !validatePhone(formData.contactPhone)) {
+      errors.clientPhone = 'Please enter a valid phone number';
+    }
+    
+    // Validate address format
+    if (formData.venueLocation && !validateAddress(formData.venueLocation)) {
+      errors.venueLocation = 'Please enter a valid address';
+    }
+    
+    // If there are errors, update state and prevent form submission
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    if (!formData.paymentMethod) {
+      setFormErrors({
+        ...errors,
+        paymentMethod: 'Please select a payment method'
+      });
+      return;
+    }
+
+    // Show payment confirmation
+    setShowConfirmation(true);
+    
+    // Scroll to top to show the confirmation banner
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Clear any previous errors
+    setFormErrors({});
+    
+    // Generate a unique contract ID
+    const contractId = uuidv4();
+
     // Set submitting state
     setIsSubmitting(true);
     
     try {
       // Create contract first
       const docRef = await addDoc(collection(db, 'djContracts'), {
-        eventType,
-        numberOfGuests: guestCount,
-        venueName,
-        venueLocation,
-        eventDate,
-        startTime,
-        endTime,
-        additionalHours,
-        email,
-        clientName,
-        phoneNumber: contactPhone,
-        paymentMethod,
+        eventType: formData.eventType,
+        numberOfGuests: formData.guestCount,
+        venueName: formData.venueName,
+        venueLocation: formData.venueLocation,
+        eventDate: formData.eventDate,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        additionalHours: formData.additionalHours,
+        email: formData.email,
+        clientName: formData.clientName,
+        phoneNumber: formData.contactPhone,
+        paymentMethod: formData.paymentMethod,
         depositPaid: false,
         confirmationSent: false,
         reminderSent: false,
@@ -270,23 +357,40 @@ Live City DJ Contract Terms and Conditions:
         createdAt: new Date()
       });
       
-      if (paymentMethod === 'Stripe') {
-        setShowStripe(true);
-        return;
-      } else if (paymentMethod === 'Venmo') {
-        window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
+      if (formData.paymentMethod === 'Stripe') {
+        // For Stripe payment
+        const stripeSession = await createStripeSession(eventData, serviceTotal);
+        if (stripeSession.url) {
+          // Set confirmation before redirect
+          setShowConfirmation(true);
+          // Short delay before redirect to allow banner to display briefly
+          setTimeout(() => {
+            window.location.href = stripeSession.url;
+          }, 1500);
+        } else {
+          setError('Failed to create Stripe checkout session');
+          setLoading(false);
+        }
+      } else if (formData.paymentMethod === 'Venmo') {
+        window.open('https://venmo.com/livecityentertainment', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 5000);
         return;
-      } else if (paymentMethod === 'CashApp') {
+      } else if (formData.paymentMethod === 'CashApp') {
         window.open('https://cash.app/$LiveCity', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 5000);
         return;
-      } else if (paymentMethod === 'PayPal') {
+      } else if (formData.paymentMethod === 'PayPal') {
         window.open('https://www.paypal.biz/livecity', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 5000);
         return;
       }
       
@@ -294,18 +398,18 @@ Live City DJ Contract Terms and Conditions:
       
       // Create a clean template params object with only string values
       const templateParams = {
-        to_name: clientName || '',
-        to_email: email || '',
-        event_type: eventType || '',
-        event_date: eventDate || '',
-        venue_name: venueName || '',
-        venue_location: venueLocation || '',
+        to_name: formData.clientName || '',
+        to_email: formData.email || '',
+        event_type: formData.eventType || '',
+        event_date: formData.eventDate || '',
+        venue_name: formData.venueName || '',
+        venue_location: formData.venueLocation || '',
         start_time: formData.startTime || '',
         end_time: formData.endTime || '',
-        guest_count: String(guestCount || 0),
-        phone_number: contactPhone || '',
+        guest_count: String(formData.guestCount || 0),
+        phone_number: formData.contactPhone || '',
         total_amount: `$${calculateTotal()}`,
-        payment_method: paymentMethod || 'Other'
+        payment_method: formData.paymentMethod || 'Other'
       };
       
       console.log("Sending email with params:", templateParams);
@@ -324,6 +428,8 @@ Live City DJ Contract Terms and Conditions:
           status: 'emailSent'
         });
         setSubmitted(true);
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 5000);
       } else {
         console.error("Email failed. Contract not saved.");
         alert("Failed to send confirmation email. Contract not saved.");
@@ -381,10 +487,10 @@ Live City DJ Contract Terms and Conditions:
   };
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <BsStripe style={{ fontSize: '28px', color: '#635BFF' }} />,
-    Venmo: <SiVenmo style={{ fontSize: '28px', color: '#008CFF' }} />,
-    CashApp: <SiCashapp style={{ fontSize: '28px', color: '#00D632' }} />,
-    PayPal: <FaPaypal style={{ fontSize: '28px', color: '#0079C1' }} />,
+    Stripe: <BsStripe style={{ fontSize: '36px', color: '#635BFF' }} />,
+    Venmo: <SiVenmo style={{ fontSize: '36px', color: '#008CFF' }} />,
+    CashApp: <SiCashapp style={{ fontSize: '36px', color: '#00D632' }} />,
+    PayPal: <FaPaypal style={{ fontSize: '36px', color: '#0079C1' }} />,
   };
 
   const itemizedTotal = () => (
@@ -501,22 +607,26 @@ Live City DJ Contract Terms and Conditions:
   }
 
   return (
-    <div className="form-container" style={{ background: 'transparent' }}>
+    <div className="main-wrapper">
+      {showConfirmation && (
+        <PaymentConfirmationBanner 
+          paymentMethod={formData.paymentMethod} 
+          onClose={() => setShowConfirmation(false)} 
+        />
+      )}
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
       
-      <div className="main-content" style={{ display: 'flex', justifyContent: 'center', background: 'transparent' }}>
+      <div className="main-content" style={{ display: 'flex', justifyContent: 'center' }}>
         {showStripe ? (
           <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             padding: '2rem',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
             maxWidth: '600px',
             width: '85%',
-            margin: '2rem auto 0 auto',
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)'
+            margin: '2rem auto 0 auto'
           }}>
             <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
               Complete Your Payment
@@ -536,7 +646,7 @@ Live City DJ Contract Terms and Conditions:
             textAlign: 'center',
             padding: '2rem',
             color: '#111',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
             maxWidth: '600px',
@@ -575,17 +685,16 @@ Live City DJ Contract Terms and Conditions:
             width: '85%',
             margin: '2rem auto 3rem auto'
           }}>
-            <Header />
-            
             <form onSubmit={handleSubmit} style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
               padding: '2.5rem',
               borderRadius: '20px',
               boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-              width: '100%',
-              backdropFilter: 'blur(5px)',
-              WebkitBackdropFilter: 'blur(5px)'
+              width: '100%'
             }}>
+              {/* Add Header at the top of the form */}
+              <Header />
+              
               {/* Client Information Section */}
               <div className="form-group">
                 <label htmlFor="clientName" className="required-field">Client Name</label>
@@ -977,7 +1086,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '15px',
+                      padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -985,15 +1094,22 @@ Live City DJ Contract Terms and Conditions:
                       cursor: 'pointer',
                       backgroundColor: formData.paymentMethod === 'Stripe' ? '#f5f5ff' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(99, 91, 255, 0.15)' : 'none',
-                      height: '100px'
+                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 6px 16px rgba(99, 91, 255, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
+                      height: '120px',
+                      transform: formData.paymentMethod === 'Stripe' ? 'translateY(-2px)' : 'none',
+                      ':hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-2px)'
+                      }
                     }}
                   >
                     {paymentIcons.Stripe}
                     <span style={{
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
+                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'medium',
                       color: formData.paymentMethod === 'Stripe' ? '#000' : '#444',
-                      marginTop: '8px'
+                      marginTop: '12px',
+                      fontSize: '16px',
+                      letterSpacing: '0.5px'
                     }}>
                       Stripe
                     </span>
@@ -1021,7 +1137,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '15px',
+                      padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1029,15 +1145,22 @@ Live City DJ Contract Terms and Conditions:
                       cursor: 'pointer',
                       backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 140, 255, 0.15)' : 'none',
-                      height: '100px'
+                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 6px 16px rgba(0, 140, 255, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
+                      height: '120px',
+                      transform: formData.paymentMethod === 'Venmo' ? 'translateY(-2px)' : 'none',
+                      ':hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-2px)'
+                      }
                     }}
                   >
                     {paymentIcons.Venmo}
                     <span style={{
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
+                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'medium',
                       color: formData.paymentMethod === 'Venmo' ? '#000' : '#444',
-                      marginTop: '8px'
+                      marginTop: '12px',
+                      fontSize: '16px',
+                      letterSpacing: '0.5px'
                     }}>
                       Venmo
                     </span>
@@ -1065,7 +1188,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '15px',
+                      padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1073,15 +1196,22 @@ Live City DJ Contract Terms and Conditions:
                       cursor: 'pointer',
                       backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 214, 50, 0.15)' : 'none',
-                      height: '100px'
+                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 6px 16px rgba(0, 214, 50, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
+                      height: '120px',
+                      transform: formData.paymentMethod === 'CashApp' ? 'translateY(-2px)' : 'none',
+                      ':hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-2px)'
+                      }
                     }}
                   >
                     {paymentIcons.CashApp}
                     <span style={{
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
+                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'medium',
                       color: formData.paymentMethod === 'CashApp' ? '#000' : '#444',
-                      marginTop: '8px'
+                      marginTop: '12px',
+                      fontSize: '16px',
+                      letterSpacing: '0.5px'
                     }}>
                       CashApp
                     </span>
@@ -1109,7 +1239,7 @@ Live City DJ Contract Terms and Conditions:
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0079C1' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '15px',
+                      padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1117,15 +1247,22 @@ Live City DJ Contract Terms and Conditions:
                       cursor: 'pointer',
                       backgroundColor: formData.paymentMethod === 'PayPal' ? '#f0f9ff' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 121, 193, 0.15)' : 'none',
-                      height: '100px'
+                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 6px 16px rgba(0, 121, 193, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
+                      height: '120px',
+                      transform: formData.paymentMethod === 'PayPal' ? 'translateY(-2px)' : 'none',
+                      ':hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-2px)'
+                      }
                     }}
                   >
                     {paymentIcons.PayPal}
                     <span style={{
-                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
+                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'medium',
                       color: formData.paymentMethod === 'PayPal' ? '#000' : '#444',
-                      marginTop: '8px'
+                      marginTop: '12px',
+                      fontSize: '16px',
+                      letterSpacing: '0.5px'
                     }}>
                       PayPal
                     </span>
@@ -1263,6 +1400,11 @@ Live City DJ Contract Terms and Conditions:
           </div>
         )}
       </div>
+      
+      <PaymentConfirmation 
+        show={showConfirmation} 
+        message={`${formData.paymentMethod} payment initiated. Please complete the transaction.`} 
+      />
     </div>
   );
 } 
