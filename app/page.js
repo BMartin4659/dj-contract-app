@@ -212,6 +212,21 @@ Live City DJ Contract Terms and Conditions:
     setIsClient(true);
   }, []);
 
+  // Add this to manually load Google Maps API
+  useEffect(() => {
+    if (isClient && !window.google) {
+      console.log('Attempting to load Google Maps API manually...');
+      const script = document.createElement('script');
+      // Replace 'YOUR_API_KEY' with your actual API key
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc&libraries=places';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => console.log('Google Maps API loaded manually!');
+      script.onerror = () => console.error('Failed to load Google Maps API manually!');
+      document.head.appendChild(script);
+    }
+  }, [isClient]);
+
   // Add this to improve responsive layout behavior
   useEffect(() => {
     // Create and add a meta viewport tag to prevent scaling issues
@@ -240,15 +255,18 @@ Live City DJ Contract Terms and Conditions:
         let attempts = 0;
         const checkGoogleMapsLoaded = setInterval(() => {
           attempts++;
+          console.log(`Attempt ${attempts} to load Google Maps...`);
           if (window.google && window.google.maps && window.google.maps.places) {
             clearInterval(checkGoogleMapsLoaded);
             initializeGooglePlaces();
             setMapsLoaded(true);
+            console.log('Google Maps loaded successfully!');
           } else if (attempts > 10) {
             // After 5 seconds (10 attempts x 500ms), show error
             clearInterval(checkGoogleMapsLoaded);
-            setMapsError('Google Maps could not be loaded. Please enter address manually.');
-            console.error('Google Maps API failed to load');
+            const errorMsg = 'Google Maps API could not be loaded. Please ensure API key is set.';
+            setMapsError(errorMsg);
+            console.error(errorMsg);
           }
         }, 500);
         
@@ -259,6 +277,7 @@ Live City DJ Contract Terms and Conditions:
   
   const initializeGooglePlaces = () => {
     try {
+      console.log('Initializing Google Places Autocomplete...');
       const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' },
@@ -268,15 +287,17 @@ Live City DJ Contract Terms and Conditions:
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         if (place.geometry) {
+          console.log('Place selected:', place.formatted_address);
           setFormData(prev => ({
             ...prev,
             venueLocation: place.formatted_address,
           }));
         }
       });
+      console.log('Google Places Autocomplete initialized successfully!');
     } catch (error) {
       console.error('Error initializing Google Places Autocomplete:', error);
-      setMapsError('Error initializing address autocomplete. Please enter address manually.');
+      setMapsError('Error initializing address autocomplete. Please check API key and configuration.');
     }
   };
 
