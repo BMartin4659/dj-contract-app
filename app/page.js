@@ -26,10 +26,8 @@ import {
   FaCreditCard,
   FaMoneyBillWave,
   FaPaypal,
-  FaDollarSign,
   FaRegCreditCard,
-  FaCheckCircle,
-  FaVenusMars
+  FaCheckCircle
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
@@ -238,15 +236,31 @@ Live City DJ Contract Terms and Conditions:
           position: relative;
           width: 100% !important;
           -webkit-overflow-scrolling: touch;
+          min-height: 100%;
+        }
+        body {
+          background-size: cover !important;
+          background-attachment: fixed !important;
+          background-position: center center !important;
+          height: auto !important;
+          min-height: 100vh !important;
         }
         .main-wrapper {
           width: 100%;
-          min-height: 100%;
+          min-height: 100vh;
           padding-bottom: 50px;
+          position: relative;
+          z-index: 1;
         }
         @media (max-width: 767px) {
           .main-content {
             padding: 10px;
+            margin-bottom: 80px;
+          }
+          .form-container {
+            margin-bottom: 80px;
+          }
+          form {
             margin-bottom: 30px;
           }
         }
@@ -570,10 +584,10 @@ Live City DJ Contract Terms and Conditions:
   };
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <BsStripe style={{ fontSize: '36px', color: '#635BFF' }} />,
-    Venmo: <SiVenmo style={{ fontSize: '36px', color: '#008CFF' }} />,
-    CashApp: <SiCashapp style={{ fontSize: '36px', color: '#00D632' }} />,
-    PayPal: <FaPaypal style={{ fontSize: '36px', color: '#0079C1' }} />,
+    Stripe: <FaCreditCard style={{ fontSize: '24px', marginRight: '10px', color: '#6772E5' }} />,
+    Venmo: <SiVenmo style={{ fontSize: '24px', marginRight: '10px', color: '#3D95CE' }} />,
+    CashApp: <SiCashapp style={{ fontSize: '24px', marginRight: '10px', color: '#00C244' }} />,
+    PayPal: <FaPaypal style={{ fontSize: '24px', marginRight: '10px', color: '#0070BA' }} />
   };
 
   const itemizedTotal = () => (
@@ -696,7 +710,7 @@ Live City DJ Contract Terms and Conditions:
     <div className="main-wrapper" style={{ 
       width: '100%', 
       position: 'relative',
-      minHeight: '100%',
+      minHeight: '100vh',
       overflowX: 'hidden',
       paddingBottom: '2rem'
     }}>
@@ -713,7 +727,8 @@ Live City DJ Contract Terms and Conditions:
         display: 'flex', 
         justifyContent: 'center',
         width: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
+        minHeight: '100vh'
       }}>
         {showStripe ? (
           <div style={{
@@ -787,7 +802,8 @@ Live City DJ Contract Terms and Conditions:
               padding: '2.5rem',
               borderRadius: '20px',
               boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-              width: '100%'
+              width: '100%',
+              marginBottom: '50px'
             }}>
               {/* Add Header at the top of the form */}
               <Header />
@@ -1211,19 +1227,24 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Redesigned Payment Method Selection */}
-              <div>
-                <label style={{...labelStyle, marginBottom: '12px'}}>Payment Method:</label>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{
+                  ...labelStyle,
+                  fontSize: '1.1rem',
+                  marginBottom: '1rem'
+                }}>
+                  Payment Method:
+                </label>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                  gap: '12px',
-                  marginBottom: '1.5rem'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px',
                 }}>
-                  {/* Stripe Option */}
-                  <div
+                  {/* Stripe Payment Option */}
+                  <div 
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
                     style={{
-                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
+                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
                       padding: '20px',
                       display: 'flex',
@@ -1231,50 +1252,39 @@ Live City DJ Contract Terms and Conditions:
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Stripe' ? '#f5f5ff' : 'white',
+                      backgroundColor: formData.paymentMethod === 'Stripe' ? 'rgba(0, 112, 243, 0.05)' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 6px 16px rgba(99, 91, 255, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
-                      height: '120px',
-                      transform: formData.paymentMethod === 'Stripe' ? 'translateY(-2px)' : 'none',
-                      ':hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)'
-                      }
+                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    {paymentIcons.Stripe}
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'medium',
-                      color: formData.paymentMethod === 'Stripe' ? '#000' : '#444',
-                      marginTop: '12px',
-                      fontSize: '16px',
-                      letterSpacing: '0.5px'
+                    <div style={{ 
+                      fontSize: '32px', 
+                      color: '#6772E5',
+                      marginBottom: '8px' 
+                    }}>
+                      <FaCreditCard />
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
                     }}>
                       Stripe
-                    </span>
-                    {formData.paymentMethod === 'Stripe' && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#635BFF',
-                        borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <FaCheck color="white" size={12} />
-                      </div>
-                    )}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Stripe"
+                      checked={formData.paymentMethod === 'Stripe'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
-                  {/* Venmo Option */}
-                  <div
+                  {/* Venmo Payment Option */}
+                  <div 
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
                     style={{
-                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
+                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
                       padding: '20px',
                       display: 'flex',
@@ -1282,50 +1292,39 @@ Live City DJ Contract Terms and Conditions:
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
+                      backgroundColor: formData.paymentMethod === 'Venmo' ? 'rgba(0, 112, 243, 0.05)' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 6px 16px rgba(0, 140, 255, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
-                      height: '120px',
-                      transform: formData.paymentMethod === 'Venmo' ? 'translateY(-2px)' : 'none',
-                      ':hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)'
-                      }
+                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    {paymentIcons.Venmo}
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'medium',
-                      color: formData.paymentMethod === 'Venmo' ? '#000' : '#444',
-                      marginTop: '12px',
-                      fontSize: '16px',
-                      letterSpacing: '0.5px'
+                    <div style={{ 
+                      fontSize: '32px', 
+                      color: '#3D95CE',
+                      marginBottom: '8px' 
+                    }}>
+                      <SiVenmo />
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
                     }}>
                       Venmo
-                    </span>
-                    {formData.paymentMethod === 'Venmo' && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#008CFF',
-                        borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <FaCheck color="white" size={12} />
-                      </div>
-                    )}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Venmo"
+                      checked={formData.paymentMethod === 'Venmo'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
-                  {/* CashApp Option */}
-                  <div
+                  {/* Cash App Payment Option */}
+                  <div 
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
                     style={{
-                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
+                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
                       padding: '20px',
                       display: 'flex',
@@ -1333,50 +1332,39 @@ Live City DJ Contract Terms and Conditions:
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
+                      backgroundColor: formData.paymentMethod === 'CashApp' ? 'rgba(0, 112, 243, 0.05)' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 6px 16px rgba(0, 214, 50, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
-                      height: '120px',
-                      transform: formData.paymentMethod === 'CashApp' ? 'translateY(-2px)' : 'none',
-                      ':hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)'
-                      }
+                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    {paymentIcons.CashApp}
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'medium',
-                      color: formData.paymentMethod === 'CashApp' ? '#000' : '#444',
-                      marginTop: '12px',
-                      fontSize: '16px',
-                      letterSpacing: '0.5px'
+                    <div style={{ 
+                      fontSize: '32px', 
+                      color: '#00C244',
+                      marginBottom: '8px' 
+                    }}>
+                      <SiCashapp />
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
                     }}>
                       CashApp
-                    </span>
-                    {formData.paymentMethod === 'CashApp' && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#00D632',
-                        borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <FaCheck color="white" size={12} />
-                      </div>
-                    )}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="CashApp"
+                      checked={formData.paymentMethod === 'CashApp'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
-                  {/* PayPal Option */}
-                  <div
+                  {/* PayPal Payment Option */}
+                  <div 
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
                     style={{
-                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0079C1' : '#ddd'}`,
+                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
                       padding: '20px',
                       display: 'flex',
@@ -1384,52 +1372,39 @@ Live City DJ Contract Terms and Conditions:
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'PayPal' ? '#f0f9ff' : 'white',
+                      backgroundColor: formData.paymentMethod === 'PayPal' ? 'rgba(0, 112, 243, 0.05)' : 'white',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 6px 16px rgba(0, 121, 193, 0.2)' : '0 2px 6px rgba(0,0,0,0.05)',
-                      height: '120px',
-                      transform: formData.paymentMethod === 'PayPal' ? 'translateY(-2px)' : 'none',
-                      ':hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)'
-                      }
+                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    {paymentIcons.PayPal}
-                    <span style={{
-                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'medium',
-                      color: formData.paymentMethod === 'PayPal' ? '#000' : '#444',
-                      marginTop: '12px',
-                      fontSize: '16px',
-                      letterSpacing: '0.5px'
+                    <div style={{ 
+                      fontSize: '32px', 
+                      color: '#0070BA',
+                      marginBottom: '8px' 
+                    }}>
+                      <FaPaypal />
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
                     }}>
                       PayPal
-                    </span>
-                    {formData.paymentMethod === 'PayPal' && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#0079C1',
-                        borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <FaCheck color="white" size={12} />
-                      </div>
-                    )}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="PayPal"
+                      checked={formData.paymentMethod === 'PayPal'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
-                  
-                  <input 
-                    type="hidden" 
-                    name="paymentMethod" 
-                    value={formData.paymentMethod} 
-                    required 
-                  />
                 </div>
+                {formErrors.paymentMethod && (
+                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                    {formErrors.paymentMethod}
+                  </p>
+                )}
               </div>
 
               {/* Redesigned Terms and Conditions */}
@@ -1546,4 +1521,4 @@ Live City DJ Contract Terms and Conditions:
       />
     </div>
   );
-} 
+}
