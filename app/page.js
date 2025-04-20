@@ -455,19 +455,9 @@ Live City DJ Contract Terms and Conditions:
       });
       
       if (formData.paymentMethod === 'Stripe') {
-        // For Stripe payment
-        const stripeSession = await createStripeSession(eventData, serviceTotal);
-        if (stripeSession.url) {
-          // Set confirmation before redirect
-          setShowConfirmation(true);
-          // Short delay before redirect to allow banner to display briefly
-          setTimeout(() => {
-            window.location.href = stripeSession.url;
-          }, 1500);
-        } else {
-          setError('Failed to create Stripe checkout session');
-          setLoading(false);
-        }
+        // For Stripe payment, show the Stripe component
+        setShowStripe(true);
+        return;
       } else if (formData.paymentMethod === 'Venmo') {
         window.open('https://venmo.com/livecityentertainment', '_blank');
         // Longer delay to ensure popup isn't blocked
