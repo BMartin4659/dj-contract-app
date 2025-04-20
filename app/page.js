@@ -8,6 +8,7 @@ import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
 import EnvChecker from '../components/EnvChecker';
+import EnvTest from '../components/EnvTest';
 import { 
   FaInfoCircle, 
   FaUser, 
@@ -744,6 +745,9 @@ Live City DJ Contract Terms and Conditions:
     }}>
       {/* Development Environment Indicator */}
       {process.env.NODE_ENV === 'development' && <EnvChecker />}
+      
+      {/* Test environment variables (hidden) */}
+      <EnvTest />
       
       {showConfirmation && (
         <PaymentConfirmationBanner 
