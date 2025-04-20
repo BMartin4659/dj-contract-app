@@ -1,11 +1,12 @@
 import React from 'react';
-import { MdEmail } from 'react-icons/md';
+import { MdEmail, MdHeadphones } from 'react-icons/md';
 
 const Header = () => {
   return (
     <div className="text-center w-full mb-5">
-      {/* Title without headphone icon */}
-      <h1 className="text-3xl md:text-4xl font-bold text-black mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+      {/* Title with headphone icon */}
+      <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 flex items-center justify-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <MdHeadphones className="mr-2 text-blue-600" size={32} />
         Live City DJ Contract
       </h1>
       
