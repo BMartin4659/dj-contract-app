@@ -4,7 +4,7 @@ import { MdEmail } from 'react-icons/md';
 const Header = () => {
   return (
     <div className="text-center w-full mb-5">
-      <div className="flex items-center justify-center gap-3 mb-2">
+      <div className="flex items-center justify-center gap-3 mb-1">
         {/* Custom headphone icon with better styling */}
         <div className="relative">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
@@ -42,14 +42,15 @@ const Header = () => {
         </h1>
       </div>
       
-      <div className="flex justify-center items-center mt-1 text-blue-700 bg-blue-50 rounded-full py-1 px-3 mx-auto w-fit shadow-sm">
-        <MdEmail className="mr-2 text-blue-600" />
+      {/* Email address moved directly under the header */}
+      <div className="flex justify-center items-center mt-1 text-blue-700">
         <a 
-          href="mailto:therealdj-bobbydrake@gmail.com"
-          className="hover:underline font-medium text-sm md:text-base"
+          href="mailto:therealdjbobbydrake@gmail.com"
+          className="hover:underline font-medium text-sm md:text-base flex items-center"
           style={{ fontFamily: 'Poppins, sans-serif' }}
         >
-          therealdj-bobbydrake@gmail.com
+          <MdEmail className="mr-1 text-blue-600" />
+          therealdjbobbydrake@gmail.com
         </a>
       </div>
     </div>
