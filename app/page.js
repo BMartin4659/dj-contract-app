@@ -227,6 +227,40 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
+  // Add mobile scrolling fix
+  useEffect(() => {
+    if (isClient) {
+      // Create a style element to add CSS fix for mobile scrolling
+      const styleEl = document.createElement('style');
+      styleEl.textContent = `
+        html, body {
+          overflow-x: hidden !important;
+          position: relative;
+          width: 100% !important;
+          -webkit-overflow-scrolling: touch;
+        }
+        .main-wrapper {
+          width: 100%;
+          min-height: 100%;
+          padding-bottom: 50px;
+        }
+        @media (max-width: 767px) {
+          .main-content {
+            padding: 10px;
+            margin-bottom: 30px;
+          }
+        }
+      `;
+      document.head.appendChild(styleEl);
+      
+      return () => {
+        if (document.head.contains(styleEl)) {
+          document.head.removeChild(styleEl);
+        }
+      };
+    }
+  }, [isClient]);
+
   // Add this to improve responsive layout behavior
   useEffect(() => {
     // Create and add a meta viewport tag to prevent scaling issues
@@ -625,9 +659,11 @@ Live City DJ Contract Terms and Conditions:
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh',
-        padding: '0 20px',
-        textAlign: 'center'
+        minHeight: '100vh',
+        padding: '20px',
+        textAlign: 'center',
+        position: 'relative',
+        width: '100%'
       }}>
         <h1 style={{ color: '#0070f3', marginBottom: '1rem' }}>Booking Submitted!</h1>
         <p style={{ fontSize: '1.2rem', maxWidth: '600px', marginBottom: '2rem' }}>
@@ -647,6 +683,7 @@ Live City DJ Contract Terms and Conditions:
             padding: '10px 20px',
             fontSize: '1rem',
             cursor: 'pointer',
+            marginBottom: '20px'
           }}
         >
           Book Another Event
@@ -656,7 +693,13 @@ Live City DJ Contract Terms and Conditions:
   }
 
   return (
-    <div className="main-wrapper">
+    <div className="main-wrapper" style={{ 
+      width: '100%', 
+      position: 'relative',
+      minHeight: '100%',
+      overflowX: 'hidden',
+      paddingBottom: '2rem'
+    }}>
       {showConfirmation && (
         <PaymentConfirmationBanner 
           paymentMethod={formData.paymentMethod} 
@@ -666,7 +709,12 @@ Live City DJ Contract Terms and Conditions:
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
       
-      <div className="main-content" style={{ display: 'flex', justifyContent: 'center' }}>
+      <div className="main-content" style={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        width: '100%',
+        overflow: 'visible'
+      }}>
         {showStripe ? (
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
