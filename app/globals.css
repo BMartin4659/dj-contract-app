@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
   --background: #ffffff;
@@ -11,6 +11,7 @@
   --app-height: 100%;
   --primary-gradient-start: #3182ce;
   --primary-gradient-end: #805ad5;
+  --header-font: 'Poppins', sans-serif;
 }
 
 @theme inline {
@@ -264,20 +265,57 @@ input[type="radio"] {
 
 /* Payment method options styling for mobile */
 @media (max-width: 768px) {
-  .payment-method-options {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 0.75rem;
+  .payment-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   
-  .payment-method-option {
-    display: flex;
-    align-items: center;
+  .payment-option {
     width: 100%;
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: 1px solid #eee;
+    padding: 8px;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .payment-option svg {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  /* Make payment icons smaller on mobile */
+  .payment-icon {
+    font-size: 20px !important;
+    margin-right: 0 !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .payment-method-label {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .payment-option {
+    padding: 6px;
+  }
+  
+  html {
+    font-size: 14px;
+  }
+  
+  /* Smaller header text on very small screens */
+  h1.text-black {
+    font-size: 1.75rem !important;
   }
 }
 
@@ -970,5 +1008,10 @@ form {
 
 .animate-pulse {
   animation: pulse 2s infinite;
+}
+
+/* Add header font styling */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--header-font);
 }
 

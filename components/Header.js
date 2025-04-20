@@ -3,8 +3,8 @@ import { MdEmail } from 'react-icons/md';
 
 const Header = () => {
   return (
-    <div className="text-center w-full mb-6">
-      <div className="flex items-center justify-center gap-3">
+    <div className="text-center w-full mb-5">
+      <div className="flex items-center justify-center gap-3 mb-2">
         {/* Custom headphone icon with better styling */}
         <div className="relative">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
@@ -37,16 +37,17 @@ const Header = () => {
           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white animate-pulse"></div>
         </div>
         
-        <h1 className="text-4xl font-bold text-gradient">
+        <h1 className="text-3xl md:text-4xl font-bold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>
           Live City DJ Contract
         </h1>
       </div>
       
-      <div className="flex justify-center items-center mt-3 text-blue-600 bg-blue-50 rounded-full py-1.5 px-5 mx-auto w-fit shadow-sm">
+      <div className="flex justify-center items-center mt-1 text-blue-700 bg-blue-50 rounded-full py-1 px-3 mx-auto w-fit shadow-sm">
         <MdEmail className="mr-2 text-blue-600" />
         <a 
           href="mailto:therealdj-bobbydrake@gmail.com"
-          className="hover:underline text-blue-700 font-medium"
+          className="hover:underline font-medium text-sm md:text-base"
+          style={{ fontFamily: 'Poppins, sans-serif' }}
         >
           therealdj-bobbydrake@gmail.com
         </a>

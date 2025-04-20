@@ -584,10 +584,10 @@ Live City DJ Contract Terms and Conditions:
   };
   const additionalHoursIcon = <FaClock style={{...iconStyle, color: '#68D391'}} />;
   const paymentIcons = {
-    Stripe: <FaCreditCard style={{ fontSize: '24px', marginRight: '10px', color: '#6772E5' }} />,
-    Venmo: <SiVenmo style={{ fontSize: '24px', marginRight: '10px', color: '#3D95CE' }} />,
-    CashApp: <SiCashapp style={{ fontSize: '24px', marginRight: '10px', color: '#00C244' }} />,
-    PayPal: <FaPaypal style={{ fontSize: '24px', marginRight: '10px', color: '#0070BA' }} />
+    Stripe: <FaCreditCard className="payment-icon" style={{ fontSize: '24px', marginRight: '10px', color: '#6772E5' }} />,
+    Venmo: <SiVenmo className="payment-icon" style={{ fontSize: '24px', marginRight: '10px', color: '#3D95CE' }} />,
+    CashApp: <SiCashapp className="payment-icon" style={{ fontSize: '24px', marginRight: '10px', color: '#00C244' }} />,
+    PayPal: <FaPaypal className="payment-icon" style={{ fontSize: '24px', marginRight: '10px', color: '#0070BA' }} />
   };
 
   const itemizedTotal = () => (
@@ -1235,18 +1235,19 @@ Live City DJ Contract Terms and Conditions:
                 }}>
                   Payment Method:
                 </label>
-                <div style={{
+                <div className="payment-options" style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '16px',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: '12px',
                 }}>
                   {/* Stripe Payment Option */}
                   <div 
+                    className="payment-option"
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '15px 10px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1257,16 +1258,16 @@ Live City DJ Contract Terms and Conditions:
                       boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '32px', 
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
                       color: '#6772E5',
-                      marginBottom: '8px' 
+                      marginBottom: '6px' 
                     }}>
                       <FaCreditCard />
                     </div>
-                    <div style={{ 
+                    <div className="payment-method-label" style={{ 
                       fontWeight: 'bold',
-                      fontSize: '1.2rem'
+                      fontSize: '1rem'
                     }}>
                       Stripe
                     </div>
@@ -1282,11 +1283,12 @@ Live City DJ Contract Terms and Conditions:
                   
                   {/* Venmo Payment Option */}
                   <div 
+                    className="payment-option"
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '15px 10px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1297,16 +1299,16 @@ Live City DJ Contract Terms and Conditions:
                       boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '32px', 
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
                       color: '#3D95CE',
-                      marginBottom: '8px' 
+                      marginBottom: '6px' 
                     }}>
                       <SiVenmo />
                     </div>
-                    <div style={{ 
+                    <div className="payment-method-label" style={{ 
                       fontWeight: 'bold',
-                      fontSize: '1.2rem'
+                      fontSize: '1rem'
                     }}>
                       Venmo
                     </div>
@@ -1322,11 +1324,12 @@ Live City DJ Contract Terms and Conditions:
                   
                   {/* Cash App Payment Option */}
                   <div 
+                    className="payment-option"
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '15px 10px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1337,16 +1340,16 @@ Live City DJ Contract Terms and Conditions:
                       boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '32px', 
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
                       color: '#00C244',
-                      marginBottom: '8px' 
+                      marginBottom: '6px' 
                     }}>
                       <SiCashapp />
                     </div>
-                    <div style={{ 
+                    <div className="payment-method-label" style={{ 
                       fontWeight: 'bold',
-                      fontSize: '1.2rem'
+                      fontSize: '1rem'
                     }}>
                       CashApp
                     </div>
@@ -1362,11 +1365,12 @@ Live City DJ Contract Terms and Conditions:
                   
                   {/* PayPal Payment Option */}
                   <div 
+                    className="payment-option"
                     onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
                     style={{
                       border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0070f3' : '#ddd'}`,
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '15px 10px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1377,16 +1381,16 @@ Live City DJ Contract Terms and Conditions:
                       boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '32px', 
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
                       color: '#0070BA',
-                      marginBottom: '8px' 
+                      marginBottom: '6px' 
                     }}>
                       <FaPaypal />
                     </div>
-                    <div style={{ 
+                    <div className="payment-method-label" style={{ 
                       fontWeight: 'bold',
-                      fontSize: '1.2rem'
+                      fontSize: '1rem'
                     }}>
                       PayPal
                     </div>
