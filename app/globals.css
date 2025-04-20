@@ -195,12 +195,19 @@ input[type="radio"] {
 
 /* Form containers */
 .form-container {
-  max-width: 700px;
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
   overflow: hidden;
   padding: 0 1rem;
   box-sizing: border-box;
+  min-height: 100vh;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.main-content {
+  width: 100%;
+  padding-top: 2rem;
 }
 
 /* Mobile form spacing */
@@ -211,6 +218,14 @@ input[type="radio"] {
   
   .form-control {
     margin-bottom: 0.5rem;
+  }
+  
+  .form-container {
+    padding: 0 0.5rem;
+  }
+  
+  .main-content {
+    padding-top: 1rem;
   }
 }
 

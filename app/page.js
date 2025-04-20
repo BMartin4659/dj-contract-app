@@ -507,15 +507,15 @@ Live City DJ Contract Terms and Conditions:
       
       <Header />
       
-      <div className="main-content">
+      <div className="main-content" style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center' }}>
         {showStripe ? (
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.96)',
             padding: '2rem',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '650px',
-            width: '95%',
+            maxWidth: '600px',
+            width: '85%',
             margin: '0 auto',
             backdropFilter: 'blur(5px)',
             WebkitBackdropFilter: 'blur(5px)'
@@ -541,8 +541,8 @@ Live City DJ Contract Terms and Conditions:
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '20px',
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '650px',
-            width: '95%',
+            maxWidth: '600px',
+            width: '85%',
             margin: '0 auto'
           }}>
             <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
@@ -572,7 +572,17 @@ Live City DJ Contract Terms and Conditions:
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-6">
+          <form onSubmit={handleSubmit} className="mt-6" style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            padding: '2.5rem',
+            borderRadius: '20px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            maxWidth: '600px',
+            width: '85%',
+            margin: '0 auto 3rem auto',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)'
+          }}>
             {/* Client Information Section */}
             <div className="form-group">
               <label htmlFor="clientName" className="required-field">Client Name</label>

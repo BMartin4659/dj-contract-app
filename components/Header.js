@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const Header = () => {
   return (
-    <header className="mb-8">
+    <header className="mb-8" style={{ paddingTop: '2rem' }}>
       {/* Logo and Title */}
       <h1
         className="text-center text-[clamp(1.75rem,6vw,3rem)] text-[#111] mb-8 leading-tight flex justify-center items-center gap-2"
