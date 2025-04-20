@@ -695,6 +695,30 @@ Live City DJ Contract Terms and Conditions:
               {/* Add Header at the top of the form */}
               <Header />
               
+              {/* Client Information Section Header */}
+              <div style={{
+                marginTop: '0.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaUser style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Client Information
+                  </span>
+                </h3>
+              </div>
+              
               {/* Client Information Section */}
               <div className="form-group">
                 <label htmlFor="clientName" className="required-field">Client Name</label>
@@ -707,8 +731,77 @@ Live City DJ Contract Terms and Conditions:
                   placeholder="Enter your full name"
                 />
               </div>
+              
+              {/* Contact Information Separator */}
+              <div style={{
+                marginTop: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaEnvelope style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Contact Information
+                  </span>
+                </h3>
+              </div>
 
-              {['email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
+              {/* Contact Information Fields */}
+              {['email', 'contactPhone'].map((field) => (
+                <div key={field}>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons[field]} 
+                      {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                    </span>
+                  </label>
+                  <input
+                    name={field}
+                    type="text"
+                    required
+                    style={inputStyle}
+                    value={formData[field]}
+                    onChange={handleChange}
+                  />
+                </div>
+              ))}
+              
+              {/* Event Details Separator */}
+              <div style={{
+                marginTop: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaCalendarAlt style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Event Details
+                  </span>
+                </h3>
+              </div>
+              
+              {/* Event Information Fields */}
+              {['eventType', 'guestCount'].map((field) => (
                 <div key={field}>
                   <label style={labelStyle}>
                     <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -726,7 +819,50 @@ Live City DJ Contract Terms and Conditions:
                   />
                 </div>
               ))}
+              
+              {/* Venue Details Separator */}
+              <div style={{
+                marginTop: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaBuilding style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Venue Information
+                  </span>
+                </h3>
+              </div>
+              
+              {/* Venue Name Field */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {fieldIcons['venueName']} 
+                    Venue Name:
+                  </span>
+                </label>
+                <input
+                  name="venueName"
+                  type="text"
+                  required
+                  style={inputStyle}
+                  value={formData.venueName}
+                  onChange={handleChange}
+                />
+              </div>
 
+              {/* Venue Location Field */}
               <div>
                 <label style={labelStyle}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -742,6 +878,30 @@ Live City DJ Contract Terms and Conditions:
                   required
                   style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
                 />
+              </div>
+              
+              {/* Date & Time Separator */}
+              <div style={{
+                marginTop: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaClock style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Event Date & Time
+                  </span>
+                </h3>
               </div>
 
               {/* Event Date */}
