@@ -19,6 +19,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Extract services from contract details
   const services = {
@@ -28,6 +29,38 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     videoVisuals: contractDetails?.videoVisuals || false,
     additionalHours: contractDetails?.additionalHours || 0
   };
+
+  // Check for mobile screen on client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth <= 480);
+      };
+      
+      // Initial check
+      checkMobile();
+      
+      // Add listener for resize
+      window.addEventListener('resize', checkMobile);
+      
+      // Cleanup
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
+
+  // Calculate correct total from services
+  const calculateTotal = () => {
+    const basePackage = 400;
+    const lighting = services.lighting ? 100 : 0;
+    const photography = services.photography ? 150 : 0;
+    const videoVisuals = services.videoVisuals ? 100 : 0;
+    const additionalHoursCost = services.additionalHours * 75;
+    
+    return basePackage + lighting + photography + videoVisuals + additionalHoursCost;
+  };
+  
+  // Get the final amount to use (either from props or calculated)
+  const finalAmount = amount || calculateTotal();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,11 +78,14 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       // Add timeout to prevent freezing
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Calculate the amount in cents for Stripe
+      const amountInCents = calculateTotal() * 100;
+      
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount,
+          amount: amountInCents,
           clientName: contractDetails?.clientName || 'Customer',
           email: contractDetails?.email || 'customer@example.com',
           eventType: contractDetails?.eventType || 'Event',
@@ -74,7 +110,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       if (paymentIntent.status === 'succeeded') {
         await addDoc(collection(db, 'stripePayments'), {
           paymentIntentId: paymentIntent.id,
-          amount: amount,
+          amount: amountInCents,
           currency: paymentIntent.currency,
           ...contractDetails,
           timestamp: new Date()
@@ -94,18 +130,14 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     <div style={{
       backgroundColor: 'rgba(255,255,255,0.95)',
       color: '#111',
-      padding: '2rem 1rem',
-      borderRadius: '20px',
+      padding: isMobile ? '1rem' : '2rem 1rem',
+      borderRadius: isMobile ? '12px' : '20px',
       boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)',
       width: '100%',
       maxWidth: '100%',
       margin: '0 auto',
-      '@media (max-width: 480px)': {
-        padding: '1rem',
-        borderRadius: '12px'
-      },
       display: 'flex',
       flexDirection: 'column',
       gap: '1rem',
@@ -136,7 +168,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             borderBottom: '1px solid #eee'
           }}>
             <span>🎶 Base Package</span>
-            <span>$350</span>
+            <span>$400</span>
           </div>
           
           {services.lighting && (
@@ -195,7 +227,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             marginTop: '0.5rem'
           }}>
             <span>Total</span>
-            <span>${amount/100}</span>
+            <span>${calculateTotal()}</span>
           </div>
         </div>
       </div>
@@ -315,7 +347,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetails }) {
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm amount={amount} onSuccess={onSuccess} contractDetails={contractDetails} />
+      <CheckoutForm 
+        amount={amount} 
+        onSuccess={onSuccess} 
+        contractDetails={contractDetails} 
+      />
     </Elements>
   );
 } 

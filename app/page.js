@@ -487,8 +487,15 @@ Live City DJ Contract Terms and Conditions:
       // Handle based on payment method
       if (formData.paymentMethod === 'Stripe') {
         // Use the existing showStripe state to toggle the Stripe checkout
-        setShowStripe(true);
-        setSubmitted(true); // Mark as submitted so the form is hidden
+        try {
+          console.log('Setting showStripe to true');
+          setShowStripe(true);
+          setSubmitted(true); // Mark as submitted so the form is hidden
+        } catch (error) {
+          console.error('Error in Stripe payment handling:', error);
+          // Fallback if setting state fails
+          alert('There was an error processing your Stripe payment setup. Please try again or choose a different payment method.');
+        }
       } else if (formData.paymentMethod === 'Venmo') {
         window.open('https://venmo.com/livecityentertainment', '_blank');
         // Longer delay to ensure popup isn't blocked

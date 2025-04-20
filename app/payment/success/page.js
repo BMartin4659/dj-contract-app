@@ -1,16 +1,18 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { FaCheckCircle, FaHome } from 'react-icons/fa';
 import Link from 'next/link';
-import { FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
+import Header from '@/components/Header';
 
-// Separate component that uses searchParams
-function PaymentDetails() {
+export default function PaymentSuccessPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [paymentId, setPaymentId] = useState('');
-  
+
   useEffect(() => {
+    // Get the payment ID from the URL
     const id = searchParams.get('id');
     if (id) {
       setPaymentId(id);
@@ -18,61 +20,85 @@ function PaymentDetails() {
   }, [searchParams]);
 
   return (
-    <>
-      {paymentId && (
-        <div className="bg-gray-100 rounded-lg p-4 mb-6 w-full">
-          <p className="text-sm text-gray-500 mb-1">Transaction ID:</p>
-          <p className="text-gray-700 font-mono text-sm break-all">{paymentId}</p>
+    <div className="main-wrapper" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: '20px',
+      background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
+      color: 'white'
+    }}>
+      <div style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: '40px',
+        borderRadius: '16px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+        maxWidth: '90%',
+        width: '600px',
+        textAlign: 'center'
+      }}>
+        <Header />
+        
+        <div style={{ marginTop: '30px', marginBottom: '20px' }}>
+          <FaCheckCircle style={{ color: '#22c55e', fontSize: '64px' }} />
         </div>
-      )}
-    </>
-  );
-}
-
-// Fallback while loading
-function PaymentDetailsFallback() {
-  return (
-    <div className="bg-gray-100 rounded-lg p-4 mb-6 w-full animate-pulse">
-      <p className="text-sm text-gray-500 mb-1">Transaction ID:</p>
-      <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-    </div>
-  );
-}
-
-export default function PaymentSuccess() {
-  const router = useRouter();
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-700 flex flex-col items-center justify-center px-4 py-12">
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-auto text-center">
-        <div className="flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-            <FaCheckCircle size={48} className="text-green-500" />
-          </div>
-          
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Payment Successful!</h1>
-          <p className="text-gray-600 mb-6">Your DJ booking is now confirmed.</p>
-          
-          <Suspense fallback={<PaymentDetailsFallback />}>
-            <PaymentDetails />
-          </Suspense>
-          
-          <div className="space-y-4 w-full">
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-2">What happens next?</h3>
-              <ul className="text-left text-gray-600 space-y-2">
-                <li>• You will receive a confirmation email with your receipt</li>
-                <li>• Your DJ will contact you to discuss event details</li>
-                <li>• You can view your booking in your account dashboard</li>
-              </ul>
-            </div>
-            
-            <Link href="/" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-              <FaArrowLeft className="mr-2" />
-              Return to Home
-            </Link>
-          </div>
-        </div>
+        
+        <h1 style={{ 
+          color: '#3b82f6', 
+          marginBottom: '1.5rem', 
+          fontSize: '2.5rem', 
+          fontWeight: 'bold',
+          textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+        }}>
+          Payment Successful!
+        </h1>
+        
+        <p style={{ 
+          fontSize: '1.25rem', 
+          lineHeight: '1.6',
+          marginBottom: '1rem',
+          color: '#333',
+          fontWeight: '500'
+        }}>
+          Thank you for your payment. Your booking has been confirmed!
+        </p>
+        
+        {paymentId && (
+          <p style={{ 
+            fontSize: '0.875rem', 
+            color: '#6b7280',
+            marginBottom: '2rem'
+          }}>
+            Payment ID: {paymentId}
+          </p>
+        )}
+        
+        <p style={{ 
+          fontSize: '1.1rem', 
+          lineHeight: '1.6',
+          marginBottom: '2rem',
+          color: '#333',
+        }}>
+          We look forward to making your event special! A confirmation email has been sent with the details of your booking.
+        </p>
+        
+        <Link href="/" style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+          transition: 'all 0.2s ease'
+        }}>
+          <FaHome style={{ marginRight: '8px' }} />
+          Back to Home
+        </Link>
       </div>
     </div>
   );
