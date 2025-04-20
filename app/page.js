@@ -1517,7 +1517,7 @@ Live City DJ Contract Terms and Conditions:
       
       <PaymentConfirmation 
         show={showConfirmation} 
-        message={`${formData.paymentMethod} payment initiated. Please complete the transaction.`} 
+        message={`${formData.paymentMethod} payment initiated. Please complete the transaction.`}
       />
     </div>
   );
