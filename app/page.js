@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -34,6 +34,15 @@ import {
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { v4 as uuidv4 } from 'uuid';
+
+// Constants and Pricing
+const SERVICES = {
+  BASE: 400,
+  LIGHTING: 100,
+  PHOTOGRAPHY: 150,
+  VIDEO_VISUALS: 100,
+  ADDITIONAL_HOUR: 75,
+};
 
 // Payment confirmation banner component
 const PaymentConfirmation = ({ show, message }) => {
@@ -77,6 +86,36 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
   );
 };
 
+// Payment Option component
+const PaymentOption = ({ method, iconComponent, isSelected, onSelect, iconColor }) => (
+  <div 
+    onClick={onSelect}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '12px',
+      borderRadius: '8px',
+      border: isSelected ? `2px solid ${iconColor}` : '1px solid #ddd',
+      backgroundColor: isSelected ? `${iconColor}10` : 'white',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? `0 4px 8px rgba(0,0,0,0.1)` : '0 1px 3px rgba(0,0,0,0.05)',
+    }}
+  >
+    <div style={{ fontSize: '24px', marginBottom: '8px', color: iconColor }}>
+      {iconComponent}
+    </div>
+    <div style={{ 
+      fontWeight: isSelected ? '600' : '400',
+      color: isSelected ? iconColor : '#333',
+    }}>
+      {method}
+    </div>
+  </div>
+);
+
 export default function DJContractForm() {
   // Terms and conditions text
   const termsAndConditionsText = `
@@ -105,7 +144,7 @@ Live City DJ Contract Terms and Conditions:
     eventDate: '',
     startTime: '',
     endTime: '',
-    paymentMethod: '',
+    paymentMethod: 'Stripe',
     lighting: false,
     photography: false,
     videoVisuals: false,
@@ -124,6 +163,7 @@ Live City DJ Contract Terms and Conditions:
   const [formErrors, setFormErrors] = useState({});
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [mapsError, setMapsError] = useState(null);
+  const [isChangingPayment, setIsChangingPayment] = useState(false);
   
   const [showStripe, setShowStripe] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
@@ -158,13 +198,6 @@ Live City DJ Contract Terms and Conditions:
     '12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM'
   ];
 
-  // Pricing constants
-  const BASE = 400,
-    LIGHTING = 100,
-    PHOTO = 150,
-    VIDEO = 100,
-    EXTRA_HOUR = 75;
-
   // Calculate hours between two time strings
   const calculateHoursBetween = useCallback((startTime, endTime) => {
     if (!startTime || !endTime) return 0;
@@ -187,11 +220,11 @@ Live City DJ Contract Terms and Conditions:
   }, [calculateHoursBetween]);
 
   const calculateTotal = () => {
-    let total = BASE;
-    if (formData.lighting) total += LIGHTING;
-    if (formData.photography) total += PHOTO;
-    if (formData.videoVisuals) total += VIDEO;
-    total += formData.additionalHours * EXTRA_HOUR;
+    let total = SERVICES.BASE;
+    if (formData.lighting) total += SERVICES.LIGHTING;
+    if (formData.photography) total += SERVICES.PHOTOGRAPHY;
+    if (formData.videoVisuals) total += SERVICES.VIDEO_VISUALS;
+    total += formData.additionalHours * SERVICES.ADDITIONAL_HOUR;
     return total;
   };
   
@@ -377,45 +410,40 @@ Live City DJ Contract Terms and Conditions:
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields
-    let errors = {};
-    if (!formData.clientName) errors.clientName = 'Client name is required';
-    if (!formData.email) errors.clientEmail = 'Email is required';
-    if (!formData.contactPhone) errors.clientPhone = 'Phone number is required';
-    if (!formData.eventType) errors.eventType = 'Event type is required';
-    if (!formData.guestCount) errors.guestCount = 'Guest count is required';
-    if (!formData.venueName) errors.venueName = 'Venue name is required';
-    if (!formData.venueLocation) errors.venueLocation = 'Venue location is required';
-    if (!formData.eventDate) errors.eventDate = 'Event date is required';
-    if (!formData.startTime) errors.startTime = 'Start time is required';
-    if (!formData.endTime) errors.endTime = 'End time is required';
+    // Validate all required fields
+    const errors = {};
+    const requiredFields = ['clientName', 'email', 'contactPhone', 'eventType', 'venueName', 'venueLocation', 'eventDate', 'startTime', 'endTime', 'paymentMethod'];
     
-    // Validate email format
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        errors[field] = `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`;
+      }
+    });
+    
+    // Validate email format if present
     if (formData.email && !validateEmail(formData.email)) {
-      errors.clientEmail = 'Please enter a valid email address';
+      errors.email = 'Please enter a valid email address';
     }
     
-    // Validate phone format
+    // Validate phone format if present
     if (formData.contactPhone && !validatePhone(formData.contactPhone)) {
-      errors.clientPhone = 'Please enter a valid phone number';
+      errors.contactPhone = 'Please enter a valid 10-digit phone number';
     }
     
-    // Validate address format
-    if (formData.venueLocation && !validateAddress(formData.venueLocation)) {
-      errors.venueLocation = 'Please enter a valid address';
+    // Check terms agreement
+    if (!formData.agreeToTerms) {
+      errors.agreeToTerms = 'You must agree to the terms and conditions';
     }
     
-    // If there are errors, update state and prevent form submission
+    // If any errors, update state and return
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      return;
-    }
-    
-    if (!formData.paymentMethod) {
-      setFormErrors({
-        ...errors,
-        paymentMethod: 'Please select a payment method'
-      });
+      // Scroll to the first error
+      const firstErrorField = Object.keys(errors)[0];
+      const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
@@ -456,31 +484,29 @@ Live City DJ Contract Terms and Conditions:
         createdAt: new Date()
       });
       
+      // Handle based on payment method
       if (formData.paymentMethod === 'Stripe') {
-        // For Stripe payment, show the Stripe component
+        // Use the existing showStripe state to toggle the Stripe checkout
         setShowStripe(true);
-        return;
+        setSubmitted(true); // Mark as submitted so the form is hidden
       } else if (formData.paymentMethod === 'Venmo') {
         window.open('https://venmo.com/livecityentertainment', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
-        return;
       } else if (formData.paymentMethod === 'CashApp') {
         window.open('https://cash.app/$LiveCity', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
-        return;
       } else if (formData.paymentMethod === 'PayPal') {
         window.open('https://www.paypal.biz/livecity', '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
-        return;
       }
       
       // For other payment methods, continue with email flow
@@ -591,13 +617,13 @@ Live City DJ Contract Terms and Conditions:
         gap: '0.5rem',
       }}>
         <span style={{ flex: '1 1 auto' }}>🎶 Base Package</span>
-        <span style={{ whiteSpace: 'nowrap' }}>${BASE}</span>
+        <span style={{ whiteSpace: 'nowrap' }}>${SERVICES.BASE}</span>
       </div>
-      {formData.lighting && <li>💡 Lighting: ${LIGHTING}</li>}
-      {formData.photography && <li>📸 Event Photography: ${PHOTO}</li>}
-      {formData.videoVisuals && <li>📽️ Video Visuals: ${VIDEO}</li>}
+      {formData.lighting && <li>💡 Lighting: ${SERVICES.LIGHTING}</li>}
+      {formData.photography && <li>📸 Event Photography: ${SERVICES.PHOTOGRAPHY}</li>}
+      {formData.videoVisuals && <li>📽️ Video Visuals: ${SERVICES.VIDEO_VISUALS}</li>}
       {formData.additionalHours > 0 && (
-        <li>⏱️ Additional Hours: ${formData.additionalHours * EXTRA_HOUR}</li>
+        <li>⏱️ Additional Hours: ${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}</li>
       )}
       <li>
         <strong>Total: ${calculateTotal()}</strong>
@@ -653,6 +679,71 @@ Live City DJ Contract Terms and Conditions:
       </div>
     );
   }
+
+  // Create a more direct payment method handler that doesn't rely on async processing
+  // Update handlePaymentMethodSelect to be more direct
+  const handlePaymentMethodSelect = useCallback((method) => {
+    // Direct assignment for immediate UI feedback
+    document.querySelectorAll('.payment-option').forEach(el => {
+      el.style.border = el.dataset.method === method 
+        ? '2px solid #0070f3' 
+        : '2px solid #ddd';
+      el.style.backgroundColor = el.dataset.method === method 
+        ? 'rgba(0, 112, 243, 0.05)' 
+        : 'white';
+      el.style.boxShadow = el.dataset.method === method 
+        ? '0 4px 12px rgba(0, 112, 243, 0.15)' 
+        : '0 1px 3px rgba(0,0,0,0.05)';
+    });
+    
+    // Update form data in the next tick to avoid blocking the UI
+    setTimeout(() => {
+      setFormData(prev => ({ ...prev, paymentMethod: method }));
+    }, 0);
+  }, []);
+
+  // Memoize the payment method option styles to reduce recalculations
+  const getPaymentOptionStyle = useCallback((method) => {
+    const isSelected = formData.paymentMethod === method;
+    return {
+      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
+      borderRadius: '12px',
+      padding: '15px 10px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: isChangingPayment ? 'wait' : 'pointer',
+      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+      opacity: isChangingPayment ? 0.7 : 1
+    };
+  }, [formData.paymentMethod, isChangingPayment]);
+
+  // Memoize common styles to avoid recreation on each render
+  const paymentIconStyle = useMemo(() => ({ 
+    fontSize: '28px', 
+    marginBottom: '6px' 
+  }), []);
+
+  // Define icon colors for payment methods
+  const paymentIconColors = useMemo(() => ({
+    Stripe: '#6772E5',
+    Venmo: '#3D95CE',
+    CashApp: '#00C244',
+    PayPal: '#0070BA'
+  }), []);
+
+  const paymentLabelStyle = useMemo(() => ({ 
+    fontWeight: 'bold',
+    fontSize: '1rem'
+  }), []);
+
+  const radioStyle = useMemo(() => ({ 
+    position: 'absolute', 
+    opacity: 0 
+  }), []);
 
   if (!isClient) {
     return null;
@@ -1247,7 +1338,7 @@ Live City DJ Contract Terms and Conditions:
                           color: '#0070f3',
                           fontWeight: 'bold'
                         }}>
-                          +${formData.additionalHours * EXTRA_HOUR}
+                          +${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}
                         </span>
                       </div>
                       <div style={{
@@ -1275,169 +1366,37 @@ Live City DJ Contract Terms and Conditions:
                   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                   gap: '12px',
                 }}>
-                  {/* Stripe Payment Option */}
-                  <div 
-                    className="payment-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '15px 10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Stripe' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div className="payment-icon" style={{ 
-                      fontSize: '28px', 
-                      color: '#6772E5',
-                      marginBottom: '6px' 
-                    }}>
-                      <FaCreditCard />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1rem'
-                    }}>
-                      Stripe
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Stripe"
-                      checked={formData.paymentMethod === 'Stripe'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
+                  <PaymentOption
+                    method="Stripe"
+                    iconComponent={<FaCreditCard />}
+                    isSelected={formData.paymentMethod === 'Stripe'}
+                    onSelect={() => handlePaymentMethodSelect('Stripe')}
+                    iconColor="#6772E5"
+                  />
                   
-                  {/* Venmo Payment Option */}
-                  <div 
-                    className="payment-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '15px 10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'Venmo' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div className="payment-icon" style={{ 
-                      fontSize: '28px', 
-                      color: '#3D95CE',
-                      marginBottom: '6px' 
-                    }}>
-                      <SiVenmo />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1rem'
-                    }}>
-                      Venmo
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Venmo"
-                      checked={formData.paymentMethod === 'Venmo'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
+                  <PaymentOption
+                    method="Venmo"
+                    iconComponent={<SiVenmo />}
+                    isSelected={formData.paymentMethod === 'Venmo'}
+                    onSelect={() => handlePaymentMethodSelect('Venmo')}
+                    iconColor="#3D95CE"
+                  />
                   
-                  {/* Cash App Payment Option */}
-                  <div 
-                    className="payment-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '15px 10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'CashApp' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div className="payment-icon" style={{ 
-                      fontSize: '28px', 
-                      color: '#00C244',
-                      marginBottom: '6px' 
-                    }}>
-                      <SiCashapp />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1rem'
-                    }}>
-                      CashApp
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="CashApp"
-                      checked={formData.paymentMethod === 'CashApp'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
+                  <PaymentOption
+                    method="CashApp"
+                    iconComponent={<SiCashapp />}
+                    isSelected={formData.paymentMethod === 'CashApp'}
+                    onSelect={() => handlePaymentMethodSelect('CashApp')}
+                    iconColor="#00C244"
+                  />
                   
-                  {/* PayPal Payment Option */}
-                  <div 
-                    className="payment-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '15px 10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentMethod === 'PayPal' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div className="payment-icon" style={{ 
-                      fontSize: '28px', 
-                      color: '#0070BA',
-                      marginBottom: '6px' 
-                    }}>
-                      <FaPaypal />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1rem'
-                    }}>
-                      PayPal
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="PayPal"
-                      checked={formData.paymentMethod === 'PayPal'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
+                  <PaymentOption
+                    method="PayPal"
+                    iconComponent={<FaPaypal />}
+                    isSelected={formData.paymentMethod === 'PayPal'}
+                    onSelect={() => handlePaymentMethodSelect('PayPal')}
+                    iconColor="#0070BA"
+                  />
                 </div>
                 {formErrors.paymentMethod && (
                   <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
