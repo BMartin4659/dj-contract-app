@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaCheckCircle, FaHome } from 'react-icons/fa';
 import Link from 'next/link';
 import Header from '@/components/Header';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [paymentId, setPaymentId] = useState('');
@@ -101,5 +101,35 @@ export default function PaymentSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function LoadingPaymentSuccess() {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '30px',
+        borderRadius: '12px',
+        textAlign: 'center'
+      }}>
+        <p style={{ fontSize: '1.2rem', color: '#3b82f6' }}>Loading payment details...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingPaymentSuccess />}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 } 
