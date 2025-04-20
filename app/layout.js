@@ -32,14 +32,13 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw", background: "transparent" }}>
+    <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preload" href="/dj-background-new.jpg" as="image" />
-        {/* Google Maps API is now loaded in individual components that need it */}
       </head>
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -48,18 +47,16 @@ export default function RootLayout({ children }) {
           overflowX: "hidden !important",
           maxWidth: "100vw !important",
           width: "100% !important",
-          backgroundImage: "url('/dj-background-new.jpg') !important",
-          backgroundSize: "cover !important",
-          backgroundPosition: "center !important",
-          backgroundRepeat: "no-repeat !important",
-          backgroundAttachment: "fixed !important",
-          minHeight: "100vh !important",
-          background: "transparent"
+          backgroundImage: "url('/dj-background-new.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
+          minHeight: "100vh"
         }}
       >
         {children}
 
-        {/* Script to fix iOS viewport issues */}
         <Script id="ios-viewport-fix" strategy="afterInteractive">
           {`
             function setAppHeight() {
@@ -83,52 +80,6 @@ export default function RootLayout({ children }) {
                 setTimeout(setAppHeight, 100);
               });
             });
-            
-            // Prevent horizontal scrolling
-            document.body.addEventListener('touchmove', function(e) {
-              if (Math.abs(e.touches[0].clientX) > window.innerWidth) {
-                e.preventDefault();
-              }
-            }, { passive: false });
-            
-            // Fix mobile background image issues
-            function fixMobileBackground() {
-              // Add a direct background to body as fallback
-              document.body.style.backgroundImage = "url('/dj-background-new.jpg')";
-              document.body.style.backgroundSize = "cover";
-              document.body.style.backgroundPosition = "center center";
-              document.body.style.backgroundRepeat = "no-repeat";
-              
-              // Check if iOS
-              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-              if (isIOS) {
-                document.body.style.backgroundAttachment = "scroll";
-                
-                // Create a pseudo element as iOS fallback
-                const style = document.createElement('style');
-                style.innerHTML = \`
-                  body::before {
-                    content: "";
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: -1;
-                    background: url('/dj-background-new.jpg') center center no-repeat;
-                    background-size: cover;
-                  }
-                \`;
-                document.head.appendChild(style);
-              }
-            }
-            
-            // Run on load and on resize
-            window.addEventListener('load', fixMobileBackground);
-            window.addEventListener('resize', fixMobileBackground);
-            
-            // Run immediately
-            fixMobileBackground();
           `}
         </Script>
       </body>
