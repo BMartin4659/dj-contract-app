@@ -505,9 +505,7 @@ Live City DJ Contract Terms and Conditions:
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
       
-      <Header />
-      
-      <div className="main-content" style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center' }}>
+      <div className="main-content" style={{ display: 'flex', justifyContent: 'center' }}>
         {showStripe ? (
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.96)',
@@ -516,7 +514,7 @@ Live City DJ Contract Terms and Conditions:
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
             maxWidth: '600px',
             width: '85%',
-            margin: '0 auto',
+            margin: '2rem auto 0 auto',
             backdropFilter: 'blur(5px)',
             WebkitBackdropFilter: 'blur(5px)'
           }}>
@@ -543,7 +541,7 @@ Live City DJ Contract Terms and Conditions:
             boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
             maxWidth: '600px',
             width: '85%',
-            margin: '0 auto'
+            margin: '2rem auto 0 auto'
           }}>
             <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
             <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
@@ -572,691 +570,697 @@ Live City DJ Contract Terms and Conditions:
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-6" style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.96)',
-            padding: '2.5rem',
-            borderRadius: '20px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+          <div style={{ 
             maxWidth: '600px',
             width: '85%',
-            margin: '0 auto 3rem auto',
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)'
+            margin: '2rem auto 3rem auto'
           }}>
-            {/* Client Information Section */}
-            <div className="form-group">
-              <label htmlFor="clientName" className="required-field">Client Name</label>
-              <input
-                id="clientName"
-                name="clientName"
-                value={formData.clientName}
-                onChange={handleChange}
-                required
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            {['email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
-              <div key={field}>
-                <label style={labelStyle}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {fieldIcons[field]} 
-                    {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                  </span>
-                </label>
+            <Header />
+            
+            <form onSubmit={handleSubmit} style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.96)',
+              padding: '2.5rem',
+              borderRadius: '20px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+              width: '100%',
+              backdropFilter: 'blur(5px)',
+              WebkitBackdropFilter: 'blur(5px)'
+            }}>
+              {/* Client Information Section */}
+              <div className="form-group">
+                <label htmlFor="clientName" className="required-field">Client Name</label>
                 <input
-                  name={field}
-                  type={field.includes('guest') ? 'number' : 'text'}
-                  required
-                  style={inputStyle}
-                  value={formData[field]}
+                  id="clientName"
+                  name="clientName"
+                  value={formData.clientName}
                   onChange={handleChange}
+                  required
+                  placeholder="Enter your full name"
                 />
               </div>
-            ))}
 
-            <div>
-              <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {venueLocationIcon} Venue Location
-                </span>
-              </label>
-              <input
-                ref={venueLocationRef}
-                name="venueLocation"
-                type="text"
-                value={formData.venueLocation}
-                onChange={handleChange}
-                required
-                style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
-              />
-            </div>
-
-            {/* Event Date */}
-            <div>
-              <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {timeIcons['eventDate']} Event Date:
-                </span>
-              </label>
-              <input
-                name="eventDate"
-                type="date"
-                required
-                style={inputStyle}
-                value={formData.eventDate}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Start Time */}
-            <div>
-              <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {timeIcons['startTime']} Start Time:
-                </span>
-              </label>
-              <select
-                name="startTime"
-                value={formData.startTime}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  
-                  if (formData.endTime) {
-                    // If end time already exists, calculate new additional hours
-                    const additionalHours = calculateAdditionalHours(value, formData.endTime);
-                    setFormData((prev) => ({
-                      ...prev,
-                      startTime: value,
-                      additionalHours
-                    }));
-                  } else {
-                    // If no end time yet, just update start time
-                    setFormData((prev) => ({
-                      ...prev,
-                      startTime: value,
-                      endTime: '' // reset endTime on startTime change
-                    }));
-                  }
-                }}
-                required
-                style={inputStyle}
-              >
-                <option value="">Select start time</option>
-                {timeOptions.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* End Time */}
-            <div>
-              <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {timeIcons['endTime']} End Time:
-                </span>
-              </label>
-              <select
-                name="endTime"
-                value={formData.endTime}
-                onChange={(e) => handleEndTimeChange(e.target.value)}
-                required
-                disabled={!formData.startTime}
-                style={inputStyle}
-              >
-                <option value="">Select end time</option>
-                {formData.startTime &&
-                  timeOptions
-                    .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
-                    .map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-              </select>
-              {formData.startTime && formData.endTime && (
-                <div style={{
-                  fontSize: '0.9rem',
-                  color: formData.additionalHours > 0 ? '#0070f3' : '#666',
-                  marginTop: '0.5rem',
-                  fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
-                }}>
-                  {formData.additionalHours > 0 
-                    ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
-                    : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
-                </div>
-              )}
-            </div>
-
-            {/* Additional Services Header */}
-            <div style={{
-              marginTop: '2rem',
-              marginBottom: '1.5rem',
-              borderBottom: '2px solid #e0e0e0',
-              position: 'relative'
-            }}>
-              <h3 style={{
-                color: '#333',
-                fontSize: '1.2rem',
-                fontWeight: '600',
-                backgroundColor: 'rgba(255,255,255,0.92)',
-                display: 'inline-block',
-                padding: '0 1rem 0.5rem 0',
-                position: 'relative',
-                marginBottom: '0'
-              }}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FaPlus style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
-                  Additional Services
-                </span>
-              </h3>
-            </div>
-
-            {/* Redesigned Card-Style Additional Services */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px',
-              marginBottom: '2rem'
-            }}>
-              {[
-                {
-                  name: 'lighting',
-                  label: 'Event Lighting',
-                  price: '$100',
-                  description: 'Requires 2 hour early entry to venue for setup. Includes sound activated strobing lights.',
-                  icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
-                },
-                {
-                  name: 'photography',
-                  label: 'Event Photography',
-                  price: '$150',
-                  description: 'Includes 50 high-quality candid shots delivered within 48 hours.',
-                  icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
-                },
-                {
-                  name: 'videoVisuals',
-                  label: 'Video Visuals',
-                  price: '$100',
-                  description: 'Slide shows, presentations, karaoke etc.',
-                  icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
-                },
-              ].map(({ name, label, price, description, icon }) => (
-                <div 
-                  key={name}
-                  onClick={() => setFormData(prev => ({ ...prev, [name]: !prev[name] }))}
-                  style={{
-                    border: `2px solid ${formData[name] ? '#0070f3' : '#ddd'}`,
-                    borderRadius: '12px',
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    cursor: 'pointer',
-                    backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                    transition: 'all 0.2s ease',
-                    boxShadow: formData[name] ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {formData[name] && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: '#0070f3',
-                      borderRadius: '50%',
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 2
-                    }}>
-                      <FaCheck color="white" size={12} />
-                    </div>
-                  )}
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ 
-                      marginRight: '12px',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
-                    }}>
-                      {icon}
-                    </div>
-                    <div>
-                      <h4 style={{ 
-                        margin: '0 0 4px 0',
-                        color: '#333',
-                        fontWeight: formData[name] ? '600' : '500'
-                      }}>
-                        {label}
-                      </h4>
-                      <div style={{ 
-                        fontSize: '1rem', 
-                        fontWeight: 'bold',
-                        color: formData[name] ? '#0070f3' : '#666'
-                      }}>
-                        {price}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <p style={{ 
-                    fontSize: '0.85rem', 
-                    color: '#666', 
-                    margin: '0',
-                    lineHeight: '1.4'
-                  }}>
-                    {description}
-                  </p>
-                  
+              {['email', 'contactPhone', 'eventType', 'guestCount', 'venueName'].map((field) => (
+                <div key={field}>
+                  <label style={labelStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons[field]} 
+                      {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                    </span>
+                  </label>
                   <input
-                    type="checkbox"
-                    name={name}
-                    checked={formData[name]}
+                    name={field}
+                    type={field.includes('guest') ? 'number' : 'text'}
+                    required
+                    style={inputStyle}
+                    value={formData[field]}
                     onChange={handleChange}
-                    style={{ position: 'absolute', opacity: 0 }}
                   />
                 </div>
               ))}
-            </div>
 
-            {/* Compact Additional Hours Selector */}
-            <div>
-              <label style={labelStyle}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
-                  Additional Hours ($75/hr):
-                </span>
-                {formData.additionalHours > 0 && (
-                  <span style={{
-                    fontSize: '0.8rem',
-                    color: '#0070f3',
-                    fontWeight: '500'
-                  }}>
-                    Auto-calculated from your time selection
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {venueLocationIcon} Venue Location
                   </span>
-                )}
-              </label>
-              <div style={{ 
-                marginTop: '8px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  {[0, 1, 2, 3, 4].map(num => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, additionalHours: num }))}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: formData.additionalHours === num ? '#0070f3' : '#f5f5f5',
-                        color: formData.additionalHours === num ? 'white' : '#333',
-                        borderRadius: '8px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '16px',
-                        boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
-                      }}
-                    >
-                      {num}
-                    </button>
+                </label>
+                <input
+                  ref={venueLocationRef}
+                  name="venueLocation"
+                  type="text"
+                  value={formData.venueLocation}
+                  onChange={handleChange}
+                  required
+                  style={{ backgroundColor: 'white', width: '100%', padding: '12px', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc', color: 'black' }}
+                />
+              </div>
+
+              {/* Event Date */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['eventDate']} Event Date:
+                  </span>
+                </label>
+                <input
+                  name="eventDate"
+                  type="date"
+                  required
+                  style={inputStyle}
+                  value={formData.eventDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['startTime']} Start Time:
+                  </span>
+                </label>
+                <select
+                  name="startTime"
+                  value={formData.startTime}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    
+                    if (formData.endTime) {
+                      // If end time already exists, calculate new additional hours
+                      const additionalHours = calculateAdditionalHours(value, formData.endTime);
+                      setFormData((prev) => ({
+                        ...prev,
+                        startTime: value,
+                        additionalHours
+                      }));
+                    } else {
+                      // If no end time yet, just update start time
+                      setFormData((prev) => ({
+                        ...prev,
+                        startTime: value,
+                        endTime: '' // reset endTime on startTime change
+                      }));
+                    }
+                  }}
+                  required
+                  style={inputStyle}
+                >
+                  <option value="">Select start time</option>
+                  {timeOptions.map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
-                </div>
-                
-                {formData.additionalHours > 0 && (
+                </select>
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {timeIcons['endTime']} End Time:
+                  </span>
+                </label>
+                <select
+                  name="endTime"
+                  value={formData.endTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  required
+                  disabled={!formData.startTime}
+                  style={inputStyle}
+                >
+                  <option value="">Select end time</option>
+                  {formData.startTime &&
+                    timeOptions
+                      .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
+                      .map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                </select>
+                {formData.startTime && formData.endTime && (
                   <div style={{
-                    backgroundColor: 'rgba(0, 112, 243, 0.05)',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    marginTop: '12px',
-                    border: '1px solid rgba(0, 112, 243, 0.2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
+                    fontSize: '0.9rem',
+                    color: formData.additionalHours > 0 ? '#0070f3' : '#666',
+                    marginTop: '0.5rem',
+                    fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <span style={{
-                        fontSize: '0.9rem',
-                        color: '#333',
-                        fontWeight: '500'
-                      }}>
-                        <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
-                        {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
-                      </span>
-                      <span style={{
-                        fontSize: '0.9rem',
-                        color: '#0070f3',
-                        fontWeight: 'bold'
-                      }}>
-                        +${formData.additionalHours * EXTRA_HOUR}
-                      </span>
-                    </div>
-                    <div style={{
-                      fontSize: '0.8rem',
-                      color: '#666'
-                    }}>
-                      Auto-calculated from {formData.startTime} to {formData.endTime}
-                    </div>
+                    {formData.additionalHours > 0 
+                      ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
+                      : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Redesigned Payment Method Selection */}
-            <div>
-              <label style={{...labelStyle, marginBottom: '12px'}}>Payment Method:</label>
+              {/* Additional Services Header */}
+              <div style={{
+                marginTop: '2rem',
+                marginBottom: '1.5rem',
+                borderBottom: '2px solid #e0e0e0',
+                position: 'relative'
+              }}>
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaPlus style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
+                    Additional Services
+                  </span>
+                </h3>
+              </div>
+
+              {/* Redesigned Card-Style Additional Services */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                gap: '12px',
-                marginBottom: '1.5rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginBottom: '2rem'
               }}>
-                {/* Stripe Option */}
-                <div
-                  onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
-                  style={{
-                    border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: formData.paymentMethod === 'Stripe' ? '#f5f5ff' : 'white',
-                    transition: 'all 0.2s ease',
-                    boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(99, 91, 255, 0.15)' : 'none',
-                    height: '100px'
-                  }}
-                >
-                  {paymentIcons.Stripe}
-                  <span style={{
-                    fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
-                    color: formData.paymentMethod === 'Stripe' ? '#000' : '#444',
-                    marginTop: '8px'
-                  }}>
-                    Stripe
-                  </span>
-                  {formData.paymentMethod === 'Stripe' && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: '#635BFF',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <FaCheck color="white" size={12} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Venmo Option */}
-                <div
-                  onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
-                  style={{
-                    border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
-                    transition: 'all 0.2s ease',
-                    boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 140, 255, 0.15)' : 'none',
-                    height: '100px'
-                  }}
-                >
-                  {paymentIcons.Venmo}
-                  <span style={{
-                    fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
-                    color: formData.paymentMethod === 'Venmo' ? '#000' : '#444',
-                    marginTop: '8px'
-                  }}>
-                    Venmo
-                  </span>
-                  {formData.paymentMethod === 'Venmo' && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: '#008CFF',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <FaCheck color="white" size={12} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* CashApp Option */}
-                <div
-                  onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
-                  style={{
-                    border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
-                    transition: 'all 0.2s ease',
-                    boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 214, 50, 0.15)' : 'none',
-                    height: '100px'
-                  }}
-                >
-                  {paymentIcons.CashApp}
-                  <span style={{
-                    fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
-                    color: formData.paymentMethod === 'CashApp' ? '#000' : '#444',
-                    marginTop: '8px'
-                  }}>
-                    CashApp
-                  </span>
-                  {formData.paymentMethod === 'CashApp' && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: '#00D632',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <FaCheck color="white" size={12} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* PayPal Option */}
-                <div
-                  onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
-                  style={{
-                    border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0079C1' : '#ddd'}`,
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: formData.paymentMethod === 'PayPal' ? '#f0f9ff' : 'white',
-                    transition: 'all 0.2s ease',
-                    boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 121, 193, 0.15)' : 'none',
-                    height: '100px'
-                  }}
-                >
-                  {paymentIcons.PayPal}
-                  <span style={{
-                    fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
-                    color: formData.paymentMethod === 'PayPal' ? '#000' : '#444',
-                    marginTop: '8px'
-                  }}>
-                    PayPal
-                  </span>
-                  {formData.paymentMethod === 'PayPal' && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      backgroundColor: '#0079C1',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <FaCheck color="white" size={12} />
-                    </div>
-                  )}
-                </div>
-                
-                <input 
-                  type="hidden" 
-                  name="paymentMethod" 
-                  value={formData.paymentMethod} 
-                  required 
-                />
-              </div>
-            </div>
-
-            {/* Redesigned Terms and Conditions */}
-            <div style={{
-              marginBottom: '1.5rem',
-              backgroundColor: 'rgba(255,255,255,0.8)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: formData.agreeToTerms ? '2px solid #0070f3' : '1px solid #ddd',
-              boxShadow: formData.agreeToTerms ? '0 4px 12px rgba(0, 112, 243, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'all 0.2s ease'
-            }}>
-              <div 
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setFormData(prev => ({...prev, agreeToTerms: !prev.agreeToTerms}))}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: formData.agreeToTerms ? '2px solid #0070f3' : '2px solid #ccc',
-                  backgroundColor: formData.agreeToTerms ? '#0070f3' : 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '12px',
-                  marginTop: '2px',
-                  transition: 'all 0.2s ease'
-                }}>
-                  {formData.agreeToTerms && <FaCheck color="white" size={14} />}
-                </div>
-                <div>
-                  <input
-                    type="checkbox"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleChange}
-                    required
+                {[
+                  {
+                    name: 'lighting',
+                    label: 'Event Lighting',
+                    price: '$100',
+                    description: 'Requires 2 hour early entry to venue for setup. Includes sound activated strobing lights.',
+                    icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
+                  },
+                  {
+                    name: 'photography',
+                    label: 'Event Photography',
+                    price: '$150',
+                    description: 'Includes 50 high-quality candid shots delivered within 48 hours.',
+                    icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
+                  },
+                  {
+                    name: 'videoVisuals',
+                    label: 'Video Visuals',
+                    price: '$100',
+                    description: 'Slide shows, presentations, karaoke etc.',
+                    icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
+                  },
+                ].map(({ name, label, price, description, icon }) => (
+                  <div 
+                    key={name}
+                    onClick={() => setFormData(prev => ({ ...prev, [name]: !prev[name] }))}
                     style={{
-                      position: 'absolute',
-                      opacity: 0,
-                      width: 0,
-                      height: 0
+                      border: `2px solid ${formData[name] ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      cursor: 'pointer',
+                      backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData[name] ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
-                  />
-                  <p style={{
-                    fontSize: '1rem',
-                    lineHeight: '1.5',
-                    fontWeight: '500',
-                    color: '#333',
-                    margin: 0
+                  >
+                    {formData[name] && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#0070f3',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2
+                      }}>
+                        <FaCheck color="white" size={12} />
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ 
+                        marginRight: '12px',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
+                      }}>
+                        {icon}
+                      </div>
+                      <div>
+                        <h4 style={{ 
+                          margin: '0 0 4px 0',
+                          color: '#333',
+                          fontWeight: formData[name] ? '600' : '500'
+                        }}>
+                          {label}
+                        </h4>
+                        <div style={{ 
+                          fontSize: '1rem', 
+                          fontWeight: 'bold',
+                          color: formData[name] ? '#0070f3' : '#666'
+                        }}>
+                          {price}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p style={{ 
+                      fontSize: '0.85rem', 
+                      color: '#666', 
+                      margin: '0',
+                      lineHeight: '1.4'
+                    }}>
+                      {description}
+                    </p>
+                    
+                    <input
+                      type="checkbox"
+                      name={name}
+                      checked={formData[name]}
+                      onChange={handleChange}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Compact Additional Hours Selector */}
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
+                    Additional Hours ($75/hr):
+                  </span>
+                  {formData.additionalHours > 0 && (
+                    <span style={{
+                      fontSize: '0.8rem',
+                      color: '#0070f3',
+                      fontWeight: '500'
+                    }}>
+                      Auto-calculated from your time selection
+                    </span>
+                  )}
+                </label>
+                <div style={{ 
+                  marginTop: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
                   }}>
-                    I agree to the <a 
-                      onClick={(e) => { 
-                        e.stopPropagation();
-                        setShowTerms(true); 
-                      }} 
-                      style={{ 
-                        color: '#0070f3', 
-                        fontWeight: 'bold', 
-                        cursor: 'pointer',
-                        textDecoration: 'underline' 
-                      }}
-                    >
-                      terms and conditions
-                    </a>, including the cancellation policy and payment terms.
-                  </p>
+                    {[0, 1, 2, 3, 4].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, additionalHours: num }))}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: formData.additionalHours === num ? '#0070f3' : '#f5f5f5',
+                          color: formData.additionalHours === num ? 'white' : '#333',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '16px',
+                          boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+                        }}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {formData.additionalHours > 0 && (
+                    <div style={{
+                      backgroundColor: 'rgba(0, 112, 243, 0.05)',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      marginTop: '12px',
+                      border: '1px solid rgba(0, 112, 243, 0.2)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <span style={{
+                          fontSize: '0.9rem',
+                          color: '#333',
+                          fontWeight: '500'
+                        }}>
+                          <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
+                          {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
+                        </span>
+                        <span style={{
+                          fontSize: '0.9rem',
+                          color: '#0070f3',
+                          fontWeight: 'bold'
+                        }}>
+                          +${formData.additionalHours * EXTRA_HOUR}
+                        </span>
+                      </div>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: '#666'
+                      }}>
+                        Auto-calculated from {formData.startTime} to {formData.endTime}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Itemized Total */}
-            <div style={{
-              backgroundColor: '#f8f9fa',
-              padding: '1rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem',
-            }}>
-              <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
-              {itemizedTotal()}
-            </div>
+              {/* Redesigned Payment Method Selection */}
+              <div>
+                <label style={{...labelStyle, marginBottom: '12px'}}>Payment Method:</label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: '12px',
+                  marginBottom: '1.5rem'
+                }}>
+                  {/* Stripe Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#635BFF' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Stripe' ? '#f5f5ff' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(99, 91, 255, 0.15)' : 'none',
+                      height: '100px'
+                    }}
+                  >
+                    {paymentIcons.Stripe}
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'Stripe' ? '#000' : '#444',
+                      marginTop: '8px'
+                    }}>
+                      Stripe
+                    </span>
+                    {formData.paymentMethod === 'Stripe' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#635BFF',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FaCheck color="white" size={12} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Venmo Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#008CFF' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Venmo' ? '#f0f9ff' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 140, 255, 0.15)' : 'none',
+                      height: '100px'
+                    }}
+                  >
+                    {paymentIcons.Venmo}
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'Venmo' ? '#000' : '#444',
+                      marginTop: '8px'
+                    }}>
+                      Venmo
+                    </span>
+                    {formData.paymentMethod === 'Venmo' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#008CFF',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FaCheck color="white" size={12} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* CashApp Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#00D632' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'CashApp' ? '#f0fff4' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 214, 50, 0.15)' : 'none',
+                      height: '100px'
+                    }}
+                  >
+                    {paymentIcons.CashApp}
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'CashApp' ? '#000' : '#444',
+                      marginTop: '8px'
+                    }}>
+                      CashApp
+                    </span>
+                    {formData.paymentMethod === 'CashApp' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#00D632',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FaCheck color="white" size={12} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* PayPal Option */}
+                  <div
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0079C1' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'PayPal' ? '#f0f9ff' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 121, 193, 0.15)' : 'none',
+                      height: '100px'
+                    }}
+                  >
+                    {paymentIcons.PayPal}
+                    <span style={{
+                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
+                      color: formData.paymentMethod === 'PayPal' ? '#000' : '#444',
+                      marginTop: '8px'
+                    }}>
+                      PayPal
+                    </span>
+                    {formData.paymentMethod === 'PayPal' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#0079C1',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FaCheck color="white" size={12} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <input 
+                    type="hidden" 
+                    name="paymentMethod" 
+                    value={formData.paymentMethod} 
+                    required 
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                backgroundColor: '#0070f3',
-                color: 'white',
-                border: 'none',
+              {/* Redesigned Terms and Conditions */}
+              <div style={{
+                marginBottom: '1.5rem',
+                backgroundColor: 'rgba(255,255,255,0.8)',
+                padding: '16px',
+                borderRadius: '12px',
+                border: formData.agreeToTerms ? '2px solid #0070f3' : '1px solid #ddd',
+                boxShadow: formData.agreeToTerms ? '0 4px 12px rgba(0, 112, 243, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                transition: 'all 0.2s ease'
+              }}>
+                <div 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setFormData(prev => ({...prev, agreeToTerms: !prev.agreeToTerms}))}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '4px',
+                    border: formData.agreeToTerms ? '2px solid #0070f3' : '2px solid #ccc',
+                    backgroundColor: formData.agreeToTerms ? '#0070f3' : 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: '12px',
+                    marginTop: '2px',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    {formData.agreeToTerms && <FaCheck color="white" size={14} />}
+                  </div>
+                  <div>
+                    <input
+                      type="checkbox"
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        position: 'absolute',
+                        opacity: 0,
+                        width: 0,
+                        height: 0
+                      }}
+                    />
+                    <p style={{
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      fontWeight: '500',
+                      color: '#333',
+                      margin: 0
+                    }}>
+                      I agree to the <a 
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          setShowTerms(true); 
+                        }} 
+                        style={{ 
+                          color: '#0070f3', 
+                          fontWeight: 'bold', 
+                          cursor: 'pointer',
+                          textDecoration: 'underline' 
+                        }}
+                      >
+                        terms and conditions
+                      </a>, including the cancellation policy and payment terms.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Itemized Total */}
+              <div style={{
+                backgroundColor: '#f8f9fa',
                 padding: '1rem',
-                fontSize: '1rem',
                 borderRadius: '8px',
-                marginTop: '1rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s',
-                opacity: isSubmitting ? 0.7 : 1
-              }}
-            >
-              {isSubmitting ? 'Processing...' : 'Submit Contract'}
-            </button>
-          </form>
+                marginBottom: '1.5rem',
+              }}>
+                <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
+                {itemizedTotal()}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  marginTop: '1rem',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s',
+                  opacity: isSubmitting ? 0.7 : 1
+                }}
+              >
+                {isSubmitting ? 'Processing...' : 'Submit Contract'}
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </div>

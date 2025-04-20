@@ -202,12 +202,12 @@ input[type="radio"] {
   padding: 0 1rem;
   box-sizing: border-box;
   min-height: 100vh;
-  background-color: rgba(0, 0, 0, 0.03);
+  background: transparent;
 }
 
 .main-content {
   width: 100%;
-  padding-top: 2rem;
+  padding-top: 0;
 }
 
 /* Mobile form spacing */
@@ -225,7 +225,7 @@ input[type="radio"] {
   }
   
   .main-content {
-    padding-top: 1rem;
+    padding-top: 0;
   }
 }
 
