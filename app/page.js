@@ -121,6 +121,7 @@ Live City DJ Contract Terms and Conditions:
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [mapsError, setMapsError] = useState(null);
   
@@ -158,7 +159,7 @@ Live City DJ Contract Terms and Conditions:
   ];
 
   // Pricing constants
-  const BASE = 350,
+  const BASE = 400,
     LIGHTING = 100,
     PHOTO = 150,
     VIDEO = 100,
@@ -731,14 +732,19 @@ Live City DJ Contract Terms and Conditions:
               }}></div>
               
               {/* Client Information Section */}
-              <div className="form-group">
-                <label htmlFor="clientName" className="required-field">Client Name</label>
+              <div>
+                <label style={labelStyle}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {fieldIcons['clientName']} Client Name:
+                  </span>
+                </label>
                 <input
-                  id="clientName"
                   name="clientName"
+                  type="text"
+                  required
+                  style={inputStyle}
                   value={formData.clientName}
                   onChange={handleChange}
-                  required
                   placeholder="Enter your full name"
                 />
               </div>
@@ -776,7 +782,7 @@ Live City DJ Contract Terms and Conditions:
                     value={formData.venueLocation}
                     onChange={handleChange}
                     required
-                    placeholder="Enter venue address for autocomplete"
+                    placeholder="Enter venue address powered by Google"
                     style={{ 
                       backgroundColor: 'white', 
                       width: '100%', 
@@ -803,7 +809,7 @@ Live City DJ Contract Terms and Conditions:
                     marginTop: '-0.75rem',
                     marginBottom: '1rem'
                   }}>
-                    {mapsError || (mapsLoaded ? 'Start typing for address suggestions' : 'Loading Google Maps...')}
+                    {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
                   </p>
                 </div>
               </div>
