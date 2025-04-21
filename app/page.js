@@ -259,11 +259,20 @@ Live City DJ Contract Terms and Conditions:
   }, [calculateHoursBetween]);
 
   const calculateTotal = () => {
+    console.log("Calculating total with services:", {
+      lighting: formData.lighting,
+      photography: formData.photography,
+      videoVisuals: formData.videoVisuals,
+      additionalHours: formData.additionalHours
+    });
+    
     let total = SERVICES.BASE;
     if (formData.lighting) total += SERVICES.LIGHTING;
     if (formData.photography) total += SERVICES.PHOTOGRAPHY;
     if (formData.videoVisuals) total += SERVICES.VIDEO_VISUALS;
     total += formData.additionalHours * SERVICES.ADDITIONAL_HOUR;
+    
+    console.log("Calculated total:", total);
     return total;
   };
   
@@ -1140,7 +1149,20 @@ Live City DJ Contract Terms and Conditions:
               
               <StripeCheckout
                 amount={parseInt(calculateTotal() * 100)}
-                contractDetails={formData}
+                contractDetails={{
+                  clientName: formData.clientName,
+                  email: formData.email,
+                  eventType: formData.eventType,
+                  eventDate: formData.eventDate,
+                  venueName: formData.venueName,
+                  venueLocation: formData.venueLocation,
+                  startTime: formData.startTime,
+                  endTime: formData.endTime,
+                  lighting: formData.lighting,
+                  photography: formData.photography,
+                  videoVisuals: formData.videoVisuals,
+                  additionalHours: formData.additionalHours
+                }}
                 onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
                   setShowStripe(false);

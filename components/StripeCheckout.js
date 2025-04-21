@@ -91,7 +91,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           email: contractDetails?.email || 'customer@example.com',
           eventType: contractDetails?.eventType || 'Event',
           eventDate: contractDetails?.eventDate || new Date().toISOString(),
-          venueName: contractDetails?.venueName || 'Venue'
+          venueName: contractDetails?.venueName || 'Venue',
+          lighting: contractDetails?.lighting || false,
+          photography: contractDetails?.photography || false,
+          videoVisuals: contractDetails?.videoVisuals || false,
+          additionalHours: contractDetails?.additionalHours || 0
         })
       });
 
@@ -113,7 +117,16 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           paymentIntentId: paymentIntent.id,
           amount: amountInCents,
           currency: paymentIntent.currency,
-          ...contractDetails,
+          clientName: contractDetails?.clientName,
+          email: contractDetails?.email,
+          eventType: contractDetails?.eventType,
+          eventDate: contractDetails?.eventDate,
+          venueName: contractDetails?.venueName,
+          venueLocation: contractDetails?.venueLocation,
+          lighting: contractDetails?.lighting || false,
+          photography: contractDetails?.photography || false,
+          videoVisuals: contractDetails?.videoVisuals || false,
+          additionalHours: contractDetails?.additionalHours || 0,
           timestamp: new Date()
         });
         onSuccess(paymentIntent.id);
@@ -431,6 +444,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             src="https://js.stripe.com/v3/fingerprinted/img/stripe-badge-payment.f4bd5a1b.png" 
             alt="Powered by Stripe" 
             style={{ height: '40px' }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg";
+              e.target.style.height = '32px';
+            }}
           />
         </div>
       </form>
