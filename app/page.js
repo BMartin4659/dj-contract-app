@@ -29,7 +29,9 @@ import {
   FaMoneyBillWave,
   FaPaypal,
   FaRegCreditCard,
-  FaCheckCircle
+  FaCheckCircle,
+  FaShieldAlt,
+  FaReceipt
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
@@ -1090,34 +1092,62 @@ Live City DJ Contract Terms and Conditions:
             width: '96%',
             margin: '0 auto'
           }}>
-            <h2 style={{ 
-              textAlign: 'center', 
-              fontSize: '1.75rem', 
-              color: '#111', 
-              marginBottom: '1rem', 
-              fontWeight: '600',
-              borderBottom: '2px solid #635BFF',
-              paddingBottom: '10px'
+            {/* Security Banner */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f8ff',
+              padding: '10px',
+              borderRadius: '8px',
+              marginBottom: '1.5rem',
+              border: '1px solid #dbeafe'
             }}>
-              Complete Your Booking
-            </h2>
-            <p style={{ 
-              textAlign: 'center', 
-              color: '#555', 
-              marginBottom: '1.5rem', 
-              fontSize: '1.1rem'
+              <FaShieldAlt size={18} style={{ color: '#2563eb', marginRight: '8px' }} />
+              <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '500' }}>
+                Secure, encrypted payment processing
+              </span>
+            </div>
+            
+            {/* Order Summary Section with headers moved inside */}
+            <div style={{
+              backgroundColor: '#f9fafb',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              marginBottom: '1.5rem',
+              border: '1px solid #e5e7eb'
             }}>
-              Secure your event date with a deposit payment
-            </p>
-            <StripeCheckout
-              amount={parseInt(calculateTotal() * 100)}
-              contractDetails={formData}
-              onSuccess={(paymentId) => {
-                // Handle successful payment before form submission
-                setShowStripe(false);
-                router.push(`/payment/success?id=${paymentId}`);
-              }}
-            />
+              <h2 style={{ 
+                color: '#111', 
+                marginBottom: '0.5rem', 
+                fontSize: '1.75rem', 
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <FaReceipt style={{ marginRight: '10px', color: '#635BFF' }} />
+                Complete Your Booking
+              </h2>
+              <p style={{ 
+                color: '#555', 
+                marginBottom: '1.5rem', 
+                fontSize: '1.1rem',
+                borderBottom: '2px solid #635BFF',
+                paddingBottom: '1rem'
+              }}>
+                Secure your event date with a deposit payment
+              </p>
+              
+              <StripeCheckout
+                amount={parseInt(calculateTotal() * 100)}
+                contractDetails={formData}
+                onSuccess={(paymentId) => {
+                  // Handle successful payment before form submission
+                  setShowStripe(false);
+                  router.push(`/payment/success?id=${paymentId}`);
+                }}
+              />
+            </div>
           </div>
         ) : submitted ? (
           <div style={{

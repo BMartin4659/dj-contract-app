@@ -129,7 +129,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     <div style={{
       backgroundColor: 'transparent',
       color: '#111',
-      padding: isMobile ? '0.5rem' : '1rem',
+      padding: '0',
       borderRadius: isMobile ? '12px' : '16px',
       width: '96%',
       maxWidth: '96%',
@@ -138,25 +138,8 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       flexDirection: 'column',
       gap: '1.5rem',
       boxSizing: 'border-box',
-      marginTop: '80px'
+      marginTop: '0'
     }}>
-      {/* Security Banner */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f0f8ff',
-        padding: '10px',
-        borderRadius: '8px',
-        marginBottom: '1rem',
-        border: '1px solid #dbeafe'
-      }}>
-        <FaShieldAlt size={18} style={{ color: '#2563eb', marginRight: '8px' }} />
-        <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '500' }}>
-          Secure, encrypted payment processing
-        </span>
-      </div>
-
       {/* Order Summary Section */}
       <div style={{
         backgroundColor: '#f9fafb',
