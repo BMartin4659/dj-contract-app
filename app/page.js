@@ -263,14 +263,38 @@ Live City DJ Contract Terms and Conditions:
       lighting: formData.lighting,
       photography: formData.photography,
       videoVisuals: formData.videoVisuals,
-      additionalHours: formData.additionalHours
+      additionalHours: formData.additionalHours,
+      types: {
+        lighting: typeof formData.lighting,
+        photography: typeof formData.photography,
+        videoVisuals: typeof formData.videoVisuals,
+        additionalHours: typeof formData.additionalHours
+      }
     });
     
     let total = SERVICES.BASE;
-    if (formData.lighting) total += SERVICES.LIGHTING;
-    if (formData.photography) total += SERVICES.PHOTOGRAPHY;
-    if (formData.videoVisuals) total += SERVICES.VIDEO_VISUALS;
-    total += formData.additionalHours * SERVICES.ADDITIONAL_HOUR;
+    
+    // Use strict type checking with explicit logs
+    if (formData.lighting === true) {
+      console.log("Adding lighting cost:", SERVICES.LIGHTING);
+      total += SERVICES.LIGHTING;
+    }
+    
+    if (formData.photography === true) {
+      console.log("Adding photography cost:", SERVICES.PHOTOGRAPHY);
+      total += SERVICES.PHOTOGRAPHY;
+    }
+    
+    if (formData.videoVisuals === true) {
+      console.log("Adding video visuals cost:", SERVICES.VIDEO_VISUALS);
+      total += SERVICES.VIDEO_VISUALS;
+    }
+    
+    const additionalHoursCost = formData.additionalHours * SERVICES.ADDITIONAL_HOUR;
+    if (additionalHoursCost > 0) {
+      console.log("Adding additional hours cost:", additionalHoursCost);
+      total += additionalHoursCost;
+    }
     
     console.log("Calculated total:", total);
     return total;
@@ -646,7 +670,6 @@ Live City DJ Contract Terms and Conditions:
         try {
           console.log('Setting showStripe to true');
           setShowStripe(true);
-          setSubmitted(true); // Mark as submitted so the form is hidden
           return; // Exit function here to prevent email send - Stripe component will handle the rest
         } catch (error) {
           console.error('Error in Stripe payment handling:', error);
@@ -946,6 +969,8 @@ Live City DJ Contract Terms and Conditions:
   // Create a service card style generator
   const getServiceCardStyle = useCallback((name) => {
     const isSelected = formData[name] === true;
+    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
+    
     return {
       border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
       borderRadius: '12px',
@@ -1197,8 +1222,18 @@ Live City DJ Contract Terms and Conditions:
                 }}
                 onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
+                  console.log("Payment successful with ID:", paymentId);
+                  
+                  // Only hide the Stripe component and redirect
                   setShowStripe(false);
-                  router.push(`/payment/success?id=${paymentId}`);
+                  
+                  // Display success message before redirecting
+                  setSubmitted(true);
+                  
+                  // Delayed redirect to success page
+                  setTimeout(() => {
+                    router.push(`/payment/success?id=${paymentId}`);
+                  }, 1500);
                 }}
               />
             </div>
@@ -1576,87 +1611,93 @@ Live City DJ Contract Terms and Conditions:
                     description: 'Slide shows, presentations, karaoke etc.',
                     icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
                   },
-                ].map(({ name, label, price, description, icon }) => (
-                  <div 
-                    key={name}
-                    onClick={() => {
-                      console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
-                      // Use direct state update with explicit true/false values
-                      setFormData(prev => {
-                        const newValue = prev[name] === true ? false : true;
-                        console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
-                        return {
-                          ...prev,
-                          [name]: newValue
-                        };
-                      });
-                    }}
-                    className="service-card"
-                    style={getServiceCardStyle(name)}
-                  >
-                    {formData[name] === true && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#0070f3',
-                        borderRadius: '50%',
-                        width: '24px',
-                        height: '24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2
-                      }}>
-                        <FaCheck color="white" size={12} />
-                      </div>
-                    )}
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                      <div style={{ 
-                        marginRight: '12px',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
-                      }}>
-                        {icon}
-                      </div>
-                      <div>
-                        <h4 style={{ 
-                          margin: '0 0 4px 0',
-                          color: '#333',
-                          fontWeight: formData[name] ? '600' : '500'
+                ].map(({ name, label, price, description, icon }) => {
+                  // Debug the current item's selection status
+                  const isSelected = formData[name] === true;
+                  console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
+                  
+                  return (
+                    <div 
+                      key={name}
+                      onClick={() => {
+                        console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
+                        // Use direct state update with explicit true/false values
+                        setFormData(prev => {
+                          const newValue = prev[name] === true ? false : true;
+                          console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
+                          return {
+                            ...prev,
+                            [name]: newValue
+                          };
+                        });
+                      }}
+                      className="service-card"
+                      style={getServiceCardStyle(name)}
+                    >
+                      {formData[name] === true && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          backgroundColor: '#0070f3',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 2
                         }}>
-                          {label}
-                        </h4>
+                          <FaCheck color="white" size={12} />
+                        </div>
+                      )}
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
                         <div style={{ 
-                          fontSize: '1rem', 
-                          fontWeight: 'bold',
-                          color: formData[name] ? '#0070f3' : '#666'
+                          marginRight: '12px',
+                          padding: '10px',
+                          borderRadius: '8px',
+                          backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
                         }}>
-                          {price}
+                          {icon}
+                        </div>
+                        <div>
+                          <h4 style={{ 
+                            margin: '0 0 4px 0',
+                            color: '#333',
+                            fontWeight: formData[name] ? '600' : '500'
+                          }}>
+                            {label}
+                          </h4>
+                          <div style={{ 
+                            fontSize: '1rem', 
+                            fontWeight: 'bold',
+                            color: formData[name] ? '#0070f3' : '#666'
+                          }}>
+                            {price}
+                          </div>
                         </div>
                       </div>
+                      
+                      <p style={{ 
+                        fontSize: '0.85rem', 
+                        color: '#666', 
+                        margin: '0',
+                        lineHeight: '1.4'
+                      }}>
+                        {description}
+                      </p>
+                      
+                      <input
+                        type="checkbox"
+                        name={name}
+                        checked={formData[name]}
+                        onChange={handleChange}
+                        style={{ position: 'absolute', opacity: 0 }}
+                      />
                     </div>
-                    
-                    <p style={{ 
-                      fontSize: '0.85rem', 
-                      color: '#666', 
-                      margin: '0',
-                      lineHeight: '1.4'
-                    }}>
-                      {description}
-                    </p>
-                    
-                    <input
-                      type="checkbox"
-                      name={name}
-                      checked={formData[name]}
-                      onChange={handleChange}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Compact Additional Hours Selector */}

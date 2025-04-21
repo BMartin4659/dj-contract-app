@@ -512,6 +512,15 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 };
 
 export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetails }) {
+  // Direct debug logging at the wrapper level
+  console.log("StripeCheckoutWrapper received contractDetails:", contractDetails);
+  console.log("Selected services:", {
+    lighting: contractDetails?.lighting,
+    photography: contractDetails?.photography,
+    videoVisuals: contractDetails?.videoVisuals,
+    additionalHours: contractDetails?.additionalHours
+  });
+  
   return (
     <Elements stripe={stripePromise}>
       <CheckoutForm 
