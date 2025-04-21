@@ -30,16 +30,22 @@ const sendConfirmationEmail = async (contractDetails, paymentId) => {
   }
   
   try {
-    // Initialize EmailJS
-    const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
-    if (userId && userId !== 'default_user_id') {
-      emailjs.init(userId);
+    // Initialize EmailJS with the PUBLIC key, not the user ID
+    // This is a common mistake that causes 422 errors
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'missing_public_key';
+    
+    if (publicKey && publicKey !== 'missing_public_key') {
+      emailjs.init(publicKey);
+    } else {
+      console.error("EmailJS initialization failed: missing PUBLIC_KEY");
+      return false;
     }
     
-    // Prepare template parameters
+    // Prepare template parameters - ensure all fields match the template's expected parameters
     const templateParams = {
       to_name: contractDetails.clientName || 'Customer',
       to_email: contractDetails.email,
+      from_name: 'Live City DJ',
       event_type: contractDetails.eventType || 'Event',
       event_date: contractDetails.eventDate || 'TBD',
       venue_name: contractDetails.venueName || 'Venue',
@@ -48,7 +54,8 @@ const sendConfirmationEmail = async (contractDetails, paymentId) => {
       end_time: contractDetails.endTime || 'TBD',
       payment_id: paymentId || 'Unknown',
       payment_method: 'Stripe',
-      total_amount: contractDetails.totalAmount || '$0.00'
+      total_amount: contractDetails.totalAmount || '$0.00',
+      message: `Thank you for booking with Live City DJ! Your payment of ${contractDetails.totalAmount || '$0.00'} has been successfully processed.`
     };
     
     console.log("Sending payment confirmation email:", templateParams);
@@ -56,18 +63,28 @@ const sendConfirmationEmail = async (contractDetails, paymentId) => {
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
     const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
     
+    if (serviceId === 'default_service_id' || templateId === 'default_template_id') {
+      console.error("EmailJS sending failed: missing service ID or template ID");
+      return false;
+    }
+    
+    // Send email with service ID and template ID only (public key is already initialized)
     const response = await emailjs.send(
       serviceId,
       templateId,
-      templateParams,
-      userId
+      templateParams
     );
     
     console.log("Email sent successfully:", response);
     return true;
   } catch (error) {
     console.error("Failed to send confirmation email:", error);
-    return false;
+    // Return more specific error information
+    return {
+      success: false,
+      error: error.message || "Unknown error",
+      status: error.status || null
+    };
   }
 };
 
