@@ -25,14 +25,29 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   // Extract services from contract details
   const services = {
     basePackage: true, // Always included
-    lighting: Boolean(contractDetails?.lighting),
-    photography: Boolean(contractDetails?.photography),
-    videoVisuals: Boolean(contractDetails?.videoVisuals),
-    additionalHours: contractDetails?.additionalHours || 0
+    lighting: Boolean(contractDetails?.lighting === true),
+    photography: Boolean(contractDetails?.photography === true),
+    videoVisuals: Boolean(contractDetails?.videoVisuals === true),
+    additionalHours: parseInt(contractDetails?.additionalHours || 0)
   };
 
+  // Debug line - remove in production
   console.log("Contract details in StripeCheckout:", contractDetails);
   console.log("Extracted services:", services);
+  console.log("Types:", {
+    lighting: typeof contractDetails?.lighting,
+    photography: typeof contractDetails?.photography,
+    videoVisuals: typeof contractDetails?.videoVisuals,
+    additionalHours: typeof contractDetails?.additionalHours
+  });
+
+  // Debug specific values - remove in production
+  console.log("Raw values:", {
+    lighting: contractDetails?.lighting,
+    photography: contractDetails?.photography,
+    videoVisuals: contractDetails?.videoVisuals,
+    additionalHours: contractDetails?.additionalHours
+  });
 
   // Check for mobile screen on client side only
   useEffect(() => {
@@ -191,6 +206,23 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           <FaReceipt style={{ marginRight: '10px', color: '#635BFF' }} />
           Order Summary
         </h3>
+        
+        {/* Debug information - will be removed in production */}
+        <div style={{ 
+          backgroundColor: '#f0f9ff', 
+          padding: '8px', 
+          marginBottom: '15px', 
+          borderRadius: '5px',
+          fontSize: '12px',
+          color: '#333',
+          border: '1px solid #bae6fd'
+        }}>
+          <p style={{ margin: '0 0 3px 0', fontWeight: 'bold' }}>Debug Info:</p>
+          <p style={{ margin: '0' }}>Lighting: {String(services.lighting)}</p>
+          <p style={{ margin: '0' }}>Photography: {String(services.photography)}</p>
+          <p style={{ margin: '0' }}>VideoVisuals: {String(services.videoVisuals)}</p>
+          <p style={{ margin: '0' }}>Additional Hours: {services.additionalHours}</p>
+        </div>
         
         <div style={{ marginBottom: '0.5rem' }}>
           {/* Base Package */}

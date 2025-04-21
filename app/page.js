@@ -529,15 +529,20 @@ Live City DJ Contract Terms and Conditions:
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === 'checkbox'
-          ? checked
-          : type === 'number'
-          ? parseInt(value) || 0
-          : value,
-    }));
+    
+    if (type === 'checkbox') {
+      console.log(`Setting ${name} to ${checked} (checkbox)`);
+    }
+    
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
+      };
+      
+      console.log(`Updated formData ${name}:`, newData[name]);
+      return newData;
+    });
   };
 
   // Basic manual address validation: requires at least one letter, one number, and at least 5 characters.
@@ -1147,6 +1152,23 @@ Live City DJ Contract Terms and Conditions:
                 Secure your event date with a deposit payment
               </p>
               
+              {/* Debug information - will be removed in production */}
+              <div style={{ 
+                backgroundColor: '#f5f5f5', 
+                padding: '10px', 
+                marginBottom: '15px', 
+                borderRadius: '5px',
+                fontSize: '14px',
+                color: '#333'
+              }}>
+                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Debug Info:</p>
+                <p style={{ margin: '0' }}>Lighting: {String(Boolean(formData.lighting))}</p>
+                <p style={{ margin: '0' }}>Photography: {String(Boolean(formData.photography))}</p>
+                <p style={{ margin: '0' }}>VideoVisuals: {String(Boolean(formData.videoVisuals))}</p>
+                <p style={{ margin: '0' }}>Additional Hours: {formData.additionalHours}</p>
+                <p style={{ margin: '0' }}>Total: ${calculateTotal()}</p>
+              </div>
+              
               <StripeCheckout
                 amount={parseInt(calculateTotal() * 100)}
                 contractDetails={{
@@ -1158,10 +1180,10 @@ Live City DJ Contract Terms and Conditions:
                   venueLocation: formData.venueLocation,
                   startTime: formData.startTime,
                   endTime: formData.endTime,
-                  lighting: Boolean(formData.lighting),
-                  photography: Boolean(formData.photography),
-                  videoVisuals: Boolean(formData.videoVisuals),
-                  additionalHours: formData.additionalHours
+                  lighting: formData.lighting === true,
+                  photography: formData.photography === true,
+                  videoVisuals: formData.videoVisuals === true,
+                  additionalHours: parseInt(formData.additionalHours || 0)
                 }}
                 onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
@@ -1547,7 +1569,21 @@ Live City DJ Contract Terms and Conditions:
                 ].map(({ name, label, price, description, icon }) => (
                   <div 
                     key={name}
-                    onClick={() => setFormData(prev => ({ ...prev, [name]: !prev[name] }))}
+                    onClick={() => {
+                      console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
+                      
+                      // Create a synthetic event object to use with handleChange
+                      const syntheticEvent = {
+                        target: {
+                          name: name,
+                          type: 'checkbox',
+                          checked: !formData[name]
+                        }
+                      };
+                      
+                      // Use the standard change handler
+                      handleChange(syntheticEvent);
+                    }}
                     className="service-card"
                     style={getServiceCardStyle(name)}
                   >
@@ -1648,7 +1684,21 @@ Live City DJ Contract Terms and Conditions:
                       <button
                         key={num}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, additionalHours: num }))}
+                        onClick={() => {
+                          console.log(`Setting additionalHours to ${num}`);
+                          
+                          // Create a synthetic event object to use with handleChange
+                          const syntheticEvent = {
+                            target: {
+                              name: 'additionalHours',
+                              type: 'number',
+                              value: num
+                            }
+                          };
+                          
+                          // Use the standard change handler
+                          handleChange(syntheticEvent);
+                        }}
                         style={{
                           width: '40px',
                           height: '40px',
