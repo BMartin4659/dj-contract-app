@@ -309,6 +309,11 @@ Live City DJ Contract Terms and Conditions:
           position: relative;
           z-index: 1;
         }
+        .form-grid-1col {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
         @media (max-width: 767px) {
           .main-content {
             padding: 10px;
@@ -323,6 +328,9 @@ Live City DJ Contract Terms and Conditions:
           }
           .form-grid-2col {
             grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+          }
+          .form-grid-1col {
             gap: 0.5rem !important;
           }
           .payment-options {
@@ -1086,8 +1094,8 @@ Live City DJ Contract Terms and Conditions:
                 />
               </div>
 
-              {/* Two-column grid for contact information */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
+              {/* Two-column grid for contact information - changed to single column */}
+              <div className="form-grid-1col">
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -1122,8 +1130,8 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               </div>
 
-              {/* Two-column grid for event details */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
+              {/* Two-column grid for event details - changed to single column */}
+              <div className="form-grid-1col">
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -1158,8 +1166,8 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               </div>
 
-              {/* Two-column grid for venue information */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
+              {/* Two-column grid for venue information - changed to single column */}
+              <div className="form-grid-1col">
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -1224,8 +1232,8 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               </div>
 
-              {/* Two-column grid for date and time selection */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }} className="form-grid-2col">
+              {/* Two-column grid for date and time selection - changed to single column */}
+              <div className="form-grid-1col">
                 {/* Event Date */}
                 <div>
                   <label style={labelStyle} className="field-label">
