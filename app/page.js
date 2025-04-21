@@ -945,7 +945,7 @@ Live City DJ Contract Terms and Conditions:
 
   // Create a service card style generator
   const getServiceCardStyle = useCallback((name) => {
-    const isSelected = formData[name];
+    const isSelected = formData[name] === true;
     return {
       border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
       borderRadius: '12px',
@@ -984,6 +984,16 @@ Live City DJ Contract Terms and Conditions:
     position: 'absolute', 
     opacity: 0 
   }), []);
+
+  // Log initial form state
+  useEffect(() => {
+    console.log("Initial form data:", formData);
+    console.log("Service selections:", {
+      lighting: formData.lighting,
+      photography: formData.photography,
+      videoVisuals: formData.videoVisuals
+    });
+  }, []);
 
   if (!isClient) {
     return null;
@@ -1571,23 +1581,20 @@ Live City DJ Contract Terms and Conditions:
                     key={name}
                     onClick={() => {
                       console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
-                      
-                      // Create a synthetic event object to use with handleChange
-                      const syntheticEvent = {
-                        target: {
-                          name: name,
-                          type: 'checkbox',
-                          checked: !formData[name]
-                        }
-                      };
-                      
-                      // Use the standard change handler
-                      handleChange(syntheticEvent);
+                      // Use direct state update with explicit true/false values
+                      setFormData(prev => {
+                        const newValue = prev[name] === true ? false : true;
+                        console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
+                        return {
+                          ...prev,
+                          [name]: newValue
+                        };
+                      });
                     }}
                     className="service-card"
                     style={getServiceCardStyle(name)}
                   >
-                    {formData[name] && (
+                    {formData[name] === true && (
                       <div style={{
                         position: 'absolute',
                         top: '10px',
@@ -1686,18 +1693,14 @@ Live City DJ Contract Terms and Conditions:
                         type="button"
                         onClick={() => {
                           console.log(`Setting additionalHours to ${num}`);
-                          
-                          // Create a synthetic event object to use with handleChange
-                          const syntheticEvent = {
-                            target: {
-                              name: 'additionalHours',
-                              type: 'number',
-                              value: num
-                            }
-                          };
-                          
-                          // Use the standard change handler
-                          handleChange(syntheticEvent);
+                          // Direct state update for hours
+                          setFormData(prev => {
+                            console.log(`Setting additionalHours from ${prev.additionalHours} to ${num}`);
+                            return {
+                              ...prev,
+                              additionalHours: num
+                            };
+                          });
                         }}
                         style={{
                           width: '40px',

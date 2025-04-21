@@ -25,9 +25,9 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   // Extract services from contract details
   const services = {
     basePackage: true, // Always included
-    lighting: Boolean(contractDetails?.lighting === true),
-    photography: Boolean(contractDetails?.photography === true),
-    videoVisuals: Boolean(contractDetails?.videoVisuals === true),
+    lighting: contractDetails?.lighting === true,
+    photography: contractDetails?.photography === true,
+    videoVisuals: contractDetails?.videoVisuals === true,
     additionalHours: parseInt(contractDetails?.additionalHours || 0)
   };
 
@@ -70,15 +70,21 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   // Calculate correct total from services
   const calculateTotal = () => {
     console.log("Calculating total with services:", services);
+    console.log("And contract details:", contractDetails);
     
     const basePackage = 400;
-    const lighting = services.lighting ? 100 : 0;
-    const photography = services.photography ? 150 : 0;
-    const videoVisuals = services.videoVisuals ? 100 : 0;
-    const additionalHoursCost = services.additionalHours * 75;
+    
+    // Try to use values from services object first, but fall back to direct contract details
+    const lighting = services.lighting || contractDetails?.lighting ? 100 : 0;
+    const photography = services.photography || contractDetails?.photography ? 150 : 0;
+    const videoVisuals = services.videoVisuals || contractDetails?.videoVisuals ? 100 : 0;
+    const additionalHoursVal = services.additionalHours || 
+                            (contractDetails?.additionalHours ? parseInt(contractDetails.additionalHours) : 0);
+    const additionalHoursCost = additionalHoursVal * 75;
     
     const total = basePackage + lighting + photography + videoVisuals + additionalHoursCost;
     console.log("Calculated total in Stripe component:", total);
+    console.log("With components:", { basePackage, lighting, photography, videoVisuals, additionalHoursCost });
     return total;
   };
   
@@ -117,10 +123,11 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           eventType: contractDetails?.eventType || 'Event',
           eventDate: contractDetails?.eventDate || new Date().toISOString(),
           venueName: contractDetails?.venueName || 'Venue',
-          lighting: services.lighting,
-          photography: services.photography,
-          videoVisuals: services.videoVisuals,
-          additionalHours: services.additionalHours
+          lighting: services.lighting || contractDetails?.lighting || false,
+          photography: services.photography || contractDetails?.photography || false,
+          videoVisuals: services.videoVisuals || contractDetails?.videoVisuals || false,
+          additionalHours: services.additionalHours || 
+                        (contractDetails?.additionalHours ? parseInt(contractDetails.additionalHours) : 0)
         })
       });
 
@@ -237,7 +244,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           </div>
           
           {/* Lighting */}
-          {services.lighting && (
+          {services.lighting || contractDetails?.lighting ? (
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -247,10 +254,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
               <span>💡 Event Lighting</span>
               <span>$100</span>
             </div>
-          )}
+          ) : null}
           
           {/* Photography */}
-          {services.photography && (
+          {services.photography || contractDetails?.photography ? (
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -260,10 +267,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
               <span>📸 Photography</span>
               <span>$150</span>
             </div>
-          )}
+          ) : null}
           
           {/* Video Visuals */}
-          {services.videoVisuals && (
+          {services.videoVisuals || contractDetails?.videoVisuals ? (
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -273,18 +280,18 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
               <span>📽️ Video Visuals</span>
               <span>$100</span>
             </div>
-          )}
+          ) : null}
           
           {/* Additional Hours */}
-          {services.additionalHours > 0 && (
+          {(services.additionalHours > 0 || (contractDetails?.additionalHours && parseInt(contractDetails.additionalHours) > 0)) && (
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               padding: '0.5rem 0',
               borderBottom: '1px solid #e5e7eb'
             }}>
-              <span>⏱️ Additional Hours ({services.additionalHours})</span>
-              <span>${services.additionalHours * 75}</span>
+              <span>⏱️ Additional Hours ({services.additionalHours || parseInt(contractDetails?.additionalHours) || 0})</span>
+              <span>${(services.additionalHours || parseInt(contractDetails?.additionalHours) || 0) * 75}</span>
             </div>
           )}
           
