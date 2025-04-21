@@ -13,6 +13,8 @@ import { db } from '@/lib/firebase';
 const EMAILJS_CONFIG = {
   SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
   TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
+  PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'default_public_key',
+  // USER_ID is deprecated but kept for backward compatibility
   USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
 };
 
@@ -66,23 +68,28 @@ function PaymentSuccessContent() {
     setEmailError(null);
 
     try {
-      // Initialize EmailJS
-      const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
-      if (userId && userId !== 'default_user_id') {
-        emailjs.init(userId);
+      // Initialize EmailJS with the PUBLIC key, not the user ID
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'missing_public_key';
+      
+      if (publicKey && publicKey !== 'missing_public_key') {
+        emailjs.init(publicKey);
+      } else {
+        throw new Error("EmailJS initialization failed: missing PUBLIC_KEY");
       }
       
-      // Prepare template parameters
+      // Prepare template parameters - make sure all fields match template expectations
       const templateParams = {
         to_name: booking.clientName || 'Customer',
         to_email: booking.email,
+        from_name: 'Live City DJ',
         event_type: booking.eventType || 'Event',
         event_date: booking.eventDate || 'TBD',
         venue_name: booking.venueName || 'Venue',
         venue_location: booking.venueLocation || 'TBD',
         payment_id: paymentId || 'Unknown',
         payment_method: 'Stripe',
-        total_amount: `$${(booking.amount / 100).toFixed(2) || '0.00'}`
+        total_amount: `$${(booking.amount / 100).toFixed(2) || '0.00'}`,
+        message: `Thank you for booking with Live City DJ! Your payment of $${(booking.amount / 100).toFixed(2) || '0.00'} has been successfully processed.`
       };
       
       console.log("Sending manual confirmation email:", templateParams);
@@ -90,11 +97,15 @@ function PaymentSuccessContent() {
       const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
       const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
       
+      if (serviceId === 'default_service_id' || templateId === 'default_template_id') {
+        throw new Error("EmailJS sending failed: missing service ID or template ID");
+      }
+      
+      // Send email with service ID and template ID only (public key is already initialized)
       const response = await emailjs.send(
         serviceId,
         templateId,
-        templateParams,
-        userId
+        templateParams
       );
       
       console.log("Manual email sent successfully:", response);
