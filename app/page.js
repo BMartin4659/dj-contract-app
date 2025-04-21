@@ -168,6 +168,8 @@ Live City DJ Contract Terms and Conditions:
   const EMAILJS_CONFIG = {
     SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
     TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
+    PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'default_public_key',
+    // USER_ID is deprecated but kept for backward compatibility
     USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
   };
 
@@ -581,14 +583,14 @@ Live City DJ Contract Terms and Conditions:
 
   // Initialize EmailJS
   useEffect(() => {
-    // Initialize EmailJS with the user ID
+    // Initialize EmailJS with the PUBLIC key, not the user ID
     if (typeof window !== 'undefined' && isClient) {
-      const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
-      if (userId && userId !== 'default_user_id') {
-        emailjs.init(userId);
-        console.log("EmailJS initialized with user ID");
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
+      if (publicKey && publicKey !== 'default_public_key') {
+        emailjs.init(publicKey);
+        console.log("EmailJS initialized with public key");
       } else {
-        console.warn("EmailJS initialization skipped - no valid user ID");
+        console.warn("EmailJS initialization skipped - no valid public key");
       }
     }
   }, [isClient]);
@@ -603,13 +605,16 @@ Live City DJ Contract Terms and Conditions:
     
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
     const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
-    const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+    
+    // Add from_name if missing (required by EmailJS)
+    if (!templateParams.from_name) {
+      templateParams.from_name = 'Live City DJ';
+    }
     
     // Verify EmailJS configuration
-    if (!serviceId || !templateId || !userId || 
+    if (!serviceId || !templateId || 
         serviceId === 'default_service_id' || 
-        templateId === 'default_template_id' || 
-        userId === 'default_user_id') {
+        templateId === 'default_template_id') {
       console.error("EmailJS environment variables are missing or using fallbacks");
       return { success: false, error: "Email service configuration is incomplete" };
     }
@@ -622,8 +627,7 @@ Live City DJ Contract Terms and Conditions:
         const emailResponse = await emailjs.send(
           serviceId,
           templateId,
-          templateParams,
-          userId
+          templateParams
         );
 
         console.log("EmailJS Response:", emailResponse);
@@ -777,6 +781,7 @@ Live City DJ Contract Terms and Conditions:
       const templateParams = {
         to_name: formData.clientName || '',
         to_email: formData.email || '',
+        from_name: 'Live City DJ',
         event_type: formData.eventType || '',
         event_date: formData.eventDate || '',
         venue_name: formData.venueName || '',
