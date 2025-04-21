@@ -11,8 +11,65 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { FaLock, FaShieldAlt, FaCheck, FaCreditCard, FaReceipt, FaInfo } from 'react-icons/fa';
+import emailjs from '@emailjs/browser';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// EmailJS configuration fallbacks
+const EMAILJS_CONFIG = {
+  SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
+  TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
+  USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
+};
+
+// Helper function to send confirmation email
+const sendConfirmationEmail = async (contractDetails, paymentId) => {
+  if (!contractDetails?.email) {
+    console.error("Cannot send confirmation email: missing email address");
+    return false;
+  }
+  
+  try {
+    // Initialize EmailJS
+    const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+    if (userId && userId !== 'default_user_id') {
+      emailjs.init(userId);
+    }
+    
+    // Prepare template parameters
+    const templateParams = {
+      to_name: contractDetails.clientName || 'Customer',
+      to_email: contractDetails.email,
+      event_type: contractDetails.eventType || 'Event',
+      event_date: contractDetails.eventDate || 'TBD',
+      venue_name: contractDetails.venueName || 'Venue',
+      venue_location: contractDetails.venueLocation || 'TBD',
+      start_time: contractDetails.startTime || 'TBD',
+      end_time: contractDetails.endTime || 'TBD',
+      payment_id: paymentId || 'Unknown',
+      payment_method: 'Stripe',
+      total_amount: contractDetails.totalAmount || '$0.00'
+    };
+    
+    console.log("Sending payment confirmation email:", templateParams);
+    
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
+    
+    const response = await emailjs.send(
+      serviceId,
+      templateId,
+      templateParams,
+      userId
+    );
+    
+    console.log("Email sent successfully:", response);
+    return true;
+  } catch (error) {
+    console.error("Failed to send confirmation email:", error);
+    return false;
+  }
+};
 
 const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   const stripe = useStripe();
@@ -167,6 +224,16 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           additionalHours: services.additionalHours,
           timestamp: new Date()
         });
+        
+        // Send confirmation email
+        await sendConfirmationEmail(
+          {
+            ...contractDetails,
+            totalAmount: `$${finalAmount}`
+          },
+          paymentIntent.id
+        );
+        
         onSuccess(paymentIntent.id);
       }
     } catch (err) {

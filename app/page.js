@@ -579,6 +579,81 @@ Live City DJ Contract Terms and Conditions:
   const validatePhone = (phone) =>
     /^[0-9]{10}$/.test(phone.replace(/\D/g, ''));
 
+  // Initialize EmailJS
+  useEffect(() => {
+    // Initialize EmailJS with the user ID
+    if (typeof window !== 'undefined' && isClient) {
+      const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+      if (userId && userId !== 'default_user_id') {
+        emailjs.init(userId);
+        console.log("EmailJS initialized with user ID");
+      } else {
+        console.warn("EmailJS initialization skipped - no valid user ID");
+      }
+    }
+  }, [isClient]);
+
+  // Function to send confirmation email with retry logic
+  const sendConfirmationEmail = async (templateParams) => {
+    const maxRetries = 3;
+    let retryCount = 0;
+    let success = false;
+
+    console.log("Preparing to send confirmation email with params:", templateParams);
+    
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
+    const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+    
+    // Verify EmailJS configuration
+    if (!serviceId || !templateId || !userId || 
+        serviceId === 'default_service_id' || 
+        templateId === 'default_template_id' || 
+        userId === 'default_user_id') {
+      console.error("EmailJS environment variables are missing or using fallbacks");
+      return { success: false, error: "Email service configuration is incomplete" };
+    }
+    
+    // Attempt to send with retries
+    while (retryCount < maxRetries && !success) {
+      try {
+        console.log(`Email send attempt ${retryCount + 1}/${maxRetries}`);
+        
+        const emailResponse = await emailjs.send(
+          serviceId,
+          templateId,
+          templateParams,
+          userId
+        );
+
+        console.log("EmailJS Response:", emailResponse);
+
+        if (emailResponse && emailResponse.status === 200) {
+          console.log("Email sent successfully!");
+          success = true;
+          return { success: true };
+        } else {
+          throw new Error(`Unexpected response: ${JSON.stringify(emailResponse)}`);
+        }
+      } catch (emailError) {
+        console.error(`Email send attempt ${retryCount + 1} failed:`, emailError);
+        retryCount++;
+        
+        if (retryCount < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const delayMs = 1000 * Math.pow(2, retryCount);
+          console.log(`Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: `Failed to send email after ${maxRetries} attempts` 
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -716,72 +791,24 @@ Live City DJ Contract Terms and Conditions:
       
       console.log("Sending email with params:", templateParams);
       
-      // Check if required environment variables are available
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
-      const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+      // Use the new email sending function with retry logic
+      const emailResult = await sendConfirmationEmail(templateParams);
       
-      // EmailJS setup verification
-      if (!serviceId || !templateId || !userId || 
-          serviceId === 'default_service_id' || 
-          templateId === 'default_template_id' || 
-          userId === 'default_user_id') {
-        console.error("EmailJS environment variables are missing or using fallbacks");
-        // Continue with form submission process even if email can't be sent
-        setSubmitted(true);
+      if (emailResult.success) {
+        // Update the document with email confirmation if Firebase was successful
         if (docRef) {
           try {
             await updateDoc(doc(db, 'djContracts', docRef.id), {
-              status: 'submitted_no_email'
+              confirmationSent: true,
+              status: 'emailSent'
             });
           } catch (updateError) {
             console.error("Error updating document status:", updateError);
           }
         }
-        return;
-      }
-      
-      // Try to send email
-      try {
-        const emailResponse = await emailjs.send(
-          serviceId,
-          templateId,
-          templateParams,
-          userId
-        );
-
-        console.log("EmailJS Response:", emailResponse);
-
-        if (emailResponse && emailResponse.status === 200) {
-          // Update the document with email confirmation if Firebase was successful
-          if (docRef) {
-            try {
-              await updateDoc(doc(db, 'djContracts', docRef.id), {
-                confirmationSent: true,
-                status: 'emailSent'
-              });
-            } catch (updateError) {
-              console.error("Error updating document status:", updateError);
-            }
-          }
-          setSubmitted(true);
-          setShowConfirmation(true);
-          setTimeout(() => setShowConfirmation(false), 5000);
-        } else {
-          console.warn("Email sent but with unexpected status:", emailResponse);
-          setSubmitted(true); // Still mark as submitted
-          setShowConfirmation(true);
-          // Show a different message if the email didn't go through
-          setConfirmationMessage("Form submitted, but confirmation email may not have been sent.");
-          setTimeout(() => setShowConfirmation(false), 5000);
-        }
-      } catch (emailError) {
-        console.error("Failed to send email:", emailError);
-        // Still complete the submission process even if email fails
-        setSubmitted(true);
-        setShowConfirmation(true);
-        setConfirmationMessage("Form submitted, but we couldn't send a confirmation email.");
-        setTimeout(() => setShowConfirmation(false), 5000);
+      } else {
+        console.warn("Email sending failed:", emailResult.error);
+        // Still mark as submitted even if email fails
       }
       
       // Mark submission as complete regardless of email success
