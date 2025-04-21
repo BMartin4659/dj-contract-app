@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "firecrawl": {
+      "command": "C:\\WINDOWS\\System32\\cmd.exe",
+      "args": [
+        "/c",
+        "set FIRECRAWL_API_KEY=your-api-key && npx -y firecrawl-mcp"
+      ]
+    },
+    "github": {
+      "command": "C:\\WINDOWS\\System32\\cmd.exe",
+      "args": [
+        "/c",
+        "C:\\Users\\B.Martin\\dj-contract-app\\run-github-server.bat"
+      ]
+    }
+  }
+} 
