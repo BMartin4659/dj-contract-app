@@ -1075,17 +1075,33 @@ Live City DJ Contract Terms and Conditions:
       }}>
         {showStripe ? (
           <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'white',
             padding: '2rem',
             borderRadius: '20px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
             maxWidth: '800px',
-            width: '90%',
+            width: '96%',
             margin: '2rem auto 0 auto'
           }}>
-            <h2 style={{ textAlign: 'center', fontSize: '1.75rem', color: '#111', marginBottom: '1.5rem', fontWeight: '600' }}>
-              Complete Your Payment
+            <h2 style={{ 
+              textAlign: 'center', 
+              fontSize: '1.75rem', 
+              color: '#111', 
+              marginBottom: '1rem', 
+              fontWeight: '600',
+              borderBottom: '2px solid #635BFF',
+              paddingBottom: '10px'
+            }}>
+              Complete Your Booking
             </h2>
+            <p style={{ 
+              textAlign: 'center', 
+              color: '#555', 
+              marginBottom: '1.5rem', 
+              fontSize: '1.1rem'
+            }}>
+              Secure your event date with a deposit payment
+            </p>
             <StripeCheckout
               amount={calculateTotal() * 100}
               contractDetails={formData}
