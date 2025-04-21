@@ -80,7 +80,9 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Calculate the amount in cents for Stripe
-      const amountInCents = calculateTotal() * 100;
+      const amountInCents = Math.round(calculateTotal() * 100);
+      
+      console.log('Submitting payment with amount:', amountInCents);
       
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
@@ -92,10 +94,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           eventType: contractDetails?.eventType || 'Event',
           eventDate: contractDetails?.eventDate || new Date().toISOString(),
           venueName: contractDetails?.venueName || 'Venue',
-          lighting: contractDetails?.lighting || false,
-          photography: contractDetails?.photography || false,
-          videoVisuals: contractDetails?.videoVisuals || false,
-          additionalHours: contractDetails?.additionalHours || 0
+          lighting: services.lighting,
+          photography: services.photography,
+          videoVisuals: services.videoVisuals,
+          additionalHours: services.additionalHours
         })
       });
 
@@ -123,10 +125,10 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           eventDate: contractDetails?.eventDate,
           venueName: contractDetails?.venueName,
           venueLocation: contractDetails?.venueLocation,
-          lighting: contractDetails?.lighting || false,
-          photography: contractDetails?.photography || false,
-          videoVisuals: contractDetails?.videoVisuals || false,
-          additionalHours: contractDetails?.additionalHours || 0,
+          lighting: services.lighting,
+          photography: services.photography,
+          videoVisuals: services.videoVisuals,
+          additionalHours: services.additionalHours,
           timestamp: new Date()
         });
         onSuccess(paymentIntent.id);
