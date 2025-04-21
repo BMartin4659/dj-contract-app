@@ -84,19 +84,26 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
       backgroundColor: 'rgba(255,255,255,0.95)',
       zIndex: '1000',
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      borderRadius: '0 0 8px 8px'
+      borderRadius: '0 0 8px 8px',
+      height: '75px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }}>
       <div className="confirmation-content" style={{
-        padding: '20px',
+        padding: '10px 20px',
         maxWidth: '600px',
-        margin: '0 auto'
+        margin: '0 auto',
+        position: 'relative',
+        textAlign: 'center'
       }}>
-        <h3>Payment Initiated</h3>
-        <p>{getMessage()}</p>
+        <h3 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>Payment Initiated</h3>
+        <p style={{ margin: '0', fontSize: '14px' }}>{getMessage()}</p>
         <button onClick={onClose} className="close-btn" style={{
           position: 'absolute',
-          top: '10px',
-          right: '10px',
+          top: '50%',
+          right: '0',
+          transform: 'translateY(-50%)',
           background: 'none',
           border: 'none',
           fontSize: '1.5rem',
@@ -1103,7 +1110,7 @@ Live City DJ Contract Terms and Conditions:
               Secure your event date with a deposit payment
             </p>
             <StripeCheckout
-              amount={calculateTotal() * 100}
+              amount={parseInt(calculateTotal() * 100)}
               contractDetails={formData}
               onSuccess={(paymentId) => {
                 // Handle successful payment before form submission

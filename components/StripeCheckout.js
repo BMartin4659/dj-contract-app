@@ -61,7 +61,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   };
   
   // Get the final amount to use (either from props or calculated)
-  const finalAmount = amount || calculateTotal();
+  const finalAmount = amount ? amount / 100 : calculateTotal();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,7 +137,8 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       display: 'flex',
       flexDirection: 'column',
       gap: '1.5rem',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      marginTop: '80px'
     }}>
       {/* Security Banner */}
       <div style={{
@@ -254,7 +255,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             fontSize: '1.1rem'
           }}>
             <span>Total</span>
-            <span>${calculateTotal()}</span>
+            <span>${finalAmount}</span>
           </div>
           
           {/* Deposit Note */}
