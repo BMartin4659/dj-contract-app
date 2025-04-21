@@ -76,11 +76,32 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
   };
 
   return (
-    <div className="payment-confirmation-banner">
-      <div className="confirmation-content">
+    <div className="payment-confirmation-banner" style={{
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      width: '100%',
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      zIndex: '1000',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      borderRadius: '0 0 8px 8px'
+    }}>
+      <div className="confirmation-content" style={{
+        padding: '20px',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
         <h3>Payment Initiated</h3>
         <p>{getMessage()}</p>
-        <button onClick={onClose} className="close-btn">×</button>
+        <button onClick={onClose} className="close-btn" style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+          fontSize: '1.5rem',
+          cursor: 'pointer'
+        }}>×</button>
       </div>
     </div>
   );
@@ -90,6 +111,7 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
 const PaymentOption = ({ method, iconComponent, isSelected, onSelect, iconColor }) => (
   <div 
     onClick={onSelect}
+    className="payment-option-item"
     style={{
       display: 'flex',
       flexDirection: 'column',
@@ -297,6 +319,79 @@ Live City DJ Contract Terms and Conditions:
           }
           form {
             margin-bottom: 30px;
+            padding: 1.5rem !important;
+          }
+          .form-grid-2col {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+          }
+          .payment-options {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .payment-option-item {
+            padding: 10px 5px !important;
+          }
+          .service-options {
+            grid-template-columns: 1fr !important;
+          }
+          .service-card {
+            padding: 15px !important;
+          }
+          .hours-selector button {
+            width: 36px !important;
+            height: 36px !important;
+          }
+          .submit-button {
+            padding: 1.2rem !important;
+            font-size: 1.1rem !important;
+            margin-top: 1.5rem !important;
+            position: sticky !important;
+            bottom: 20px !important;
+            z-index: 100 !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+          }
+          .field-label {
+            font-size: 0.95rem !important;
+            margin-bottom: 0.3rem !important;
+          }
+          .field-input {
+            padding: 10px !important;
+            margin-bottom: 0.7rem !important;
+          }
+          .section-header {
+            margin-top: 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .section-divider {
+            margin: 1.5rem 0 !important;
+          }
+          .payment-confirmation-banner {
+            padding: 10px !important;
+            width: 100% !important;
+            border-radius: 0 !important;
+          }
+          .confirmation-content {
+            padding: 15px !important;
+          }
+          .terms-container {
+            padding: 12px !important;
+          }
+          .event-summary {
+            padding: 12px !important;
+            margin-bottom: 70px !important;
+          }
+          .event-summary h3 {
+            font-size: 1.1rem !important;
+          }
+          .event-summary-list {
+            font-size: 0.9rem !important;
+          }
+          .event-summary-list div {
+            margin-bottom: 4px !important;
+          }
+          .event-total {
+            padding-top: 8px !important;
+            font-size: 1.1rem !important;
           }
         }
       `;
@@ -616,7 +711,7 @@ Live City DJ Contract Terms and Conditions:
   };
 
   const itemizedTotal = () => (
-    <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem', color: '#000' }}>
+    <ul className="event-summary-list" style={{ listStyle: 'none', padding: 0, marginTop: '1rem', color: '#000' }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -632,7 +727,12 @@ Live City DJ Contract Terms and Conditions:
       {formData.additionalHours > 0 && (
         <li>⏱️ Additional Hours: ${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}</li>
       )}
-      <li>
+      <li className="event-total" style={{
+        marginTop: '10px',
+        paddingTop: '10px',
+        borderTop: '1px solid #ddd',
+        fontWeight: 'bold'
+      }}>
         <strong>Total: ${calculateTotal()}</strong>
       </li>
     </ul>
@@ -727,6 +827,24 @@ Live City DJ Contract Terms and Conditions:
       opacity: isChangingPayment ? 0.7 : 1
     };
   }, [formData.paymentMethod, isChangingPayment]);
+
+  // Create a service card style generator
+  const getServiceCardStyle = useCallback((name) => {
+    const isSelected = formData[name];
+    return {
+      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
+      borderRadius: '12px',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      cursor: 'pointer',
+      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+      position: 'relative',
+      overflow: 'hidden'
+    };
+  }, [formData]);
 
   // Memoize common styles to avoid recreation on each render
   const paymentIconStyle = useMemo(() => ({ 
@@ -947,11 +1065,11 @@ Live City DJ Contract Terms and Conditions:
                 marginBottom: '20px', 
                 borderBottom: '1px solid #e0e0e0',
                 opacity: 0.5
-              }}></div>
+              }} className="section-divider"></div>
               
               {/* Client Information Section */}
               <div>
-                <label style={labelStyle}>
+                <label style={labelStyle} className="field-label">
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     {fieldIcons['clientName']} Client Name:
                   </span>
@@ -961,6 +1079,7 @@ Live City DJ Contract Terms and Conditions:
                   type="text"
                   required
                   style={inputStyle}
+                  className="field-input"
                   value={formData.clientName}
                   onChange={handleChange}
                   placeholder="Enter your full name"
@@ -968,9 +1087,9 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Two-column grid for contact information */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {fieldIcons['email']} Email:
                     </span>
@@ -980,12 +1099,13 @@ Live City DJ Contract Terms and Conditions:
                     type="email"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.email}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {fieldIcons['contactPhone']} Contact Phone:
                     </span>
@@ -995,6 +1115,7 @@ Live City DJ Contract Terms and Conditions:
                     type="tel"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.contactPhone}
                     onChange={handleChange}
                   />
@@ -1002,9 +1123,9 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Two-column grid for event details */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {fieldIcons['eventType']} Event Type:
                     </span>
@@ -1014,12 +1135,13 @@ Live City DJ Contract Terms and Conditions:
                     type="text"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.eventType}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {fieldIcons['guestCount']} Guest Count:
                     </span>
@@ -1029,6 +1151,7 @@ Live City DJ Contract Terms and Conditions:
                     type="number"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.guestCount}
                     onChange={handleChange}
                   />
@@ -1036,9 +1159,9 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Two-column grid for venue information */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="form-grid-2col">
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {fieldIcons['venueName']} Venue Name:
                     </span>
@@ -1048,12 +1171,13 @@ Live City DJ Contract Terms and Conditions:
                     type="text"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.venueName}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {venueLocationIcon} Venue Location:
                     </span>
@@ -1077,6 +1201,7 @@ Live City DJ Contract Terms and Conditions:
                         color: 'black',
                         transition: 'all 0.2s ease'
                       }}
+                      className="field-input"
                     />
                     <div style={{ 
                       position: 'absolute',
@@ -1100,10 +1225,10 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Two-column grid for date and time selection */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }} className="form-grid-2col">
                 {/* Event Date */}
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {timeIcons['eventDate']} Event Date:
                     </span>
@@ -1113,6 +1238,7 @@ Live City DJ Contract Terms and Conditions:
                     type="date"
                     required
                     style={inputStyle}
+                    className="field-input"
                     value={formData.eventDate}
                     onChange={handleChange}
                   />
@@ -1120,7 +1246,7 @@ Live City DJ Contract Terms and Conditions:
 
                 {/* Start Time */}
                 <div>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
                       {timeIcons['startTime']} Start Time:
                     </span>
@@ -1150,6 +1276,7 @@ Live City DJ Contract Terms and Conditions:
                     }}
                     required
                     style={inputStyle}
+                    className="field-input"
                   >
                     <option value="">Select start time</option>
                     {timeOptions.map((t) => (
@@ -1161,7 +1288,7 @@ Live City DJ Contract Terms and Conditions:
 
               {/* End Time */}
               <div>
-                <label style={labelStyle}>
+                <label style={labelStyle} className="field-label">
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     {timeIcons['endTime']} End Time:
                   </span>
@@ -1173,6 +1300,7 @@ Live City DJ Contract Terms and Conditions:
                   required
                   disabled={!formData.startTime}
                   style={inputStyle}
+                  className="field-input"
                 >
                   <option value="">Select end time</option>
                   {formData.startTime &&
@@ -1202,7 +1330,7 @@ Live City DJ Contract Terms and Conditions:
                 marginBottom: '1.5rem',
                 borderBottom: '2px solid #e0e0e0',
                 position: 'relative'
-              }}>
+              }} className="section-header">
                 <h3 style={{
                   color: '#333',
                   fontSize: '1.2rem',
@@ -1226,7 +1354,7 @@ Live City DJ Contract Terms and Conditions:
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: '16px',
                 marginBottom: '2rem'
-              }}>
+              }} className="service-options">
                 {[
                   {
                     name: 'lighting',
@@ -1253,19 +1381,8 @@ Live City DJ Contract Terms and Conditions:
                   <div 
                     key={name}
                     onClick={() => setFormData(prev => ({ ...prev, [name]: !prev[name] }))}
-                    style={{
-                      border: `2px solid ${formData[name] ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '20px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      cursor: 'pointer',
-                      backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData[name] ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
+                    className="service-card"
+                    style={getServiceCardStyle(name)}
                   >
                     {formData[name] && (
                       <div style={{
@@ -1334,7 +1451,7 @@ Live City DJ Contract Terms and Conditions:
 
               {/* Compact Additional Hours Selector */}
               <div>
-                <label style={labelStyle}>
+                <label style={labelStyle} className="field-label">
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
                     Additional Hours ($75/hr):
@@ -1359,7 +1476,7 @@ Live City DJ Contract Terms and Conditions:
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
-                  }}>
+                  }} className="hours-selector">
                     {[0, 1, 2, 3, 4].map(num => (
                       <button
                         key={num}
@@ -1435,7 +1552,7 @@ Live City DJ Contract Terms and Conditions:
                   ...labelStyle,
                   fontSize: '1.1rem',
                   marginBottom: '1rem'
-                }}>
+                }} className="field-label">
                   Payment Method:
                 </label>
                 <div className="payment-options" style={{
@@ -1491,7 +1608,7 @@ Live City DJ Contract Terms and Conditions:
                 border: formData.agreeToTerms ? '2px solid #0070f3' : '1px solid #ddd',
                 boxShadow: formData.agreeToTerms ? '0 4px 12px rgba(0, 112, 243, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
                 transition: 'all 0.2s ease'
-              }}>
+              }} className="terms-container">
                 <div 
                   style={{
                     display: 'flex',
@@ -1556,7 +1673,7 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               {/* Itemized Total */}
-              <div style={{
+              <div className="event-summary" style={{
                 backgroundColor: '#f8f9fa',
                 padding: '1rem',
                 borderRadius: '8px',
@@ -1569,6 +1686,7 @@ Live City DJ Contract Terms and Conditions:
               <button
                 type="submit"
                 disabled={isSubmitting}
+                className="submit-button"
                 style={{
                   width: '100%',
                   backgroundColor: '#0070f3',
