@@ -1044,7 +1044,7 @@ Live City DJ Contract Terms and Conditions:
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Book Another Event
+            Secure Your Event Date
           </button>
         </div>
       </div>

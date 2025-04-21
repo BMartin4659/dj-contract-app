@@ -123,7 +123,7 @@ function PaymentSuccessContent() {
           transition: 'all 0.2s ease'
         }}>
           <FaHome style={{ marginRight: '12px', fontSize: '1.2rem' }} />
-          Back to Home
+          Secure Your Event Date
         </Link>
       </div>
     </div>
