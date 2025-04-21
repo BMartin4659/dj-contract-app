@@ -71,6 +71,14 @@ function PaymentSuccessContent() {
       // Initialize EmailJS with the PUBLIC key - Try multiple options for backwards compatibility
       let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
       
+      // Debug logging to troubleshoot
+      console.log("EmailJS config:", {
+        publicKey: publicKey ? "Set" : "Not set",
+        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ? "Set" : "Not set",
+        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ? "Set" : "Not set",
+        userId: process.env.NEXT_PUBLIC_EMAILJS_USER_ID ? "Set" : "Not set",
+      });
+      
       // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
       if (!publicKey || publicKey === 'default_public_key' || publicKey === 'missing_public_key') {
         publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
@@ -109,17 +117,35 @@ function PaymentSuccessContent() {
       }
       
       // Send email with service ID and template ID only (public key is already initialized)
-      const response = await emailjs.send(
-        serviceId,
-        templateId,
-        templateParams
-      );
-      
-      console.log("Manual email sent successfully:", response);
-      setEmailSent(true);
+      try {
+        const response = await emailjs.send(
+          serviceId,
+          templateId,
+          templateParams
+        );
+        
+        console.log("Manual email sent successfully:", response);
+        setEmailSent(true);
+      } catch (sendError) {
+        // Handle emailjs.send specific errors
+        console.error("EmailJS send error:", sendError);
+        throw new Error(sendError.text || sendError.message || "EmailJS API Error: Check console for details");
+      }
     } catch (error) {
       console.error("Failed to send manual confirmation email:", error);
-      setEmailError(error.message || "Failed to send email");
+      
+      // Handle different error types and provide better error messages
+      let errorMessage = "Failed to send email";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && Object.keys(error).length === 0) {
+        errorMessage = "Empty response from EmailJS API. Check your API key and template configuration.";
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      setEmailError(errorMessage);
     } finally {
       setEmailSending(false);
     }
