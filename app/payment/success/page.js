@@ -68,13 +68,20 @@ function PaymentSuccessContent() {
     setEmailError(null);
 
     try {
-      // Initialize EmailJS with the PUBLIC key, not the user ID
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'missing_public_key';
+      // Initialize EmailJS with the PUBLIC key - Try multiple options for backwards compatibility
+      let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
       
-      if (publicKey && publicKey !== 'missing_public_key') {
+      // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
+      if (!publicKey || publicKey === 'default_public_key' || publicKey === 'missing_public_key') {
+        publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+        console.log("Falling back to USER_ID for EmailJS initialization");
+      }
+      
+      if (publicKey && publicKey !== 'default_public_key' && publicKey !== 'missing_public_key' && publicKey !== 'default_user_id') {
         emailjs.init(publicKey);
+        console.log("EmailJS initialized successfully with key");
       } else {
-        throw new Error("EmailJS initialization failed: missing PUBLIC_KEY");
+        throw new Error("EmailJS initialization failed: missing PUBLIC_KEY and USER_ID");
       }
       
       // Prepare template parameters - make sure all fields match template expectations

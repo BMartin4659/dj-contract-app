@@ -583,14 +583,22 @@ Live City DJ Contract Terms and Conditions:
 
   // Initialize EmailJS
   useEffect(() => {
-    // Initialize EmailJS with the PUBLIC key, not the user ID
+    // Initialize EmailJS with the PUBLIC key, but fall back to USER_ID if needed
     if (typeof window !== 'undefined' && isClient) {
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
-      if (publicKey && publicKey !== 'default_public_key') {
+      // Try PUBLIC_KEY first
+      let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
+      
+      // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
+      if (!publicKey || publicKey === 'default_public_key') {
+        publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+        console.log("Falling back to USER_ID for EmailJS initialization");
+      }
+      
+      if (publicKey && publicKey !== 'default_public_key' && publicKey !== 'default_user_id') {
         emailjs.init(publicKey);
-        console.log("EmailJS initialized with public key");
+        console.log("EmailJS initialized successfully with key:", publicKey.substring(0, 4) + "...");
       } else {
-        console.warn("EmailJS initialization skipped - no valid public key");
+        console.warn("EmailJS initialization skipped - no valid public key or user ID");
       }
     }
   }, [isClient]);

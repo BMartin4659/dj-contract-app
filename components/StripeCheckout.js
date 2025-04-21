@@ -30,14 +30,20 @@ const sendConfirmationEmail = async (contractDetails, paymentId) => {
   }
   
   try {
-    // Initialize EmailJS with the PUBLIC key, not the user ID
-    // This is a common mistake that causes 422 errors
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'missing_public_key';
+    // Try multiple approaches to get a valid key for EmailJS
+    let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
     
-    if (publicKey && publicKey !== 'missing_public_key') {
+    // Fallback to USER_ID if needed (for backwards compatibility)
+    if (!publicKey || publicKey === 'missing_public_key' || publicKey === 'default_public_key') {
+      publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID;
+      console.log("Falling back to USER_ID for EmailJS initialization");
+    }
+    
+    if (publicKey && publicKey !== 'missing_public_key' && publicKey !== 'default_public_key') {
       emailjs.init(publicKey);
+      console.log("EmailJS initialized successfully with key");
     } else {
-      console.error("EmailJS initialization failed: missing PUBLIC_KEY");
+      console.error("EmailJS initialization failed: missing both PUBLIC_KEY and USER_ID");
       return false;
     }
     
