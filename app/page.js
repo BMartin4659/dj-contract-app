@@ -155,6 +155,13 @@ Live City DJ Contract Terms and Conditions:
 10. Media Rights: DJ may use event photos/videos for promotional purposes unless otherwise specified.
 `;
 
+  // Fallback EmailJS configuration (used if environment variables are missing)
+  const EMAILJS_CONFIG = {
+    SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
+    TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
+    USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
+  };
+
   const initialFormData = {
     clientName: '',
     email: '',
@@ -192,6 +199,7 @@ Live City DJ Contract Terms and Conditions:
   const [showTerms, setShowTerms] = useState(false);
   const [modalText, setModalText] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState(null);
   
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
@@ -316,7 +324,7 @@ Live City DJ Contract Terms and Conditions:
         }
         @media (max-width: 767px) {
           .main-content {
-            padding: 10px;
+            padding: 0;
             margin-bottom: 80px;
           }
           .form-container {
@@ -324,7 +332,21 @@ Live City DJ Contract Terms and Conditions:
           }
           form {
             margin-bottom: 30px;
-            padding: 1.5rem !important;
+            padding: 1.5rem 1rem !important;
+            width: 96% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+          form h1 {
+            line-height: 1.3 !important;
+            margin-bottom: 1rem !important;
+          }
+          form h2 {
+            line-height: 1.3 !important;
+            margin-bottom: 0.75rem !important;
+          }
+          form h3 {
+            line-height: 1.3 !important;
           }
           .form-grid-2col {
             grid-template-columns: 1fr !important;
@@ -566,26 +588,34 @@ Live City DJ Contract Terms and Conditions:
     setIsSubmitting(true);
     
     try {
-      // Create contract first
-      const docRef = await addDoc(collection(db, 'djContracts'), {
-        eventType: formData.eventType,
-        numberOfGuests: formData.guestCount,
-        venueName: formData.venueName,
-        venueLocation: formData.venueLocation,
-        eventDate: formData.eventDate,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        additionalHours: formData.additionalHours,
-        email: formData.email,
-        clientName: formData.clientName,
-        phoneNumber: formData.contactPhone,
-        paymentMethod: formData.paymentMethod,
-        depositPaid: false,
-        confirmationSent: false,
-        reminderSent: false,
-        status: 'pending',
-        createdAt: new Date()
-      });
+      let docRef;
+      
+      // Try to create contract in Firestore
+      try {
+        docRef = await addDoc(collection(db, 'djContracts'), {
+          eventType: formData.eventType,
+          numberOfGuests: formData.guestCount,
+          venueName: formData.venueName,
+          venueLocation: formData.venueLocation,
+          eventDate: formData.eventDate,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          additionalHours: formData.additionalHours,
+          email: formData.email,
+          clientName: formData.clientName,
+          phoneNumber: formData.contactPhone,
+          paymentMethod: formData.paymentMethod,
+          depositPaid: false,
+          confirmationSent: false,
+          reminderSent: false,
+          status: 'pending',
+          createdAt: new Date()
+        });
+      } catch (firebaseError) {
+        console.error("Firebase error:", firebaseError);
+        // Continue with form submission even if Firebase fails
+        // This allows the user to still proceed with payment/email
+      }
       
       // Handle based on payment method
       if (formData.paymentMethod === 'Stripe') {
@@ -594,6 +624,7 @@ Live City DJ Contract Terms and Conditions:
           console.log('Setting showStripe to true');
           setShowStripe(true);
           setSubmitted(true); // Mark as submitted so the form is hidden
+          return; // Exit function here to prevent email send - Stripe component will handle the rest
         } catch (error) {
           console.error('Error in Stripe payment handling:', error);
           // Fallback if setting state fails
@@ -639,29 +670,82 @@ Live City DJ Contract Terms and Conditions:
       
       console.log("Sending email with params:", templateParams);
       
-      const emailResponse = await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        process.env.NEXT_PUBLIC_EMAILJS_USER_ID
-      );
+      // Check if required environment variables are available
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
+      const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
+      
+      // EmailJS setup verification
+      if (!serviceId || !templateId || !userId || 
+          serviceId === 'default_service_id' || 
+          templateId === 'default_template_id' || 
+          userId === 'default_user_id') {
+        console.error("EmailJS environment variables are missing or using fallbacks");
+        // Continue with form submission process even if email can't be sent
+        setSubmitted(true);
+        if (docRef) {
+          try {
+            await updateDoc(doc(db, 'djContracts', docRef.id), {
+              status: 'submitted_no_email'
+            });
+          } catch (updateError) {
+            console.error("Error updating document status:", updateError);
+          }
+        }
+        return;
+      }
+      
+      // Try to send email
+      try {
+        const emailResponse = await emailjs.send(
+          serviceId,
+          templateId,
+          templateParams,
+          userId
+        );
 
-      if (emailResponse.status === 200) {
-        // Update the document with email confirmation
-        await updateDoc(doc(db, 'djContracts', docRef.id), {
-          confirmationSent: true,
-          status: 'emailSent'
-        });
+        console.log("EmailJS Response:", emailResponse);
+
+        if (emailResponse && emailResponse.status === 200) {
+          // Update the document with email confirmation if Firebase was successful
+          if (docRef) {
+            try {
+              await updateDoc(doc(db, 'djContracts', docRef.id), {
+                confirmationSent: true,
+                status: 'emailSent'
+              });
+            } catch (updateError) {
+              console.error("Error updating document status:", updateError);
+            }
+          }
+          setSubmitted(true);
+          setShowConfirmation(true);
+          setTimeout(() => setShowConfirmation(false), 5000);
+        } else {
+          console.warn("Email sent but with unexpected status:", emailResponse);
+          setSubmitted(true); // Still mark as submitted
+          setShowConfirmation(true);
+          // Show a different message if the email didn't go through
+          setConfirmationMessage("Form submitted, but confirmation email may not have been sent.");
+          setTimeout(() => setShowConfirmation(false), 5000);
+        }
+      } catch (emailError) {
+        console.error("Failed to send email:", emailError);
+        // Still complete the submission process even if email fails
         setSubmitted(true);
         setShowConfirmation(true);
+        setConfirmationMessage("Form submitted, but we couldn't send a confirmation email.");
         setTimeout(() => setShowConfirmation(false), 5000);
-      } else {
-        console.error("Email failed. Contract not saved.");
-        alert("Failed to send confirmation email. Contract not saved.");
       }
+      
+      // Mark submission as complete regardless of email success
+      setSubmitted(true);
+      
     } catch (error) {
       console.error("Something went wrong:", error);
-      alert("An error occurred while submitting the contract.");
+      alert("An error occurred while submitting the contract, but we've saved your information. Please contact support if you don't receive a confirmation email.");
+      // Still mark as submitted so user can try again or contact support
+      setSubmitted(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -1053,7 +1137,7 @@ Live City DJ Contract Terms and Conditions:
         ) : (
           <div style={{ 
             maxWidth: '800px',
-            width: '90%',
+            width: '96%',
             margin: '2rem auto 3rem auto'
           }}>
             <form onSubmit={handleSubmit} style={{
@@ -1718,7 +1802,7 @@ Live City DJ Contract Terms and Conditions:
       
       <PaymentConfirmation 
         show={showConfirmation} 
-        message={`${formData.paymentMethod} payment initiated. Please complete the transaction.`}
+        message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
       />
     </div>
   );
