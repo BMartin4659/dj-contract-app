@@ -25,11 +25,14 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   // Extract services from contract details
   const services = {
     basePackage: true, // Always included
-    lighting: contractDetails?.lighting || false,
-    photography: contractDetails?.photography || false,
-    videoVisuals: contractDetails?.videoVisuals || false,
+    lighting: Boolean(contractDetails?.lighting),
+    photography: Boolean(contractDetails?.photography),
+    videoVisuals: Boolean(contractDetails?.videoVisuals),
     additionalHours: contractDetails?.additionalHours || 0
   };
+
+  console.log("Contract details in StripeCheckout:", contractDetails);
+  console.log("Extracted services:", services);
 
   // Check for mobile screen on client side only
   useEffect(() => {
@@ -51,13 +54,17 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 
   // Calculate correct total from services
   const calculateTotal = () => {
+    console.log("Calculating total with services:", services);
+    
     const basePackage = 400;
     const lighting = services.lighting ? 100 : 0;
     const photography = services.photography ? 150 : 0;
     const videoVisuals = services.videoVisuals ? 100 : 0;
     const additionalHoursCost = services.additionalHours * 75;
     
-    return basePackage + lighting + photography + videoVisuals + additionalHoursCost;
+    const total = basePackage + lighting + photography + videoVisuals + additionalHoursCost;
+    console.log("Calculated total in Stripe component:", total);
+    return total;
   };
   
   // Get the final amount to use (either from props or calculated)
@@ -83,6 +90,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       const amountInCents = Math.round(calculateTotal() * 100);
       
       console.log('Submitting payment with amount:', amountInCents);
+      console.log('Services being submitted:', services);
       
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
@@ -115,6 +123,12 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
+        console.log("Payment succeeded, storing in Firebase:", {
+          paymentId: paymentIntent.id,
+          amount: amountInCents,
+          services
+        });
+        
         await addDoc(collection(db, 'stripePayments'), {
           paymentIntentId: paymentIntent.id,
           amount: amountInCents,

@@ -1158,9 +1158,9 @@ Live City DJ Contract Terms and Conditions:
                   venueLocation: formData.venueLocation,
                   startTime: formData.startTime,
                   endTime: formData.endTime,
-                  lighting: formData.lighting,
-                  photography: formData.photography,
-                  videoVisuals: formData.videoVisuals,
+                  lighting: Boolean(formData.lighting),
+                  photography: Boolean(formData.photography),
+                  videoVisuals: Boolean(formData.videoVisuals),
                   additionalHours: formData.additionalHours
                 }}
                 onSuccess={(paymentId) => {
