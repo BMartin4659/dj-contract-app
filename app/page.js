@@ -1079,8 +1079,8 @@ Live City DJ Contract Terms and Conditions:
             padding: '0',
             borderRadius: '0',
             boxShadow: 'none',
-            maxWidth: '100%',
-            width: '100%',
+            maxWidth: '96%',
+            width: '96%',
             margin: '0 auto'
           }}>
             <h2 style={{ 
