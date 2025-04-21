@@ -1075,13 +1075,13 @@ Live City DJ Contract Terms and Conditions:
       }}>
         {showStripe ? (
           <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '20px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-            maxWidth: '800px',
-            width: '96%',
-            margin: '2rem auto 0 auto'
+            backgroundColor: 'transparent',
+            padding: '0',
+            borderRadius: '0',
+            boxShadow: 'none',
+            maxWidth: '100%',
+            width: '100%',
+            margin: '0 auto'
           }}>
             <h2 style={{ 
               textAlign: 'center', 

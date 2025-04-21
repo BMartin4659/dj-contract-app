@@ -127,9 +127,9 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 
   return (
     <div style={{
-      backgroundColor: 'white',
+      backgroundColor: 'transparent',
       color: '#111',
-      padding: isMobile ? '1.5rem' : '2rem',
+      padding: isMobile ? '0.5rem' : '1rem',
       borderRadius: isMobile ? '12px' : '16px',
       width: '100%',
       maxWidth: '100%',
@@ -162,7 +162,8 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         padding: isMobile ? '1.25rem' : '1.5rem',
         borderRadius: '12px',
         marginBottom: '0.5rem',
-        border: '1px solid #e5e7eb'
+        border: '1px solid #e5e7eb',
+        width: '100%'
       }}>
         <h3 style={{
           marginBottom: '1rem',
@@ -275,14 +276,15 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ marginTop: '0' }}>
+      <form onSubmit={handleSubmit} style={{ marginTop: '0', width: '100%' }}>
         {/* Card Details Section */}
         <div style={{
           marginBottom: '1.5rem',
           backgroundColor: '#f9fafb',
           padding: isMobile ? '1.25rem' : '1.5rem',
           borderRadius: '12px',
-          border: '1px solid #e5e7eb'
+          border: '1px solid #e5e7eb',
+          width: '100%'
         }}>
           <h3 style={{
             marginBottom: '0.75rem',
@@ -433,7 +435,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           Your payment information is encrypted and secure
         </div>
         
-        {/* Secure Badges */}
+        {/* Official Stripe Logo */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -442,9 +444,9 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           marginTop: '1rem'
         }}>
           <img 
-            src="https://cdn.jsdelivr.net/gh/stripe/stripe-icons@main/stripe-badge-white.svg" 
+            src="https://js.stripe.com/v3/fingerprinted/img/stripe-badge-payment.f4bd5a1b.png" 
             alt="Powered by Stripe" 
-            style={{ height: '32px' }}
+            style={{ height: '40px' }}
           />
         </div>
       </form>
