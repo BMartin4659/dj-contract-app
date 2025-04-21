@@ -68,21 +68,29 @@ function PaymentSuccessContent() {
     setEmailError(null);
 
     try {
+      // Debug information for identifying the issue
+      console.log("EmailJS environment variables:", {
+        publicKeyExists: !!process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+        userIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_USER_ID,
+        serviceIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+        templateIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+      });
+      
       // Initialize EmailJS with the PUBLIC key - Try multiple options for backwards compatibility
       let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
       
-      // Debug logging to troubleshoot
-      console.log("EmailJS config:", {
-        publicKey: publicKey ? "Set" : "Not set",
-        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ? "Set" : "Not set",
-        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ? "Set" : "Not set",
-        userId: process.env.NEXT_PUBLIC_EMAILJS_USER_ID ? "Set" : "Not set",
-      });
+      // Display key for debugging (first 4 characters only for security)
+      if (publicKey) {
+        console.log(`Public key starts with: ${publicKey.substring(0, 4)}...`);
+      }
       
       // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
       if (!publicKey || publicKey === 'default_public_key' || publicKey === 'missing_public_key') {
         publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
         console.log("Falling back to USER_ID for EmailJS initialization");
+        if (publicKey) {
+          console.log(`USER_ID starts with: ${publicKey.substring(0, 4)}...`);
+        }
       }
       
       if (publicKey && publicKey !== 'default_public_key' && publicKey !== 'missing_public_key' && publicKey !== 'default_user_id') {
@@ -116,33 +124,97 @@ function PaymentSuccessContent() {
         throw new Error("EmailJS sending failed: missing service ID or template ID");
       }
       
-      // Send email with service ID and template ID only (public key is already initialized)
-      try {
-        const response = await emailjs.send(
-          serviceId,
-          templateId,
-          templateParams
-        );
+      // Manual retry and error handling
+      const MAX_RETRIES = 2;
+      let retryCount = 0;
+      let success = false;
+      
+      while (retryCount <= MAX_RETRIES && !success) {
+        try {
+          console.log(`Send attempt ${retryCount + 1}/${MAX_RETRIES + 1}`);
+          
+          // Allow a short delay if this is a retry
+          if (retryCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+          
+          // Use a direct fetch call to the EmailJS API endpoint as a fallback if needed
+          let response;
+          try {
+            // Standard method with the SDK
+            response = await emailjs.send(
+              serviceId,
+              templateId,
+              templateParams
+            );
+            
+            console.log("Manual email sent successfully:", response);
+            success = true;
+          } catch (innerError) {
+            // If we get an empty object error, try alternative method
+            if (typeof innerError === 'object' && Object.keys(innerError).length === 0) {
+              console.log("Empty error object detected. Using alternative sending method...");
+              
+              // Try direct API call as fallback
+              const apiUrl = 'https://api.emailjs.com/api/v1.0/email/send';
+              const directApiResponse = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  service_id: serviceId,
+                  template_id: templateId,
+                  user_id: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID,
+                  template_params: templateParams,
+                  accessToken: publicKey
+                })
+              });
+              
+              if (directApiResponse.ok) {
+                console.log("Manual email sent via direct API call");
+                success = true;
+              } else {
+                const errorText = await directApiResponse.text();
+                throw new Error(`API error: ${directApiResponse.status} - ${errorText}`);
+              }
+            } else {
+              // Re-throw other types of errors
+              throw innerError;
+            }
+          }
+          
+          if (success) {
+            setEmailSent(true);
+            break;
+          }
+        } catch (retryError) {
+          console.error(`Attempt ${retryCount + 1} failed:`, retryError);
+          if (retryCount === MAX_RETRIES) {
+            // This was the last attempt
+            throw retryError;
+          }
+        }
         
-        console.log("Manual email sent successfully:", response);
-        setEmailSent(true);
-      } catch (sendError) {
-        // Handle emailjs.send specific errors
-        console.error("EmailJS send error:", sendError);
-        throw new Error(sendError.text || sendError.message || "EmailJS API Error: Check console for details");
+        retryCount++;
       }
     } catch (error) {
       console.error("Failed to send manual confirmation email:", error);
       
-      // Handle different error types and provide better error messages
+      // Better error handling with proper messages based on the error type
       let errorMessage = "Failed to send email";
       
       if (error instanceof Error) {
-        errorMessage = error.message;
+        errorMessage = error.message || "Unknown error occurred";
       } else if (typeof error === 'object' && Object.keys(error).length === 0) {
-        errorMessage = "Empty response from EmailJS API. Check your API key and template configuration.";
+        errorMessage = "Network or permission error. Check browser console for details.";
       } else if (typeof error === 'string') {
         errorMessage = error;
+      }
+      
+      // Provide specific guidance based on known causes
+      if (errorMessage.includes("CORS") || errorMessage.includes("Network")) {
+        errorMessage += " This is likely a network configuration issue or CORS restriction.";
       }
       
       setEmailError(errorMessage);
