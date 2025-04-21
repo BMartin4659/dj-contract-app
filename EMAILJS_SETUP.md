@@ -1,7 +1,11 @@
 # EmailJS Setup Instructions
 
 ## Overview
-This application uses EmailJS to send booking confirmation emails after successful payments. Follow these instructions to set up your EmailJS account and configure the application to use it.
+This application uses EmailJS to send booking confirmation emails in two places:
+1. After a successful Stripe payment (in StripeCheckout.js)
+2. On the payment success page for manual resend (in app/payment/success/page.js)
+
+Follow these instructions to set up your EmailJS account and configure the application to use it.
 
 ## Step 1: Create an EmailJS Account
 1. Go to [EmailJS.com](https://www.emailjs.com/) and create an account
@@ -52,8 +56,13 @@ After setting up the environment variables, restart your development server:
 npm run dev
 ```
 
+## Affected Components
+The EmailJS configuration affects the following components:
+1. `components/StripeCheckout.js` - Sends emails after successful Stripe payment
+2. `app/payment/success/page.js` - Allows manual resending of confirmation emails
+
 ## Troubleshooting
-If you encounter an empty error object (`Error sending email: {}`), it usually indicates:
+If you encounter an empty error object (`Error sending email: {}` or `Failed to send confirmation email: {}`), it usually indicates:
 1. Missing or incorrect environment variables
 2. CORS or network issues
 3. Permissions problems with EmailJS
@@ -62,4 +71,5 @@ Solutions:
 - Verify your API keys are correct
 - Check that your EmailJS service is active
 - Ensure your template has all required parameters
-- Try using the direct API call (implemented as a fallback in the code) 
+- Try using the direct API call (implemented as a fallback in the code)
+- Check your browser console for more detailed error information 
