@@ -130,7 +130,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
     <div style={{
       backgroundColor: 'rgba(255,255,255,0.95)',
       color: '#111',
-      padding: isMobile ? '1rem' : '2rem 1rem',
+      padding: isMobile ? '1rem' : '2rem',
       borderRadius: isMobile ? '12px' : '20px',
       boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
       backdropFilter: 'blur(4px)',
@@ -140,37 +140,63 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
       margin: '0 auto',
       display: 'flex',
       flexDirection: 'column',
-      gap: '1rem',
+      gap: '1.5rem',
       boxSizing: 'border-box'
     }}>
+      {/* Page Title */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '1rem'
+      }}>
+        <h2 style={{
+          color: '#333',
+          fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+          fontWeight: 'bold',
+          margin: '0'
+        }}>Complete Your Booking</h2>
+        <p style={{
+          color: '#666',
+          fontSize: 'clamp(0.9rem, 3vw, 1rem)',
+          margin: '0.5rem 0 0 0'
+        }}>Secure your event date with a deposit payment</p>
+      </div>
+
+      {/* Order Summary Section */}
       <div style={{
         backgroundColor: '#f8f9fa',
-        padding: '1.5rem',
-        borderRadius: '8px',
-        marginBottom: '1.5rem',
+        padding: isMobile ? '1rem' : '1.5rem',
+        borderRadius: '12px',
+        marginBottom: '0.5rem',
         border: '1px solid #e9ecef',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
       }}>
         <h3 style={{
           marginBottom: '1rem',
           color: '#333',
-          fontSize: 'clamp(1.2rem, 5vw, 2rem)',
+          fontSize: 'clamp(1.1rem, 4vw, 1.3rem)',
           fontWeight: 'bold',
           borderBottom: '2px solid #635BFF',
-          paddingBottom: '0.5rem'
-        }}>Order Summary</h3>
+          paddingBottom: '0.5rem',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <span style={{ marginRight: '0.5rem' }}>📋</span>
+          Order Summary
+        </h3>
         
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '0.5rem' }}>
+          {/* Base Package */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             padding: '0.5rem 0',
             borderBottom: '1px solid #eee'
           }}>
-            <span>🎶 Base Package</span>
-            <span>$400</span>
+            <span style={{ fontWeight: '500' }}>🎶 Base Package</span>
+            <span style={{ fontWeight: '500' }}>$400</span>
           </div>
           
+          {/* Lighting */}
           {services.lighting && (
             <div style={{
               display: 'flex',
@@ -183,6 +209,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             </div>
           )}
           
+          {/* Photography */}
           {services.photography && (
             <div style={{
               display: 'flex',
@@ -195,6 +222,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             </div>
           )}
           
+          {/* Video Visuals */}
           {services.videoVisuals && (
             <div style={{
               display: 'flex',
@@ -207,6 +235,7 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             </div>
           )}
           
+          {/* Additional Hours */}
           {services.additionalHours > 0 && (
             <div style={{
               display: 'flex',
@@ -219,75 +248,136 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             </div>
           )}
           
+          {/* Total */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             padding: '0.75rem 0',
             fontWeight: 'bold',
-            marginTop: '0.5rem'
+            marginTop: '0.5rem',
+            fontSize: 'clamp(1rem, 4vw, 1.2rem)',
+            borderTop: '2px solid #eee',
+            paddingTop: '0.75rem'
           }}>
             <span>Total</span>
             <span>${calculateTotal()}</span>
           </div>
         </div>
+
+        {/* 50% Deposit Note */}
+        <div style={{
+          backgroundColor: 'rgba(99, 91, 255, 0.1)',
+          padding: '0.75rem',
+          borderRadius: '8px',
+          fontSize: 'clamp(0.8rem, 3vw, 0.9rem)',
+          display: 'flex',
+          alignItems: 'center',
+          marginTop: '0.5rem'
+        }}>
+          <span style={{ marginRight: '0.5rem', color: '#635BFF' }}>ℹ️</span>
+          <span>50% deposit required to secure your booking. The remaining balance will be due on the event day.</span>
+        </div>
       </div>
       
-      <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} style={{ marginTop: '0' }}>
+        {/* Card Details Section */}
         <div style={{
           marginBottom: '1.5rem',
           backgroundColor: '#f8f9fa',
-          padding: '1.5rem',
-          borderRadius: '8px',
+          padding: isMobile ? '1rem' : '1.5rem',
+          borderRadius: '12px',
           border: '1px solid #e9ecef',
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
           <h3 style={{
             marginBottom: '0.75rem',
             color: '#333',
-            fontSize: 'clamp(1.2rem, 5vw, 2rem)',
+            fontSize: 'clamp(1.1rem, 4vw, 1.3rem)',
             fontWeight: 'bold',
             borderBottom: '2px solid #635BFF',
-            paddingBottom: '0.5rem'
-          }}>Payment Details</h3>
+            paddingBottom: '0.5rem',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <span style={{ marginRight: '0.5rem' }}>💳</span>
+            Payment Details
+          </h3>
+
+          {/* Security Note */}
+          <div style={{ 
+            marginBottom: '1rem', 
+            display: 'flex', 
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 180, 0, 0.1)',
+            padding: '0.5rem',
+            borderRadius: '8px'
+          }}>
+            <span style={{ color: '#00b400', marginRight: '0.5rem' }}>🔐</span>
+            <span style={{ fontSize: '0.875rem', color: '#333' }}>Secure payment powered by Stripe</span>
+          </div>
+
+          {/* Card Element Container */}
           <div style={{
             padding: '1rem',
             border: '1px solid #ced4da',
-            borderRadius: '6px',
+            borderRadius: '10px',
             backgroundColor: 'white',
             boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#635BFF', marginRight: '0.5rem' }}>🔐</span>
-              <span style={{ fontSize: '0.875rem', color: '#666' }}>Secure payment powered by Stripe</span>
-            </div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontSize: '0.9rem',
+              color: '#555',
+              fontWeight: '500'
+            }}>
+              Card Information
+            </label>
             <CardElement options={{
               style: {
                 base: {
-                  fontSize: 'clamp(14px, 3vw, 16px)',
+                  fontSize: isMobile ? '16px' : '18px',
                   color: '#111',
                   fontFamily: 'Arial, sans-serif',
                   '::placeholder': {
-                    color: '#666',
+                    color: '#888',
                   },
                   iconColor: '#635BFF',
+                  lineHeight: '40px',
                 },
                 invalid: {
                   color: '#9e2146',
                   iconColor: '#fa755a',
                 },
-              }
+              },
+              hidePostalCode: true
             }} />
+          </div>
+
+          {/* Card Brands Display */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            marginTop: '1rem'
+          }}>
+            <div style={{ opacity: 0.7, fontSize: '1.5rem' }}>💳</div>
+            <div style={{ opacity: 0.7, fontSize: '1.5rem' }}>💳</div>
+            <div style={{ opacity: 0.7, fontSize: '1.5rem' }}>💳</div>
+            <div style={{ opacity: 0.7, fontSize: '1.5rem' }}>💳</div>
           </div>
         </div>
         
+        {/* Confirmation Checkbox */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             cursor: 'pointer',
             padding: '1rem',
             backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
-            borderRadius: '6px',
+            borderRadius: '10px',
             border: `2px solid ${confirmed ? '#635BFF' : '#ddd'}`,
             boxShadow: confirmed ? '0 2px 8px rgba(99, 91, 255, 0.2)' : 'none',
             transition: 'all 0.2s ease'
@@ -298,19 +388,41 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
               onChange={(e) => setConfirmed(e.target.checked)}
               style={{
                 marginRight: '0.75rem',
+                marginTop: '0.25rem',
                 width: '20px',
                 height: '20px',
                 accentColor: '#635BFF'
               }}
             />
-            <span style={{ fontWeight: confirmed ? 'bold' : 'normal' }}>
-              I confirm the services listed above and authorize payment
+            <span style={{ 
+              fontWeight: confirmed ? '500' : 'normal',
+              fontSize: 'clamp(0.9rem, 3vw, 1rem)',
+              lineHeight: '1.4'
+            }}>
+              I confirm the services listed above and authorize payment of the 50% deposit. I understand the remaining balance is due on the event day.
             </span>
           </label>
         </div>
         
-        {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+        {/* Error Message */}
+        {error && (
+          <div style={{ 
+            color: '#e53e3e', 
+            marginBottom: '1rem',
+            backgroundColor: 'rgba(229, 62, 62, 0.1)',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <span style={{ marginRight: '0.5rem' }}>⚠️</span>
+            {error}
+          </div>
+        )}
         
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={!stripe || loading || !confirmed}
@@ -318,17 +430,18 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             width: '100%',
             backgroundColor: confirmed ? '#635BFF' : '#a8a8a8',
             color: '#fff',
-            padding: '1rem 1.5rem',
-            borderRadius: '6px',
+            padding: '1.2rem 1.5rem',
+            borderRadius: '10px',
             border: 'none',
             cursor: confirmed ? 'pointer' : 'not-allowed',
             fontWeight: 'bold',
-            fontSize: 'clamp(1rem, 4vw, 1.5rem)',
+            fontSize: 'clamp(1rem, 4vw, 1.2rem)',
             boxShadow: confirmed ? '0 4px 12px rgba(99, 91, 255, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
             transition: 'all 0.2s ease',
             transform: confirmed ? 'translateY(0)' : 'none',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            marginTop: '0.5rem'
           }}
           onMouseOver={(e) => {
             if (confirmed) e.currentTarget.style.transform = 'translateY(-2px)';
@@ -337,8 +450,18 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             if (confirmed) e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          {loading ? 'Processing...' : 'Pay Now'}
+          {loading ? 'Processing Payment...' : 'Pay Now'}
         </button>
+
+        {/* Security Note */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '1rem',
+          color: '#666',
+          fontSize: '0.8rem'
+        }}>
+          Your payment is secure and encrypted. We do not store your card details.
+        </div>
       </form>
     </div>
   );
