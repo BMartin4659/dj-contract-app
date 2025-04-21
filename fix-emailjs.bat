@@ -4,15 +4,10 @@ echo ==================
 echo.
 echo This script will fix EmailJS integration issues in the DJ Contract app.
 
-set /p "public_key=Please enter your EmailJS public key: "
+set /p "public_key=Please enter your EmailJS public key (default: PRPjY6zE2LkFb3a25): "
 
 if "%public_key%"=="" (
-  echo.
-  echo Error: Public key cannot be empty.
-  echo Please run the script again and provide your EmailJS public key.
-  echo.
-  pause
-  exit /b 1
+  set "public_key=PRPjY6zE2LkFb3a25"
 )
 
 echo.
@@ -22,7 +17,7 @@ echo.
 (
   echo # EmailJS Configuration
   echo NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_9z9konq
-  echo NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_booking_confirmation
+  echo NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_p87ey1j
   echo NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=%public_key%
   echo.
   echo # Existing Google Maps API Key

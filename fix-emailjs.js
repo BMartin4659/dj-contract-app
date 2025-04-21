@@ -7,29 +7,29 @@
  * 2. Ensures the public key is properly set
  * 
  * Usage:
- * - Run with: node fix-emailjs.js YOUR_PUBLIC_KEY
+ * - Run with: node fix-emailjs.js [YOUR_PUBLIC_KEY]
+ * - If no key provided, uses the default: PRPjY6zE2LkFb3a25
  */
 
 const fs = require('fs');
 const path = require('path');
 
-// Check if public key is provided
-if (process.argv.length < 3) {
-  console.error('\x1b[31mError: Please provide your EmailJS public key as an argument.\x1b[0m');
-  console.log('Example: node fix-emailjs.js YOUR_PUBLIC_KEY');
-  process.exit(1);
+// Get public key from args or use default
+let publicKey = 'PRPjY6zE2LkFb3a25'; // Default key
+if (process.argv.length >= 3) {
+  publicKey = process.argv[2];
 }
 
-const publicKey = process.argv[2];
+console.log(`\x1b[34mUsing EmailJS public key: ${publicKey}\x1b[0m`);
 
 // Create .env.local file content
 const envContent = `# EmailJS Configuration
 NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_9z9konq
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_booking_confirmation
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_p87ey1j
 NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=${publicKey}
 
 # Existing Google Maps API Key (preserving if it exists)
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY_HERE'}
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc'}
 `;
 
 try {

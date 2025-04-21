@@ -18,8 +18,8 @@ The issue is caused by missing or incorrect EmailJS environment variables, speci
 ### Option 1: Use the Automated Fix Script (Windows)
 
 1. Run the `fix-emailjs.bat` file included in this repository
-2. When prompted, enter your EmailJS public key
-   - You can find this in your EmailJS dashboard under Account > API Keys
+2. When prompted, press Enter to use the default key or enter your EmailJS public key
+   - The default key is already set to: `PRPjY6zE2LkFb3a25`
 3. Restart your development server:
    ```
    npm run dev
@@ -29,7 +29,7 @@ The issue is caused by missing or incorrect EmailJS environment variables, speci
 
 1. Run the fix script with your EmailJS public key:
    ```
-   node fix-emailjs.js YOUR_PUBLIC_KEY_HERE
+   node fix-emailjs.js PRPjY6zE2LkFb3a25
    ```
 2. Restart your development server:
    ```
@@ -43,23 +43,24 @@ The issue is caused by missing or incorrect EmailJS environment variables, speci
    ```
    # EmailJS Configuration
    NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_9z9konq
-   NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_booking_confirmation
-   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=YOUR_PUBLIC_KEY_HERE
+   NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_p87ey1j
+   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=PRPjY6zE2LkFb3a25
    
    # Google Maps API Key (if needed)
    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc
    ```
-3. Replace `YOUR_PUBLIC_KEY_HERE` with your actual EmailJS public key
-4. Restart your development server:
+3. Restart your development server:
    ```
    npm run dev
    ```
 
-## Getting Your EmailJS Public Key
+## Verifying the Fix
 
-1. Log in to your EmailJS account at https://dashboard.emailjs.com/admin/
-2. Go to Account > API Keys
-3. Copy your "Public Key"
+Once you've applied the fix:
+
+1. Check that your browser console no longer shows the "Error sending email: {}" message
+2. Test sending a confirmation email on the payment success page
+3. Verify that emails are being sent after successful Stripe payments
 
 ## Affected Components
 
@@ -72,12 +73,13 @@ The EmailJS configuration affects two components:
 If you're still experiencing issues:
 
 1. Check your browser console for additional error information
-2. Verify that your EmailJS account is active and not limited
-3. Make sure the template parameters match those expected by your template
-4. Test if the direct API call fallback works (already implemented in the code)
+2. Try using a different web browser to rule out CORS or caching issues
+3. Make sure your EmailJS account is active and not hitting rate limits
+4. Ensure the template parameters match those expected by your template
+5. Inspect network traffic in the browser dev tools to see the exact request/response
 
 ## Additional Resources
 
 For more detailed information about EmailJS integration, refer to:
-1. The EmailJS documentation at https://www.emailjs.com/docs/
+1. The EmailJS documentation at https://www.emailjs.com/docs/sdk/send/
 2. The `EMAILJS_SETUP.md` file in your project 
