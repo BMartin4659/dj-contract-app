@@ -3,20 +3,108 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaCheckCircle, FaHome, FaEnvelope, FaRedo } from 'react-icons/fa';
+import { SiVenmo, SiCashapp } from 'react-icons/si';
+import { FaPaypal, FaCreditCard } from 'react-icons/fa';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import emailjs from '@emailjs/browser';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { sendConfirmationEmail as sendEmail } from '@/lib/sendEmail';
 
-// EmailJS configuration fallbacks
-const EMAILJS_CONFIG = {
-  SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
-  TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
-  PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'default_public_key',
-  // USER_ID is deprecated but kept for backward compatibility
-  USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
+// Payment method configurations
+const PAYMENT_METHODS = {
+  VENMO: {
+    url: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
+    handle: '@Bobby-Martin-64',
+    color: '#3D95CE',
+    icon: SiVenmo,
+    name: 'Venmo'
+  },
+  CASHAPP: {
+    url: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+    handle: '$BobbyMartin64',
+    color: '#00C244',
+    icon: SiCashapp,
+    name: 'CashApp'
+  },
+  PAYPAL: {
+    url: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659',
+    handle: 'paypal.me/bmartin4659',
+    color: '#003087',
+    icon: FaPaypal,
+    name: 'PayPal'
+  },
+  STRIPE: {
+    url: process.env.NEXT_PUBLIC_STRIPE_URL || '#',
+    handle: '',
+    color: '#6772E5',
+    icon: FaCreditCard,
+    name: 'Stripe'
+  }
 };
+
+// Extract handles from URLs if available
+if (PAYMENT_METHODS.VENMO.url) {
+  let venmoHandle = '';
+  
+  // Extract handle from account.venmo.com/u/{username} format
+  if (PAYMENT_METHODS.VENMO.url.includes('account.venmo.com/u/')) {
+    venmoHandle = PAYMENT_METHODS.VENMO.url.split('/u/').pop();
+    // Don't include @ in the URL but show it in the handle display
+    PAYMENT_METHODS.VENMO.handle = `@${venmoHandle}`;
+  } 
+  // Extract handle from venmo.com/{username} format
+  else if (PAYMENT_METHODS.VENMO.url.includes('venmo.com/')) {
+    venmoHandle = PAYMENT_METHODS.VENMO.url.split('venmo.com/').pop();
+    // Remove @ if it exists in the venmoHandle for display purposes
+    if (venmoHandle.startsWith('@')) {
+      venmoHandle = venmoHandle.substring(1);
+      // Update the URL to remove the @ symbol
+      PAYMENT_METHODS.VENMO.url = PAYMENT_METHODS.VENMO.url.replace(`/@${venmoHandle}`, `/${venmoHandle}`);
+    }
+    PAYMENT_METHODS.VENMO.handle = `@${venmoHandle}`;
+  }
+}
+
+if (PAYMENT_METHODS.CASHAPP.url) {
+  let cashappHandle = '';
+  
+  // Extract handle from cash.app/{$username} format
+  if (PAYMENT_METHODS.CASHAPP.url.includes('cash.app/')) {
+    // Get the part after cash.app/
+    cashappHandle = PAYMENT_METHODS.CASHAPP.url.split('cash.app/').pop();
+    
+    // Remove any URL parameters if they exist
+    if (cashappHandle.includes('?')) {
+      cashappHandle = cashappHandle.split('?')[0];
+    }
+    
+    // Make sure the handle has a $ prefix for display
+    if (!cashappHandle.startsWith('$')) {
+      PAYMENT_METHODS.CASHAPP.handle = `$${cashappHandle}`;
+      // Update the URL to include the $ if it doesn't have it
+      PAYMENT_METHODS.CASHAPP.url = `https://cash.app/$${cashappHandle}`;
+    } else {
+      PAYMENT_METHODS.CASHAPP.handle = cashappHandle;
+      // Make sure the URL is consistent with the handle
+      PAYMENT_METHODS.CASHAPP.url = `https://cash.app/${cashappHandle}`;
+    }
+    
+    // Log for debugging
+    console.log('CashApp handle:', PAYMENT_METHODS.CASHAPP.handle);
+    console.log('CashApp URL:', PAYMENT_METHODS.CASHAPP.url);
+  }
+}
+
+if (PAYMENT_METHODS.PAYPAL.url) {
+  let paypalHandle = '';
+  
+  // Extract handle from paypal.me/{username} format
+  if (PAYMENT_METHODS.PAYPAL.url.includes('paypal.me/')) {
+    paypalHandle = PAYMENT_METHODS.PAYPAL.url.split('paypal.me/').pop();
+    PAYMENT_METHODS.PAYPAL.handle = paypalHandle;
+  }
+}
 
 function PaymentSuccessContent() {
   const router = useRouter();
@@ -59,168 +147,89 @@ function PaymentSuccessContent() {
 
   // Function to manually send confirmation email
   const sendConfirmationEmail = async () => {
-    if (!booking || !booking.email) {
-      setEmailError("Cannot send email: missing booking information");
+    if (!emailSent && booking && booking.email) {
+      try {
+        console.log('Sending confirmation email...');
+        setEmailSending(true);
+        setEmailError(null);
+        
+        // Use our utility function
+        const result = await sendEmail({
+          clientName: booking.clientName,
+          email: booking.email,
+          eventType: booking.eventType || 'DJ Service',
+          eventDate: booking.eventDate,
+          venueName: booking.venueName,
+          venueLocation: booking.venueLocation,
+          startTime: booking.startTime,
+          endTime: booking.endTime,
+          paymentId: paymentId,
+          amount: booking.amount
+        });
+        
+        console.log('📧 Email sent successfully:', result);
+        setEmailSent(true);
+      } catch (error) {
+        console.error('❌ Error sending email:', error);
+        if (error.message) console.error("Error message:", error.message);
+        
+        // Show user-friendly error message
+        setEmailError(
+          error.message === 'Failed to fetch' 
+            ? 'Unable to connect to email service. Please try again later.'
+            : error.message || 'Failed to send email. Please try again or contact support.'
+        );
+      } finally {
+        setEmailSending(false);
+      }
+    }
+  };
+
+  // Function to ensure payment URLs are correctly formatted before opening
+  const openPaymentApp = (url) => {
+    if (!url || !url.startsWith('http')) {
+      alert("Invalid payment URL. Please contact support.");
       return;
     }
-
-    setEmailSending(true);
-    setEmailError(null);
-
-    try {
-      // Debug information for identifying the issue
-      console.log("EmailJS environment variables:", {
-        publicKeyExists: !!process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-        userIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_USER_ID,
-        serviceIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-        templateIdExists: !!process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-      });
+    
+    let formattedUrl = url;
+    
+    // Handle Venmo URL formatting
+    if (url.includes('venmo.com/') || url.includes('account.venmo.com/')) {
+      // For Venmo, ensure we're using the format: https://venmo.com/u/USERNAME
+      const username = url.split('/').pop();
       
-      // Initialize EmailJS with the PUBLIC key - Try multiple options for backwards compatibility
-      let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+      // Remove @ if it exists at the start of the username part
+      const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
       
-      // Display key for debugging (first 4 characters only for security)
-      if (publicKey) {
-        console.log(`Public key starts with: ${publicKey.substring(0, 4)}...`);
-      }
-      
-      // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
-      if (!publicKey || publicKey === 'default_public_key' || publicKey === 'missing_public_key') {
-        publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
-        console.log("Falling back to USER_ID for EmailJS initialization");
-        if (publicKey) {
-          console.log(`USER_ID starts with: ${publicKey.substring(0, 4)}...`);
-        }
-      }
-      
-      if (publicKey && publicKey !== 'default_public_key' && publicKey !== 'missing_public_key' && publicKey !== 'default_user_id') {
-        emailjs.init(publicKey);
-        console.log("EmailJS initialized successfully with key");
-      } else {
-        throw new Error("EmailJS initialization failed: missing PUBLIC_KEY and USER_ID");
-      }
-      
-      // Prepare template parameters - make sure all fields match template expectations
-      const templateParams = {
-        to_name: booking.clientName || 'Customer',
-        to_email: booking.email,
-        from_name: 'Live City DJ',
-        event_type: booking.eventType || 'Event',
-        event_date: booking.eventDate || 'TBD',
-        venue_name: booking.venueName || 'Venue',
-        venue_location: booking.venueLocation || 'TBD',
-        payment_id: paymentId || 'Unknown',
-        payment_method: 'Stripe',
-        total_amount: `$${(booking.amount / 100).toFixed(2) || '0.00'}`,
-        message: `Thank you for booking with Live City DJ! Your payment of $${(booking.amount / 100).toFixed(2) || '0.00'} has been successfully processed.`
-      };
-      
-      console.log("Sending manual confirmation email:", templateParams);
-      
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
-      
-      if (serviceId === 'default_service_id' || templateId === 'default_template_id') {
-        throw new Error("EmailJS sending failed: missing service ID or template ID");
-      }
-      
-      // Manual retry and error handling
-      const MAX_RETRIES = 2;
-      let retryCount = 0;
-      let success = false;
-      
-      while (retryCount <= MAX_RETRIES && !success) {
-        try {
-          console.log(`Send attempt ${retryCount + 1}/${MAX_RETRIES + 1}`);
-          
-          // Allow a short delay if this is a retry
-          if (retryCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          }
-          
-          // Use a direct fetch call to the EmailJS API endpoint as a fallback if needed
-          let response;
-          try {
-            // Standard method with the SDK
-            response = await emailjs.send(
-              serviceId,
-              templateId,
-              templateParams
-            );
-            
-            console.log("Manual email sent successfully:", response);
-            success = true;
-          } catch (innerError) {
-            // If we get an empty object error, try alternative method
-            if (typeof innerError === 'object' && Object.keys(innerError).length === 0) {
-              console.log("Empty error object detected. Using alternative sending method...");
-              
-              // Try direct API call as fallback
-              const apiUrl = 'https://api.emailjs.com/api/v1.0/email/send';
-              const directApiResponse = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  service_id: serviceId,
-                  template_id: templateId,
-                  user_id: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID,
-                  template_params: templateParams,
-                  accessToken: publicKey
-                })
-              });
-              
-              if (directApiResponse.ok) {
-                console.log("Manual email sent via direct API call");
-                success = true;
-              } else {
-                const errorText = await directApiResponse.text();
-                throw new Error(`API error: ${directApiResponse.status} - ${errorText}`);
-              }
-            } else {
-              // Re-throw other types of errors
-              throw innerError;
-            }
-          }
-          
-          if (success) {
-            setEmailSent(true);
-            break;
-          }
-        } catch (retryError) {
-          console.error(`Attempt ${retryCount + 1} failed:`, retryError);
-          if (retryCount === MAX_RETRIES) {
-            // This was the last attempt
-            throw retryError;
-          }
-        }
-        
-        retryCount++;
-      }
-    } catch (error) {
-      console.error("Failed to send manual confirmation email:", error);
-      
-      // Better error handling with proper messages based on the error type
-      let errorMessage = "Failed to send email";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message || "Unknown error occurred";
-      } else if (typeof error === 'object' && Object.keys(error).length === 0) {
-        errorMessage = "Network or permission error. Check browser console for details.";
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      // Provide specific guidance based on known causes
-      if (errorMessage.includes("CORS") || errorMessage.includes("Network")) {
-        errorMessage += " This is likely a network configuration issue or CORS restriction.";
-      }
-      
-      setEmailError(errorMessage);
-    } finally {
-      setEmailSending(false);
+      // Use the correct Venmo URL format
+      formattedUrl = `https://venmo.com/u/${cleanUsername}`;
     }
+    
+    // Handle Cash App URL formatting
+    if (url.includes('cash.app/')) {
+      // Extract the username from the URL
+      let username = url.split('cash.app/').pop();
+      
+      // Remove any URL parameters if they exist
+      if (username.includes('?')) {
+        username = username.split('?')[0];
+      }
+      
+      // Handle $ character in username
+      if (username.startsWith('$')) {
+        // URL already has $ character
+        formattedUrl = `https://cash.app/${username}`;
+      } else {
+        // Add $ if it doesn't exist
+        formattedUrl = `https://cash.app/$${username}`;
+      }
+      
+      console.log('Formatted CashApp URL:', formattedUrl);
+    }
+    
+    console.log('Opening payment URL:', formattedUrl);
+    window.open(formattedUrl, '_blank');
   };
 
   return (
@@ -331,48 +340,68 @@ function PaymentSuccessContent() {
             marginBottom: '2.5rem',
             border: '1px solid #e5e7eb'
           }}>
-            <p style={{ fontSize: '1rem', color: '#4b5563', marginBottom: '10px' }}>
-              Didn&apos;t receive the confirmation email?
-            </p>
-            
             {!emailSent ? (
-              <button
-                onClick={sendConfirmationEmail}
-                disabled={emailSending}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  backgroundColor: emailSending ? '#93c5fd' : '#3b82f6',
-                  color: 'white',
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: emailSending ? 'default' : 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  marginBottom: emailError ? '10px' : '0'
-                }}
-              >
-                {emailSending ? (
-                  <>
-                    <div style={{ 
-                      width: '18px', 
-                      height: '18px', 
-                      borderRadius: '50%', 
-                      border: '2px solid white',
-                      borderTopColor: 'transparent',
-                      marginRight: '10px',
-                      animation: 'spin 1s linear infinite'
-                    }} /> 
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <FaEnvelope style={{ marginRight: '10px' }} /> 
-                    Resend Confirmation Email
-                  </>
+              <>
+                <p style={{ fontSize: '1rem', color: '#4b5563', marginBottom: '10px' }}>
+                  {emailError 
+                    ? "There was an issue sending the confirmation email:" 
+                    : "A confirmation email has been sent to your email address. If you didn't receive it, you can resend it:"}
+                </p>
+                
+                <button
+                  onClick={sendConfirmationEmail}
+                  disabled={emailSending}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    backgroundColor: emailSending ? '#93c5fd' : '#3b82f6',
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: emailSending ? 'default' : 'pointer',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    marginBottom: emailError ? '10px' : '0'
+                  }}
+                >
+                  {emailSending ? (
+                    <>
+                      <div style={{ 
+                        width: '18px', 
+                        height: '18px', 
+                        borderRadius: '50%', 
+                        border: '2px solid white',
+                        borderTopColor: 'transparent',
+                        marginRight: '10px',
+                        animation: 'spin 1s linear infinite'
+                      }} /> 
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FaEnvelope style={{ marginRight: '10px' }} /> 
+                      {emailError ? 'Try Again' : 'Resend Confirmation Email'}
+                    </>
+                  )}
+                </button>
+                
+                {emailError && (
+                  <div style={{ 
+                    marginTop: '10px', 
+                    padding: '10px', 
+                    background: 'rgba(254, 226, 226, 0.5)', 
+                    borderRadius: '6px', 
+                    color: '#b91c1c',
+                    fontSize: '0.9rem'
+                  }}>
+                    {emailError}
+                    <p style={{ marginTop: '8px', color: '#4b5563', fontSize: '0.85rem' }}>
+                      Don&apos;t worry - your booking is confirmed. Our team will send you a manual confirmation soon.
+                    </p>
+                  </div>
                 )}
-              </button>
+              </>
             ) : (
               <div style={{ 
                 color: '#059669', 
@@ -388,21 +417,118 @@ function PaymentSuccessContent() {
                 Email sent successfully to {booking.email}
               </div>
             )}
-            
-            {emailError && (
-              <div style={{ 
-                color: '#dc2626', 
-                fontSize: '0.9rem',
-                padding: '8px', 
-                borderRadius: '6px', 
-                backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                marginTop: '10px'
-              }}>
-                {emailError}
-              </div>
-            )}
           </div>
         )}
+        
+        {/* Payment Methods Section */}
+        <div style={{
+          padding: '20px',
+          borderRadius: '10px',
+          backgroundColor: '#f8fafc',
+          marginBottom: '2.5rem',
+          border: '1px solid #e2e8f0',
+        }}>
+          <h3 style={{ 
+            fontSize: '1.3rem', 
+            color: '#1e293b', 
+            marginBottom: '20px',
+            fontWeight: '600',
+            textAlign: 'center'
+          }}>
+            Need to make a payment? Use one of these methods:
+          </h3>
+          
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: '20px',
+            flexWrap: 'wrap'
+          }}>
+            {/* Show Venmo, CashApp, and PayPal options */}
+            {['VENMO', 'CASHAPP', 'PAYPAL'].map((methodKey) => {
+              const method = PAYMENT_METHODS[methodKey];
+              // Skip Stripe and any payment methods without URLs
+              if (methodKey === 'STRIPE' || !method.url || method.url === '#') return null;
+              
+              // Generate contrasting text color based on background color
+              const getTextColor = (bgColor) => {
+                if (methodKey === 'VENMO') return '#1e40af';
+                if (methodKey === 'CASHAPP') return '#166534';
+                if (methodKey === 'PAYPAL') return '#1e3a8a';
+                return '#333333';
+              };
+              
+              // Generate light background color based on brand color
+              const getLightBgColor = (brandColor) => {
+                if (methodKey === 'VENMO') return '#f0f9ff';
+                if (methodKey === 'CASHAPP') return '#f0fff4';
+                if (methodKey === 'PAYPAL') return '#eff6ff';
+                return '#f8fafc';
+              };
+              
+              return (
+                <div key={methodKey} style={{
+                  padding: '20px',
+                  borderRadius: '10px',
+                  backgroundColor: getLightBgColor(method.color),
+                  border: `1px solid ${method.color}20`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  minWidth: '220px',
+                  flex: '1'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '15px'
+                  }}>
+                    <method.icon style={{ 
+                      fontSize: '24px', 
+                      marginRight: '10px', 
+                      color: method.color 
+                    }} />
+                    <span style={{ fontWeight: '600', color: getTextColor(method.color) }}>
+                      {method.name}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    color: method.color,
+                    padding: '10px 20px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    border: `2px solid ${method.color}20`,
+                    marginBottom: '15px'
+                  }}>
+                    {method.handle}
+                  </div>
+                  <button 
+                    onClick={() => openPaymentApp(method.url)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      backgroundColor: method.color,
+                      color: 'white',
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Open {method.name}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         
         <Link href="/" style={{
           display: 'inline-flex',
