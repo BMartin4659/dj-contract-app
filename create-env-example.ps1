@@ -20,7 +20,7 @@ STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY
 
 # Payment Method URLs (REQUIRED)
 NEXT_PUBLIC_VENMO_URL=https://venmo.com/u/Bobby-Martin-64
-NEXT_PUBLIC_CASHAPP_URL=https://cash.app/$BobbyMartin64
+NEXT_PUBLIC_CASHAPP_URL=https://cash.app/$LiveCity
 NEXT_PUBLIC_PAYPAL_URL=https://paypal.me/bmartin4659
 NEXT_PUBLIC_STRIPE_URL=
 
