@@ -147,6 +147,14 @@ const PaymentOption = ({ method, iconComponent, isSelected, onSelect, iconColor 
   </div>
 );
 
+// Add at the top of the file after imports
+// Payment method URL configurations
+const PAYMENT_URLS = {
+  VENMO: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
+  CASHAPP: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+  PAYPAL: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
+};
+
 export default function DJContractForm() {
   // Terms and conditions text
   const termsAndConditionsText = `
@@ -319,18 +327,72 @@ Live City DJ Contract Terms and Conditions:
     setIsClient(true);
   }, []);
 
-  // Add this to manually load Google Maps API
+  // Add this to manually load Google Maps API only if needed
   useEffect(() => {
-    if (isClient && !window.google) {
-      console.log('Attempting to load Google Maps API manually...');
-      const script = document.createElement('script');
-      // Replace 'YOUR_API_KEY' with your actual API key
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc&libraries=places';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => console.log('Google Maps API loaded manually!');
-      script.onerror = () => console.error('Failed to load Google Maps API manually!');
-      document.head.appendChild(script);
+    // Skip if already loaded or loading via layout.js
+    if (window.googleMapsLoaded || 
+        document.querySelector('script[src*="maps.googleapis.com"][src*="callback=initGoogleMapsCallback"]')) {
+      console.log('Google Maps already loading via layout.js - skipping manual load');
+      return;
+    }
+    
+    if (isClient && !window.google?.maps?.places) {
+      console.log('Checking for existing Google Maps script...');
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      
+      if (!existingScript) {
+        console.log('No existing Google Maps script found. Loading manually...');
+        
+        // First add the callback
+        window.initMapCallback = () => {
+          console.log('Google Maps API loaded manually via component callback!');
+          setMapsLoaded(true);
+          if (venueLocationRef.current) {
+            initializeGooglePlaces();
+          }
+          // Set the global flag to indicate it's loaded
+          window.googleMapsLoaded = true;
+        };
+        
+        // Then add the script
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMapCallback`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onerror = (err) => {
+          console.error('Failed to load Google Maps API manually!', err);
+          setMapsError('Failed to load Google Maps API. Please check your connection.');
+        };
+        
+        document.head.appendChild(script);
+      } else {
+        console.log('Existing Google Maps script found. Waiting for it to load...');
+        
+        // Set up a check to see if Google Maps loads through the existing script
+        const checkGoogleMapsInterval = setInterval(() => {
+          if (window.google?.maps?.places || window.googleMapsLoaded) {
+            console.log('Google Maps loaded via existing script!');
+            clearInterval(checkGoogleMapsInterval);
+            setMapsLoaded(true);
+            if (venueLocationRef.current) {
+              initializeGooglePlaces();
+            }
+          }
+        }, 500);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkGoogleMapsInterval);
+          if (!window.google?.maps?.places && !window.googleMapsLoaded) {
+            console.error('Google Maps failed to load after waiting');
+            setMapsError('Google Maps failed to load. Please try refreshing the page.');
+          }
+        }, 10000);
+      }
+    } else if (isClient && window.google?.maps?.places) {
+      console.log('Google Maps API already loaded!');
+      setMapsLoaded(true);
     }
   }, [isClient]);
 
@@ -478,47 +540,90 @@ Live City DJ Contract Terms and Conditions:
       };
     }
   }, [isClient]);
-
-  // Add this to improve responsive layout behavior
-  useEffect(() => {
-    // Create and add a meta viewport tag to prevent scaling issues
-    const metaViewport = document.createElement('meta');
-    metaViewport.name = 'viewport';
-    metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-    document.head.appendChild(metaViewport);
-    
-    return () => {
-      // Remove the meta tag when component unmounts
-      if (document.head.contains(metaViewport)) {
-        document.head.removeChild(metaViewport);
-      }
-    };
-  }, []);
   
   // Google Maps Places API initialization
   useEffect(() => {
     if (isClient && venueLocationRef.current) {
-      // Check if Google Maps API is loaded
+      // First check if the API is loaded via the callback
+      if (window.googleMapsLoaded) {
+        console.log('Google Maps already loaded via callback - initializing Places...');
+        try {
+          initializeGooglePlaces();
+          setMapsLoaded(true);
+        } catch (error) {
+          console.error('Error initializing Google Places despite callback:', error);
+          setMapsError('Error initializing Google Places autocomplete');
+        }
+        return;
+      }
+      
+      // Fallback check if the API is loaded directly
       if (window.google && window.google.maps && window.google.maps.places) {
-        initializeGooglePlaces();
-        setMapsLoaded(true);
+        console.log('Google Maps API detected - initializing Places...');
+        try {
+          initializeGooglePlaces();
+          setMapsLoaded(true);
+        } catch (error) {
+          console.error('Error initializing Google Places:', error);
+          setMapsError('Error initializing Google Places autocomplete');
+        }
       } else {
+        console.log('Google Maps API not detected in initialization hook - waiting for load...');
         // Wait for API to load with a timeout
         let attempts = 0;
         const checkGoogleMapsLoaded = setInterval(() => {
           attempts++;
-          console.log(`Attempt ${attempts} to load Google Maps...`);
-          if (window.google && window.google.maps && window.google.maps.places) {
+          console.log(`Attempt ${attempts} to check if Google Maps API is loaded...`);
+          
+          // Check for callback flag first
+          if (window.googleMapsLoaded) {
             clearInterval(checkGoogleMapsLoaded);
-            initializeGooglePlaces();
-            setMapsLoaded(true);
-            console.log('Google Maps loaded successfully!');
-          } else if (attempts > 10) {
-            // After 5 seconds (10 attempts x 500ms), show error
+            console.log('Google Maps loaded via callback!');
+            try {
+              initializeGooglePlaces();
+              setMapsLoaded(true);
+            } catch (error) {
+              console.error('Error initializing Google Places after callback:', error);
+              setMapsError('Error initializing Google Places autocomplete');
+            }
+            return;
+          }
+          
+          // Then check for direct API loading
+          if (window.google?.maps?.places) {
             clearInterval(checkGoogleMapsLoaded);
-            const errorMsg = 'Google Maps API could not be loaded. Please ensure API key is set.';
+            console.log('Google Maps API loaded successfully after attempts!');
+            try {
+              initializeGooglePlaces();
+              setMapsLoaded(true);
+            } catch (error) {
+              console.error('Error initializing Google Places after waiting:', error);
+              setMapsError('Error initializing Google Places autocomplete');
+            }
+          } else if (attempts > 20) { // Increase timeout to 10 seconds
+            // After 10 seconds (20 attempts x 500ms), show error
+            clearInterval(checkGoogleMapsLoaded);
+            
+            // Log available Google object properties to help debug
+            if (window.google) {
+              console.log('Google object exists but not complete. Available properties:', Object.keys(window.google));
+              if (window.google.maps) {
+                console.log('Maps object exists. Available properties:', Object.keys(window.google.maps));
+              }
+            }
+            
+            const errorMsg = 'Google Maps API could not be loaded. Check browser console for details.';
             setMapsError(errorMsg);
             console.error(errorMsg);
+            
+            // Attempt to log API key details (without revealing the full key)
+            try {
+              const apiKeyPartial = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(0, 5) + '...' + 
+                                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.length - 4);
+              console.log(`API key being used (partial): ${apiKeyPartial}`);
+            } catch (e) {
+              console.error('Could not log API key info:', e);
+            }
           }
         }, 500);
         
@@ -529,27 +634,77 @@ Live City DJ Contract Terms and Conditions:
   
   const initializeGooglePlaces = () => {
     try {
-      console.log('Initializing Google Places Autocomplete...');
+      console.log('Initializing Google Places Autocomplete...', venueLocationRef.current);
+      
+      // Check for DOM reference first
+      if (!venueLocationRef.current) {
+        console.error('Venue location reference is not available');
+        setMapsError('Cannot initialize address autocomplete: input reference not found');
+        return;
+      }
+      
+      // Check for Google Places API
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        console.error('Google Maps API is not fully loaded:', window.google);
+        setMapsError('Google Maps API is not properly loaded');
+        return;
+      }
+      
+      // Create a new ID for the element to avoid any previous association issues
+      const uniqueId = `location-input-${Date.now()}`;
+      venueLocationRef.current.id = uniqueId;
+      
+      console.log('Creating autocomplete instance with options:', {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address', 'geometry', 'name']
+      });
+      
+      // Initialize autocomplete
       const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' },
         fields: ['formatted_address', 'geometry', 'name'],
       });
-
+      
+      console.log('Autocomplete instance created:', autocomplete);
+      
+      // Add place_changed listener
       autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          console.log('Place selected:', place.formatted_address);
-          setFormData(prev => ({
-            ...prev,
-            venueLocation: place.formatted_address,
-          }));
+        console.log('Place changed event fired');
+        try {
+          const place = autocomplete.getPlace();
+          console.log('Place selected:', place);
+          
+          if (place && place.formatted_address) {
+            console.log('Selected place details:', place.formatted_address);
+            setFormData(prev => ({
+              ...prev,
+              venueLocation: place.formatted_address,
+            }));
+          } else {
+            console.warn('No place details available');
+            if (place) {
+              console.log('Place object returned without formatted_address. Available fields:', Object.keys(place));
+            }
+          }
+        } catch (placeError) {
+          console.error('Error in place_changed handler:', placeError);
         }
       });
+      
+      // Store reference to autocomplete instance
+      window.googleAutocompleteInstance = autocomplete;
+      
       console.log('Google Places Autocomplete initialized successfully!');
     } catch (error) {
       console.error('Error initializing Google Places Autocomplete:', error);
-      setMapsError('Error initializing address autocomplete. Please check API key and configuration.');
+      // More detailed error message
+      let errorMsg = 'Error initializing address autocomplete.';
+      if (error.message) {
+        errorMsg += ` Error: ${error.message}`;
+      }
+      setMapsError(errorMsg);
     }
   };
 
@@ -764,19 +919,19 @@ Live City DJ Contract Terms and Conditions:
           alert('There was an error processing your Stripe payment setup. Please try again or choose a different payment method.');
         }
       } else if (formData.paymentMethod === 'Venmo') {
-        window.open('https://venmo.com/livecityentertainment', '_blank');
+        window.open(PAYMENT_URLS.VENMO, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
       } else if (formData.paymentMethod === 'CashApp') {
-        window.open('https://cash.app/$LiveCity', '_blank');
+        window.open(PAYMENT_URLS.CASHAPP, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
       } else if (formData.paymentMethod === 'PayPal') {
-        window.open('https://www.paypal.biz/livecity', '_blank');
+        window.open(PAYMENT_URLS.PAYPAL, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
@@ -787,19 +942,13 @@ Live City DJ Contract Terms and Conditions:
       
       // Create a clean template params object with only string values
       const templateParams = {
-        to_name: formData.clientName || '',
-        to_email: formData.email || '',
-        from_name: 'Live City DJ',
-        event_type: formData.eventType || '',
-        event_date: formData.eventDate || '',
-        venue_name: formData.venueName || '',
-        venue_location: formData.venueLocation || '',
-        start_time: formData.startTime || '',
-        end_time: formData.endTime || '',
-        guest_count: String(formData.guestCount || 0),
-        phone_number: formData.contactPhone || '',
-        total_amount: `$${calculateTotal()}`,
-        payment_method: formData.paymentMethod || 'Other'
+        name: formData.clientName, // for {{name}} greeting
+        clientName: formData.clientName,
+        eventDate: formData.eventDate,
+        venueName: formData.venueName,
+        venueLocation: formData.venueLocation,
+        total: `$${calculateTotal()}`,
+        email: formData.email
       };
       
       console.log("Sending email with params:", templateParams);
@@ -1060,6 +1209,50 @@ Live City DJ Contract Terms and Conditions:
     });
   }, []);
 
+  // Add this to manually load Google Maps API if other methods fail
+  useEffect(() => {
+    if (isClient && mapsError) {
+      console.log('Attempting to reload Google Maps API after error...');
+      
+      // Remove any existing Google Maps scripts
+      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+      existingScripts.forEach(script => script.remove());
+      
+      // Reset Google object
+      if (window.google && window.google.maps) {
+        try {
+          // This is a best-effort attempt to clear the Google object
+          window.google.maps = undefined;
+        } catch (e) {
+          console.error('Error clearing Google maps object:', e);
+        }
+      }
+      
+      // Create and add new script
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`;
+      script.async = true;
+      script.defer = true;
+      
+      // Define callback function
+      window.initGoogleMapsCallback = () => {
+        console.log('Google Maps API reloaded successfully!');
+        setMapsError(null);
+        setMapsLoaded(true);
+        if (venueLocationRef.current) {
+          initializeGooglePlaces();
+        }
+      };
+      
+      script.onerror = (err) => {
+        console.error('Failed to reload Google Maps API:', err);
+        setMapsError('Failed to load Google Maps API. Please try refreshing the page.');
+      };
+      
+      document.head.appendChild(script);
+    }
+  }, [mapsError, isClient]);
+
   if (!isClient) {
     return null;
   }
@@ -1305,14 +1498,14 @@ Live City DJ Contract Terms and Conditions:
             {formData.paymentMethod === 'CashApp' && (
               <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
                 <h3>Please send your deposit via Cash App:</h3>
-                <p>$LiveCity</p>
+                <p>$BobbyMartin64</p>
               </div>
             )}
 
             {formData.paymentMethod === 'PayPal' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
+              <div className="payment-instructions">
                 <h3>Please send your deposit via PayPal:</h3>
-                <p>LiveCity (https://www.paypal.biz/livecity)</p>
+                <p>Bobby Martin (https://paypal.me/bmartin4659)</p>
               </div>
             )}
           </div>
