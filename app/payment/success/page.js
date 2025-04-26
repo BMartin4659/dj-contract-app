@@ -235,50 +235,61 @@ function PaymentSuccessContent() {
   };
 
   // Function to ensure payment URLs are correctly formatted before opening
-  const openPaymentApp = (url) => {
-    if (!url || !url.startsWith('http')) {
-      alert("Invalid payment URL. Please contact support.");
-      return;
-    }
-    
-    let formattedUrl = url;
-    
-    // Handle Venmo URL formatting
-    if (url.includes('venmo.com/') || url.includes('account.venmo.com/')) {
-      // For Venmo, ensure we're using the format: https://venmo.com/u/USERNAME
-      const username = url.split('/').pop();
-      
-      // Remove @ if it exists at the start of the username part
-      const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
-      
-      // Use the correct Venmo URL format
-      formattedUrl = `https://venmo.com/u/${cleanUsername}`;
-    }
-    
-    // Handle Cash App URL formatting
-    if (url.includes('cash.app/')) {
-      // Extract the username from the URL
-      let username = url.split('cash.app/').pop();
-      
-      // Remove any URL parameters if they exist
-      if (username.includes('?')) {
-        username = username.split('?')[0];
+  const openPaymentApp = (url, event) => {
+    try {
+      // Prevent default if an event was passed
+      if (event && event.preventDefault) {
+        event.preventDefault();
+        event.stopPropagation();
       }
       
-      // Handle $ character in username
-      if (username.startsWith('$')) {
-        // URL already has $ character
-        formattedUrl = `https://cash.app/${username}`;
-      } else {
-        // Add $ if it doesn't exist
-        formattedUrl = `https://cash.app/$${username}`;
+      if (!url || !url.startsWith('http')) {
+        alert("Invalid payment URL. Please contact support.");
+        return;
       }
       
-      console.log('Formatted CashApp URL:', formattedUrl);
+      let formattedUrl = url;
+      
+      // Handle Venmo URL formatting
+      if (url.includes('venmo.com/') || url.includes('account.venmo.com/')) {
+        // For Venmo, ensure we're using the format: https://venmo.com/u/USERNAME
+        const username = url.split('/').pop();
+        
+        // Remove @ if it exists at the start of the username part
+        const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
+        
+        // Use the correct Venmo URL format
+        formattedUrl = `https://venmo.com/u/${cleanUsername}`;
+      }
+      
+      // Handle Cash App URL formatting
+      if (url.includes('cash.app/')) {
+        // Extract the username from the URL
+        let username = url.split('cash.app/').pop();
+        
+        // Remove any URL parameters if they exist
+        if (username.includes('?')) {
+          username = username.split('?')[0];
+        }
+        
+        // Handle $ character in username
+        if (username.startsWith('$')) {
+          // URL already has $ character
+          formattedUrl = `https://cash.app/${username}`;
+        } else {
+          // Add $ if it doesn't exist
+          formattedUrl = `https://cash.app/$${username}`;
+        }
+        
+        console.log('Formatted CashApp URL:', formattedUrl);
+      }
+      
+      console.log('Opening payment URL:', formattedUrl);
+      window.open(formattedUrl, '_blank');
+    } catch (error) {
+      console.error('Error opening payment app:', error);
+      alert("There was an error opening the payment app. Please try again or contact support.");
     }
-    
-    console.log('Opening payment URL:', formattedUrl);
-    window.open(formattedUrl, '_blank');
   };
 
   return (
@@ -367,6 +378,20 @@ function PaymentSuccessContent() {
             }}>
               Payment ID: {paymentId}
             </p>
+          )}
+          
+          {booking && booking.isDeposit && (
+            <div style={{
+              marginTop: '15px',
+              padding: '12px',
+              backgroundColor: 'rgba(246, 197, 59, 0.1)',
+              border: '1px solid rgba(246, 197, 59, 0.3)',
+              borderRadius: '8px',
+              fontSize: '0.95rem',
+              color: '#805f13'
+            }}>
+              <p><strong>Note:</strong> You&apos;ve paid the deposit amount (50%). The remaining balance of ${booking.remainingBalance || booking.totalAmount / 2} will be due on the day of the event.</p>
+            </div>
           )}
         </div>
         
@@ -468,116 +493,6 @@ function PaymentSuccessContent() {
             )}
           </div>
         )}
-        
-        {/* Payment Methods Section */}
-        <div style={{
-          padding: '20px',
-          borderRadius: '10px',
-          backgroundColor: '#f8fafc',
-          marginBottom: '2.5rem',
-          border: '1px solid #e2e8f0',
-        }}>
-          <h3 style={{ 
-            fontSize: '1.3rem', 
-            color: '#1e293b', 
-            marginBottom: '20px',
-            fontWeight: '600',
-            textAlign: 'center'
-          }}>
-            Need to make a payment? Use one of these methods:
-          </h3>
-          
-          <div style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            gap: '20px',
-            flexWrap: 'wrap'
-          }}>
-            {/* Show Venmo, CashApp, and PayPal options */}
-            {['VENMO', 'CASHAPP', 'PAYPAL'].map((methodKey) => {
-              const method = PAYMENT_METHODS[methodKey];
-              // Skip Stripe and any payment methods without URLs
-              if (methodKey === 'STRIPE' || !method.url || method.url === '#') return null;
-              
-              // Generate contrasting text color based on background color
-              const getTextColor = (bgColor) => {
-                if (methodKey === 'VENMO') return '#1e40af';
-                if (methodKey === 'CASHAPP') return '#166534';
-                if (methodKey === 'PAYPAL') return '#1e3a8a';
-                return '#333333';
-              };
-              
-              // Generate light background color based on brand color
-              const getLightBgColor = (brandColor) => {
-                if (methodKey === 'VENMO') return '#f0f9ff';
-                if (methodKey === 'CASHAPP') return '#f0fff4';
-                if (methodKey === 'PAYPAL') return '#eff6ff';
-                return '#f8fafc';
-              };
-              
-              return (
-                <div key={methodKey} style={{
-                  padding: '20px',
-                  borderRadius: '10px',
-                  backgroundColor: getLightBgColor(method.color),
-                  border: `1px solid ${method.color}20`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  minWidth: '220px',
-                  flex: '1'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <method.icon style={{ 
-                      fontSize: '24px', 
-                      marginRight: '10px', 
-                      color: method.color 
-                    }} />
-                    <span style={{ fontWeight: '600', color: getTextColor(method.color) }}>
-                      {method.name}
-                    </span>
-                  </div>
-                  <div style={{
-                    fontSize: '1.2rem',
-                    fontWeight: 'bold',
-                    color: method.color,
-                    padding: '10px 20px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    border: `2px solid ${method.color}20`,
-                    marginBottom: '15px'
-                  }}>
-                    {method.handle}
-                  </div>
-                  <button 
-                    onClick={() => openPaymentApp(method.url)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      backgroundColor: method.color,
-                      color: 'white',
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      textDecoration: 'none',
-                      fontWeight: '600',
-                      fontSize: '0.95rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    Open {method.name}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
         
         <Link href="/" style={{
           display: 'inline-flex',

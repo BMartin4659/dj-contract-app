@@ -1,18 +1,30 @@
 import React from 'react';
 import { MdEmail } from 'react-icons/md';
+import Image from 'next/image';
 
 const Header = () => {
   return (
     <div className="text-center w-full mb-5">
-      {/* Title with headphone emoji instead of SVG */}
-      <h1 className="text-3xl md:text-4xl font-bold text-black mb-3 flex items-center justify-center" 
-        style={{ 
-          fontFamily: 'Poppins, sans-serif',
-          lineHeight: '1.3'
-        }}>
-        <span className="mr-2 text-3xl" role="img" aria-label="headphones">🎧</span>
-        Live City DJ Contract
-      </h1>
+      {/* Title with company logo */}
+      <div className="flex flex-col items-center justify-center mb-3">
+        <div className="relative w-64 h-32 mb-2">
+          <Image 
+            src="/dj-bobby-drake-logo.png" 
+            alt="Live City DJ Logo" 
+            fill
+            sizes="(max-width: 768px) 100vw, 256px"
+            style={{ objectFit: "contain" }}
+            priority
+          />
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold text-black" 
+          style={{ 
+            fontFamily: 'Poppins, sans-serif',
+            lineHeight: '1.3'
+          }}>
+          Event Contract
+        </h1>
+      </div>
       
       {/* Email address directly under the header */}
       <div className="flex justify-center items-center mt-2 text-blue-700">

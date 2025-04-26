@@ -13,6 +13,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+const chalk = require('chalk'); // Optional, for colored output
+
+console.log(chalk ? chalk.blue('Starting EmailJS integration fix...') : 'Starting EmailJS integration fix...');
 
 // Get public key from args or use default
 let publicKey = 'PRPjY6zE2LkFb3a25'; // Default key
@@ -65,4 +69,132 @@ try {
 } catch (error) {
   console.error('\x1b[31mError creating .env.local file:\x1b[0m', error.message);
   process.exit(1);
-} 
+}
+
+// Fix EmailJS integration issues
+// Run with: node fix-emailjs.js
+
+// 1. Check if the proper package is installed
+try {
+  console.log('Checking installed packages...');
+  
+  // Check if package.json exists
+  if (!fs.existsSync('package.json')) {
+    console.error('Error: package.json not found. Make sure you run this script from the project root.');
+    process.exit(1);
+  }
+  
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+  
+  // Check for conflicting packages
+  if (dependencies.emailjs && !dependencies['@emailjs/browser']) {
+    console.log('Found outdated emailjs package. Removing and installing @emailjs/browser...');
+    execSync('npm uninstall emailjs', { stdio: 'inherit' });
+    execSync('npm install @emailjs/browser', { stdio: 'inherit' });
+    console.log(chalk ? chalk.green('Successfully updated EmailJS package!') : 'Successfully updated EmailJS package!');
+  } else if (!dependencies['@emailjs/browser']) {
+    console.log('Installing @emailjs/browser package...');
+    execSync('npm install @emailjs/browser', { stdio: 'inherit' });
+    console.log(chalk ? chalk.green('Successfully installed @emailjs/browser!') : 'Successfully installed @emailjs/browser!');
+  } else {
+    console.log(chalk ? chalk.green('Correct EmailJS package is already installed.') : 'Correct EmailJS package is already installed.');
+  }
+} catch (error) {
+  console.error('Error checking or updating packages:', error.message);
+}
+
+// 2. Check for environment variables
+const envFile = '.env.local';
+try {
+  console.log('\nChecking environment variables...');
+  
+  let envContent = '';
+  if (fs.existsSync(envFile)) {
+    envContent = fs.readFileSync(envFile, 'utf8');
+  }
+  
+  const requiredVars = [
+    'NEXT_PUBLIC_EMAILJS_SERVICE_ID',
+    'NEXT_PUBLIC_EMAILJS_TEMPLATE_ID',
+    'NEXT_PUBLIC_EMAILJS_PUBLIC_KEY'
+  ];
+  
+  const missingVars = [];
+  for (const varName of requiredVars) {
+    if (!envContent.includes(varName)) {
+      missingVars.push(varName);
+    }
+  }
+  
+  if (missingVars.length > 0) {
+    console.log(chalk ? chalk.yellow(`Missing environment variables: ${missingVars.join(', ')}`) : 
+                          `Missing environment variables: ${missingVars.join(', ')}`);
+    console.log('Please make sure these are defined in your .env.local file.');
+    
+    // Prompt for essential missing variables if needed
+    console.log('\nPlease check your EmailJS dashboard for these values and add them to your .env.local file:');
+    for (const varName of missingVars) {
+      console.log(`${varName}=your_value_here`);
+    }
+  } else {
+    console.log(chalk ? chalk.green('All required environment variables are set!') : 
+                         'All required environment variables are set!');
+  }
+} catch (error) {
+  console.error('Error checking environment variables:', error.message);
+}
+
+// 3. Verify the success page implementation
+const successPagePath = path.join('app', 'payment', 'success', 'page.js');
+try {
+  console.log('\nVerifying success page implementation...');
+  
+  if (!fs.existsSync(successPagePath)) {
+    console.error(`Error: ${successPagePath} not found.`);
+  } else {
+    const successPageContent = fs.readFileSync(successPagePath, 'utf8');
+    
+    // Check for proper imports
+    const hasProperImport = successPageContent.includes('import emailjs from \'@emailjs/browser\'');
+    if (!hasProperImport) {
+      console.log(chalk ? chalk.yellow('Success page is not using the correct EmailJS import.') : 
+                           'Success page is not using the correct EmailJS import.');
+      console.log('Please update the import to: import emailjs from \'@emailjs/browser\'');
+    }
+    
+    // Check for initialization
+    const hasInitialization = successPageContent.includes('emailjs.init(');
+    if (!hasInitialization) {
+      console.log(chalk ? chalk.yellow('EmailJS initialization is missing.') : 
+                           'EmailJS initialization is missing.');
+      console.log('Please add EmailJS initialization to your component.');
+    }
+    
+    // Check for proper error handling
+    const hasErrorHandling = successPageContent.includes('CORS issue') || 
+                             successPageContent.includes('Object.keys(error).length === 0');
+    if (!hasErrorHandling) {
+      console.log(chalk ? chalk.yellow('Improved error handling is missing.') : 
+                           'Improved error handling is missing.');
+      console.log('Please add improved error handling in the catch block.');
+    }
+    
+    if (hasProperImport && hasInitialization && hasErrorHandling) {
+      console.log(chalk ? chalk.green('Success page implementation looks good!') : 
+                           'Success page implementation looks good!');
+    } else {
+      console.log('Please check the success page for the issues mentioned above.');
+    }
+  }
+} catch (error) {
+  console.error('Error verifying success page:', error.message);
+}
+
+// 4. Final instructions
+console.log('\n' + (chalk ? chalk.blue('EmailJS Fix Complete') : 'EmailJS Fix Complete'));
+console.log('Next steps:');
+console.log('1. Ensure all environment variables are correctly set in .env.local');
+console.log('2. Test sending emails in development');
+console.log('3. Check for CORS errors in your browser console');
+console.log('4. If problems persist, verify your EmailJS service settings and whitelist your domain'); 

@@ -10,7 +10,9 @@ import Header from '../components/Header';
 import EnvChecker from '../components/EnvChecker';
 import EnvTest from '../components/EnvTest';
 import { 
-  FaInfoCircle, 
+  FaCheckCircle, 
+  FaShieldAlt,
+  FaReceipt,
   FaUser, 
   FaEnvelope, 
   FaPhone, 
@@ -25,17 +27,20 @@ import {
   FaCheck,
   FaPlus,
   FaMinus,
-  FaCreditCard,
-  FaMoneyBillWave,
   FaPaypal,
-  FaRegCreditCard,
-  FaCheckCircle,
-  FaShieldAlt,
-  FaReceipt
+  FaCreditCard
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { v4 as uuidv4 } from 'uuid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Link from 'next/link';
+import Logo from '../components/Logo';
+import LoadingDots from '../components/LoadingDots';
+import { handleNavigationClick } from '../lib/eventHandlers';
+import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
+import Footer from '../components/Footer';
 
 // Constants and Pricing
 const SERVICES = {
@@ -117,30 +122,35 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
 };
 
 // Payment Option component
-const PaymentOption = ({ method, iconComponent, isSelected, onSelect, iconColor }) => (
+const PaymentOption = ({ method, isSelected, onSelect, color }) => (
   <div 
     onClick={onSelect}
     className="payment-option-item"
     style={{
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '12px',
+      padding: '18px',
       borderRadius: '8px',
-      border: isSelected ? `2px solid ${iconColor}` : '1px solid #ddd',
-      backgroundColor: isSelected ? `${iconColor}10` : 'white',
+      border: isSelected ? `2px solid ${color || '#0070f3'}` : '1px solid #ddd',
+      backgroundColor: isSelected ? (color ? `${color}10` : 'rgba(0, 112, 243, 0.05)') : 'white',
       cursor: 'pointer',
       transition: 'all 0.2s ease',
       boxShadow: isSelected ? `0 4px 8px rgba(0,0,0,0.1)` : '0 1px 3px rgba(0,0,0,0.05)',
     }}
   >
-    <div style={{ fontSize: '24px', marginBottom: '8px', color: iconColor }}>
-      {iconComponent}
-    </div>
+    <input
+      type="radio"
+      name="paymentMethod"
+      value={method}
+      checked={isSelected}
+      onChange={() => {}}
+      style={{ display: 'none' }}
+    />
     <div style={{ 
       fontWeight: isSelected ? '600' : '400',
-      color: isSelected ? iconColor : '#333',
+      color: isSelected ? (color || '#0070f3') : '#333',
+      fontSize: '1rem',
     }}>
       {method}
     </div>
@@ -151,7 +161,7 @@ const PaymentOption = ({ method, iconComponent, isSelected, onSelect, iconColor 
 // Payment method URL configurations
 const PAYMENT_URLS = {
   VENMO: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
-  CASHAPP: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+  CASHAPP: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$LiveCity',
   PAYPAL: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
 };
 
@@ -181,27 +191,25 @@ Live City DJ Contract Terms and Conditions:
     USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
   };
 
-  const initialFormData = {
+  const [formData, setFormData] = useState({
     clientName: '',
     email: '',
     contactPhone: '',
-    eventType: '',
-    guestCount: '',
+    eventType: 'Wedding',
+    guestCount: '100',
     venueName: '',
     venueLocation: '',
     eventDate: '',
     startTime: '',
     endTime: '',
     paymentMethod: 'Stripe',
+    paymentAmount: 'deposit', // New field for deposit or full payment
     lighting: false,
     photography: false,
     videoVisuals: false,
-    agreeToTerms: false,
     additionalHours: 0,
-    message: ''
-  };
-  
-  const [formData, setFormData] = useState(initialFormData);
+    agreeToTerms: false,
+  });
   
   const router = useRouter();
   const venueLocationRef = useRef(null);
@@ -308,6 +316,19 @@ Live City DJ Contract Terms and Conditions:
     
     console.log("Calculated total:", total);
     return total;
+  };
+
+  // Calculate the deposit amount (50% of total)
+  const calculateDepositAmount = () => {
+    const total = calculateTotal();
+    return Math.round(total * 0.5);
+  };
+  
+  // Get the final amount to pay based on selection (deposit or full)
+  const getAmountToPay = () => {
+    return formData.paymentAmount === 'deposit' 
+      ? calculateDepositAmount() 
+      : calculateTotal();
   };
   
   const handleEndTimeChange = (endTime) => {
@@ -738,28 +759,36 @@ Live City DJ Contract Terms and Conditions:
 
   // Initialize EmailJS
   useEffect(() => {
-    // Initialize EmailJS with the PUBLIC key, but fall back to USER_ID if needed
+    // Initialize EmailJS with the newer API format
     if (typeof window !== 'undefined' && isClient) {
-      // Try PUBLIC_KEY first
-      let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
-      
-      // Fallback to USER_ID if PUBLIC_KEY is not available (for older deployments)
-      if (!publicKey || publicKey === 'default_public_key') {
-        publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || EMAILJS_CONFIG.USER_ID;
-        console.log("Falling back to USER_ID for EmailJS initialization");
-      }
-      
-      if (publicKey && publicKey !== 'default_public_key' && publicKey !== 'default_user_id') {
-        emailjs.init(publicKey);
-        console.log("EmailJS initialized successfully with key:", publicKey.substring(0, 4) + "...");
-      } else {
-        console.warn("EmailJS initialization skipped - no valid public key or user ID");
+      try {
+        // Get the public key
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
+        
+        if (publicKey && publicKey !== 'default_public_key') {
+          // Use the newer init method with object parameter
+          emailjs.init({
+            publicKey: publicKey
+          });
+          console.log("EmailJS initialized successfully with key:", publicKey.substring(0, 4) + "...");
+        } else {
+          console.warn("EmailJS initialization skipped - no valid public key");
+        }
+      } catch (initError) {
+        console.error("Error initializing EmailJS:", initError);
       }
     }
   }, [isClient]);
 
   // Function to send confirmation email with retry logic
   const sendConfirmationEmail = async (templateParams) => {
+    // Skip actual email sending in development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Development mode - skipping actual email sending");
+      console.log("Email would be sent with params:", templateParams);
+      return { success: true, devMode: true };
+    }
+
     const maxRetries = 3;
     let retryCount = 0;
     let success = false;
@@ -769,17 +798,31 @@ Live City DJ Contract Terms and Conditions:
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
     const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
     
-    // Add from_name if missing (required by EmailJS)
-    if (!templateParams.from_name) {
-      templateParams.from_name = 'Live City DJ';
-    }
+    // Make sure all required parameters are properly set
+    const emailParams = {
+      from_name: 'Live City DJ',
+      to_name: templateParams.clientName || templateParams.name || 'Valued Customer',
+      to_email: templateParams.email,
+      event_type: templateParams.eventType || 'Event',
+      event_date: templateParams.eventDate || 'TBD',
+      venue_name: templateParams.venueName || 'TBD',
+      venue_location: templateParams.venueLocation || 'TBD',
+      payment_method: templateParams.paymentMethod || 'Online Payment',
+      total_amount: templateParams.total || `$${templateParams.totalAmount || '0.00'}`,
+      // Pass through any other parameters
+      ...templateParams
+    };
     
     // Verify EmailJS configuration
     if (!serviceId || !templateId || 
         serviceId === 'default_service_id' || 
         templateId === 'default_template_id') {
       console.error("EmailJS environment variables are missing or using fallbacks");
-      return { success: false, error: "Email service configuration is incomplete" };
+      return { 
+        success: false, 
+        error: "Email service configuration is incomplete",
+        fallbackMessage: "Email couldn't be sent due to missing configuration. We'll contact you shortly." 
+      };
     }
     
     // Attempt to send with retries
@@ -790,7 +833,7 @@ Live City DJ Contract Terms and Conditions:
         const emailResponse = await emailjs.send(
           serviceId,
           templateId,
-          templateParams
+          emailParams
         );
 
         console.log("EmailJS Response:", emailResponse);
@@ -803,7 +846,29 @@ Live City DJ Contract Terms and Conditions:
           throw new Error(`Unexpected response: ${JSON.stringify(emailResponse)}`);
         }
       } catch (emailError) {
+        // Log more details about the error
         console.error(`Email send attempt ${retryCount + 1} failed:`, emailError);
+        
+        // Special handling for empty error objects (common with CORS issues)
+        if (!emailError || Object.keys(emailError).length === 0) {
+          console.error("Empty error object detected - likely a CORS or network issue");
+          console.error("Current environment:", {
+            serviceId,
+            templateId: templateId?.substring(0, 5) + "...",
+            hasPublicKey: !!process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+            environment: process.env.NODE_ENV
+          });
+          
+          // In case of CORS error, we'll treat it as a non-fatal error and allow the form submission to continue
+          if (retryCount === maxRetries - 1) {
+            return {
+              success: false,
+              error: "Browser security prevented email sending. We'll contact you manually.",
+              cors: true
+            };
+          }
+        }
+        
         retryCount++;
         
         if (retryCount < maxRetries) {
@@ -817,7 +882,8 @@ Live City DJ Contract Terms and Conditions:
     
     return { 
       success: false, 
-      error: `Failed to send email after ${maxRetries} attempts` 
+      error: `Failed to send email after ${maxRetries} attempts`,
+      fallbackMessage: "We couldn't send your confirmation email automatically, but your booking is confirmed. We'll follow up shortly."
     };
   };
 
@@ -894,6 +960,11 @@ Live City DJ Contract Terms and Conditions:
           clientName: formData.clientName,
           phoneNumber: formData.contactPhone,
           paymentMethod: formData.paymentMethod,
+          paymentAmount: formData.paymentAmount, // Store payment amount type
+          isDeposit: formData.paymentAmount === 'deposit', // Boolean flag for easy querying
+          amountDue: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal(),
+          totalAmount: calculateTotal(),
+          remainingBalance: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : 0,
           depositPaid: false,
           confirmationSent: false,
           reminderSent: false,
@@ -908,34 +979,44 @@ Live City DJ Contract Terms and Conditions:
       
       // Handle based on payment method
       if (formData.paymentMethod === 'Stripe') {
-        // Use the existing showStripe state to toggle the Stripe checkout
-        try {
-          console.log('Setting showStripe to true');
-          setShowStripe(true);
-          return; // Exit function here to prevent email send - Stripe component will handle the rest
-        } catch (error) {
-          console.error('Error in Stripe payment handling:', error);
-          // Fallback if setting state fails
-          alert('There was an error processing your Stripe payment setup. Please try again or choose a different payment method.');
-        }
+        // Show the Stripe checkout component
+        setShowStripe(true);
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 5000);
+        return; // Exit the function early to let the Stripe component handle payment
       } else if (formData.paymentMethod === 'Venmo') {
-        window.open(PAYMENT_URLS.VENMO, '_blank');
-        // Longer delay to ensure popup isn't blocked
-        setTimeout(() => setSubmitted(true), 1000);
-        setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 5000);
+        try {
+          window.open(PAYMENT_URLS.VENMO, '_blank');
+          // Longer delay to ensure popup isn't blocked
+          setTimeout(() => setSubmitted(true), 1000);
+          setShowConfirmation(true);
+          setTimeout(() => setShowConfirmation(false), 5000);
+        } catch (error) {
+          console.error('Error opening Venmo payment URL:', error);
+          alert('Could not open Venmo. Please try again or use another payment method.');
+        }
       } else if (formData.paymentMethod === 'CashApp') {
-        window.open(PAYMENT_URLS.CASHAPP, '_blank');
-        // Longer delay to ensure popup isn't blocked
-        setTimeout(() => setSubmitted(true), 1000);
-        setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 5000);
+        try {
+          window.open(PAYMENT_URLS.CASHAPP, '_blank');
+          // Longer delay to ensure popup isn't blocked
+          setTimeout(() => setSubmitted(true), 1000);
+          setShowConfirmation(true);
+          setTimeout(() => setShowConfirmation(false), 5000);
+        } catch (error) {
+          console.error('Error opening CashApp payment URL:', error);
+          alert('Could not open CashApp. Please try again or use another payment method.');
+        }
       } else if (formData.paymentMethod === 'PayPal') {
-        window.open(PAYMENT_URLS.PAYPAL, '_blank');
-        // Longer delay to ensure popup isn't blocked
-        setTimeout(() => setSubmitted(true), 1000);
-        setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 5000);
+        try {
+          window.open(PAYMENT_URLS.PAYPAL, '_blank');
+          // Longer delay to ensure popup isn't blocked
+          setTimeout(() => setSubmitted(true), 1000);
+          setShowConfirmation(true);
+          setTimeout(() => setShowConfirmation(false), 5000);
+        } catch (error) {
+          console.error('Error opening PayPal payment URL:', error);
+          alert('Could not open PayPal. Please try again or use another payment method.');
+        }
       }
       
       // For other payment methods, continue with email flow
@@ -947,7 +1028,10 @@ Live City DJ Contract Terms and Conditions:
         eventDate: formData.eventDate,
         venueName: formData.venueName,
         venueLocation: formData.venueLocation,
+        paymentType: formData.paymentAmount === 'deposit' ? 'Deposit' : 'Full Payment',
+        amountPaid: `$${getAmountToPay()}`,
         total: `$${calculateTotal()}`,
+        remainingBalance: formData.paymentAmount === 'deposit' ? `$${calculateDepositAmount()}` : '$0',
         email: formData.email
       };
       
@@ -956,7 +1040,7 @@ Live City DJ Contract Terms and Conditions:
       // Use the new email sending function with retry logic
       const emailResult = await sendConfirmationEmail(templateParams);
       
-      if (emailResult.success) {
+      if (emailResult.success || emailResult.devMode) {
         // Update the document with email confirmation if Firebase was successful
         if (docRef) {
           try {
@@ -970,7 +1054,7 @@ Live City DJ Contract Terms and Conditions:
         }
       } else {
         console.warn("Email sending failed:", emailResult.error);
-        // Still mark as submitted even if email fails
+        // Still mark as submitted even if email fails - we've already handled the error appropriately
       }
       
       // Mark submission as complete regardless of email success
@@ -1060,7 +1144,44 @@ Live City DJ Contract Terms and Conditions:
         borderTop: '1px solid #ddd',
         fontWeight: 'bold'
       }}>
-        <strong>Total: ${calculateTotal()}</strong>
+        <strong>Subtotal: ${calculateTotal()}</strong>
+      </li>
+      
+      {/* Show the payment amount based on selection */}
+      <li style={{ 
+        marginTop: '5px',
+        fontWeight: formData.paymentAmount === 'deposit' ? 'bold' : 'normal',
+        color: formData.paymentAmount === 'deposit' ? '#0070f3' : 'inherit'
+      }}>
+        {formData.paymentAmount === 'deposit' ? (
+          <>💵 <strong>Deposit (50%): ${calculateDepositAmount()}</strong></>
+        ) : (
+          <>💵 Deposit (50%): ${calculateDepositAmount()}</>
+        )}
+      </li>
+      
+      <li style={{ 
+        marginTop: '5px',
+        fontWeight: formData.paymentAmount === 'full' ? 'bold' : 'normal',
+        color: formData.paymentAmount === 'full' ? '#0070f3' : 'inherit'
+      }}>
+        {formData.paymentAmount === 'full' ? (
+          <>💰 <strong>Full Payment: ${calculateTotal()}</strong></>
+        ) : (
+          <>💰 Full Payment: ${calculateTotal()}</>
+        )}
+      </li>
+      
+      <li className="amount-to-pay" style={{
+        marginTop: '15px',
+        padding: '10px',
+        backgroundColor: 'rgba(0, 112, 243, 0.1)',
+        borderRadius: '8px',
+        fontWeight: 'bold',
+        fontSize: '1.1rem',
+        textAlign: 'center'
+      }}>
+        <strong>Amount to Pay: ${getAmountToPay()}</strong>
       </li>
     </ul>
   );
@@ -1304,7 +1425,25 @@ Live City DJ Contract Terms and Conditions:
           </p>
           <button
             onClick={() => {
-              setFormData(initialFormData);
+              setFormData({
+                clientName: '',
+                email: '',
+                contactPhone: '',
+                eventType: 'Wedding',
+                guestCount: '100',
+                venueName: '',
+                venueLocation: '',
+                eventDate: '',
+                startTime: '',
+                endTime: '',
+                paymentMethod: 'Stripe',
+                paymentAmount: 'deposit', // New field for deposit or full payment
+                lighting: false,
+                photography: false,
+                videoVisuals: false,
+                additionalHours: 0,
+                agreeToTerms: false,
+              });
               setSubmitted(false);
             }}
             style={{
@@ -1438,7 +1577,7 @@ Live City DJ Contract Terms and Conditions:
               </div>
               
               <StripeCheckout
-                amount={parseInt(calculateTotal() * 100)}
+                amount={getAmountToPay() * 100}
                 contractDetails={{
                   clientName: formData.clientName,
                   email: formData.email,
@@ -1451,7 +1590,9 @@ Live City DJ Contract Terms and Conditions:
                   lighting: formData.lighting === true,
                   photography: formData.photography === true,
                   videoVisuals: formData.videoVisuals === true,
-                  additionalHours: parseInt(formData.additionalHours || 0)
+                  additionalHours: parseInt(formData.additionalHours || 0),
+                  paymentAmount: formData.paymentAmount, // Pass payment amount type
+                  isDeposit: formData.paymentAmount === 'deposit'
                 }}
                 onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
@@ -1498,7 +1639,7 @@ Live City DJ Contract Terms and Conditions:
             {formData.paymentMethod === 'CashApp' && (
               <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
                 <h3>Please send your deposit via Cash App:</h3>
-                <p>$BobbyMartin64</p>
+                <p>$LiveCity</p>
               </div>
             )}
 
@@ -1657,7 +1798,7 @@ Live City DJ Contract Terms and Conditions:
                       value={formData.venueLocation}
                       onChange={handleChange}
                       required
-                      placeholder="Enter venue address powered by Google"
+                      placeholder="Enter venue address"
                       style={{ 
                         backgroundColor: 'white', 
                         width: '100%', 
@@ -1700,15 +1841,27 @@ Live City DJ Contract Terms and Conditions:
                       {timeIcons['eventDate']} Event Date:
                     </span>
                   </label>
-                  <input
-                    name="eventDate"
-                    type="date"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.eventDate}
-                    onChange={handleChange}
-                  />
+                  <div 
+                    style={{position: 'relative'}}
+                    onClick={() => {
+                      // Find and click the date input when clicking anywhere in this div
+                      const dateInput = document.querySelector('input[name="eventDate"]');
+                      if (dateInput) {
+                        dateInput.focus();
+                        dateInput.click();
+                      }
+                    }}
+                  >
+                    <input
+                      name="eventDate"
+                      type="date"
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                      value={formData.eventDate}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
 
                 {/* Start Time */}
@@ -2040,13 +2193,141 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               </div>
 
-              {/* Redesigned Payment Method Selection */}
+              {/* Payment Amount Selection */}
+              <div className="payment-amount-section" style={{ marginBottom: '2rem' }}>
+                <label style={{
+                  ...labelStyle,
+                  fontSize: '1.1rem',
+                  marginBottom: '1rem'
+                }}>
+                  Payment Option:
+                </label>
+                <div className="payment-amount-options" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '15px',
+                  marginBottom: '1rem'
+                }}>
+                  {/* Deposit Option */}
+                  <div 
+                    className="payment-amount-option"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'deposit' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentAmount === 'deposit' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '20px 15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentAmount === 'deposit' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentAmount === 'deposit' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div style={{ 
+                      fontSize: '28px', 
+                      color: '#0070f3',
+                      marginBottom: '10px' 
+                    }}>
+                      💵
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem',
+                      marginBottom: '5px'
+                    }}>
+                      Pay Deposit
+                    </div>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      color: '#666',
+                      textAlign: 'center'
+                    }}>
+                      50% now, 50% on event day
+                    </div>
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      color: '#0070f3'
+                    }}>
+                      ${calculateDepositAmount()}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentAmount"
+                      value="deposit"
+                      checked={formData.paymentAmount === 'deposit'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
+                  
+                  {/* Full Payment Option */}
+                  <div 
+                    className="payment-amount-option"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'full' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentAmount === 'full' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '20px 15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentAmount === 'full' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentAmount === 'full' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div style={{ 
+                      fontSize: '28px', 
+                      color: '#0070f3',
+                      marginBottom: '10px' 
+                    }}>
+                      💰
+                    </div>
+                    <div style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem',
+                      marginBottom: '5px'
+                    }}>
+                      Pay in Full
+                    </div>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      color: '#666',
+                      textAlign: 'center'
+                    }}>
+                      Pay the full amount now
+                    </div>
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      color: '#0070f3'
+                    }}>
+                      ${calculateTotal()}
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentAmount"
+                      value="full"
+                      checked={formData.paymentAmount === 'full'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   ...labelStyle,
                   fontSize: '1.1rem',
                   marginBottom: '1rem'
-                }} className="field-label">
+                }}>
                   Payment Method:
                 </label>
                 <div className="payment-options" style={{
@@ -2054,37 +2335,173 @@ Live City DJ Contract Terms and Conditions:
                   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                   gap: '12px',
                 }}>
-                  <PaymentOption
-                    method="Stripe"
-                    iconComponent={<FaCreditCard />}
-                    isSelected={formData.paymentMethod === 'Stripe'}
-                    onSelect={() => handlePaymentMethodSelect('Stripe')}
-                    iconColor="#6772E5"
-                  />
+                  {/* Stripe Payment Option */}
+                  <div 
+                    className="payment-option"
+                    data-method="Stripe"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Stripe' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
+                      color: '#6772E5',
+                      marginBottom: '6px' 
+                    }}>
+                      <FaCreditCard />
+                    </div>
+                    <div className="payment-method-label" style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1rem'
+                    }}>
+                      Stripe
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Stripe"
+                      checked={formData.paymentMethod === 'Stripe'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
                   
-                  <PaymentOption
-                    method="Venmo"
-                    iconComponent={<SiVenmo />}
-                    isSelected={formData.paymentMethod === 'Venmo'}
-                    onSelect={() => handlePaymentMethodSelect('Venmo')}
-                    iconColor="#3D95CE"
-                  />
+                  {/* Venmo Payment Option */}
+                  <div 
+                    className="payment-option"
+                    data-method="Venmo"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Venmo' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
+                      color: '#3D95CE',
+                      marginBottom: '6px' 
+                    }}>
+                      <SiVenmo />
+                    </div>
+                    <div className="payment-method-label" style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1rem'
+                    }}>
+                      Venmo
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Venmo"
+                      checked={formData.paymentMethod === 'Venmo'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
                   
-                  <PaymentOption
-                    method="CashApp"
-                    iconComponent={<SiCashapp />}
-                    isSelected={formData.paymentMethod === 'CashApp'}
-                    onSelect={() => handlePaymentMethodSelect('CashApp')}
-                    iconColor="#00C244"
-                  />
+                  {/* Cash App Payment Option */}
+                  <div 
+                    className="payment-option"
+                    data-method="CashApp"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'CashApp' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
+                      color: '#00C244',
+                      marginBottom: '6px' 
+                    }}>
+                      <SiCashapp />
+                    </div>
+                    <div className="payment-method-label" style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1rem'
+                    }}>
+                      CashApp
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="CashApp"
+                      checked={formData.paymentMethod === 'CashApp'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
                   
-                  <PaymentOption
-                    method="PayPal"
-                    iconComponent={<FaPaypal />}
-                    isSelected={formData.paymentMethod === 'PayPal'}
-                    onSelect={() => handlePaymentMethodSelect('PayPal')}
-                    iconColor="#0070BA"
-                  />
+                  {/* PayPal Payment Option */}
+                  <div 
+                    className="payment-option"
+                    data-method="PayPal"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'PayPal' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div className="payment-icon" style={{ 
+                      fontSize: '28px', 
+                      color: '#0070BA',
+                      marginBottom: '6px' 
+                    }}>
+                      <FaPaypal />
+                    </div>
+                    <div className="payment-method-label" style={{ 
+                      fontWeight: 'bold',
+                      fontSize: '1rem'
+                    }}>
+                      PayPal
+                    </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="PayPal"
+                      checked={formData.paymentMethod === 'PayPal'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
+                  </div>
                 </div>
                 {formErrors.paymentMethod && (
                   <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>

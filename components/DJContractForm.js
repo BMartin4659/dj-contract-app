@@ -27,7 +27,16 @@ import {
   FaMoneyBillWave,
   FaPaypal
 } from 'react-icons/fa';
+import { SiVenmo, SiCashapp } from 'react-icons/si';
 import Header from './Header';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+// Payment method URL configurations
+const PAYMENT_URLS = {
+  VENMO: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
+  CASHAPP: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+  PAYPAL: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
+};
 
 const termsAndConditionsText = `
 Live City DJ Contract Terms and Conditions:
@@ -181,33 +190,67 @@ export default function DJContractForm() {
       if (paymentMethod === 'Stripe') {
         setShowStripe(true);
       } else if (paymentMethod === 'Venmo') {
-        window.open('https://venmo.com/u/Bobby-Martin-64', '_blank');
-        setTimeout(() => setSubmitted(true), 1000);
+        try {
+          window.open(PAYMENT_URLS.VENMO, '_blank');
+          setTimeout(() => setSubmitted(true), 1000);
+        } catch (error) {
+          console.error('Error opening Venmo payment URL:', error);
+          alert('Could not open Venmo. Please try again or use another payment method.');
+          setSubmitted(true); // Still mark as submitted so user isn't stuck
+        }
       } else if (paymentMethod === 'CashApp') {
-        window.open('https://cash.app/$LiveCity', '_blank');
-        setTimeout(() => setSubmitted(true), 1000);
+        try {
+          window.open(PAYMENT_URLS.CASHAPP, '_blank');
+          setTimeout(() => setSubmitted(true), 1000);
+        } catch (error) {
+          console.error('Error opening CashApp payment URL:', error);
+          alert('Could not open CashApp. Please try again or use another payment method.');
+          setSubmitted(true); // Still mark as submitted so user isn't stuck
+        }
+      } else if (paymentMethod === 'PayPal') {
+        try {
+          window.open(PAYMENT_URLS.PAYPAL, '_blank');
+          setTimeout(() => setSubmitted(true), 1000);
+        } catch (error) {
+          console.error('Error opening PayPal payment URL:', error);
+          alert('Could not open PayPal. Please try again or use another payment method.');
+          setSubmitted(true); // Still mark as submitted so user isn't stuck
+        }
       } else {
-        const templateParams = {
-          to_name: clientName,
-          to_email: email,
-          event_type: eventType,
-          event_date: eventDate,
-          venue_name: venueName,
-          venue_location: venueLocation,
-          start_time: startTime,
-          end_time: endTime,
-          guest_count: String(guestCount),
-          phone_number: contactPhone,
-          total_amount: `$${calculateTotal()}`,
-          payment_method: paymentMethod
-        };
-
-        await emailjs.send(
-          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-          templateParams,
-          process.env.NEXT_PUBLIC_EMAILJS_USER_ID
-        );
+        try {
+          const functions = getFunctions();
+          const sendEmail = httpsCallable(functions, 'sendConfirmationEmail');
+          
+          const emailPayload = {
+            to: email,
+            subject: `🎧 Live City DJ Booking Confirmed!`,
+            text: `Your booking for ${eventType} on ${eventDate} has been confirmed.`,
+            html: `
+              <div style="font-family: sans-serif; padding: 20px;">
+                <h2 style="color: #3b82f6;">🎉 Booking Confirmed!</h2>
+                <p>Hi ${clientName},</p>
+                <p>Thank you for booking <strong>Live City DJ</strong> for your <strong>${eventType}</strong>.</p>
+                <ul>
+                  <li><strong>Date:</strong> ${eventDate}</li>
+                  <li><strong>Venue:</strong> ${venueName}</li>
+                  <li><strong>Location:</strong> ${venueLocation}</li>
+                  <li><strong>Start Time:</strong> ${startTime}</li>
+                  <li><strong>End Time:</strong> ${endTime}</li>
+                  <li><strong>Total:</strong> $${calculateTotal()}</li>
+                </ul>
+                <p>We'll see you on the dance floor!</p>
+                <p style="margin-top: 30px;">— DJ Bobby Drake 🎧</p>
+              </div>
+            `
+          };
+          
+          const result = await sendEmail(emailPayload);
+          
+          console.log('Email sent successfully:', result.data);
+        } catch (emailError) {
+          console.error("Error sending confirmation email:", emailError);
+          // Continue with the process even if email fails
+        }
 
         await updateDoc(doc(db, 'djContracts', docRef.id), {
           confirmationSent: true,

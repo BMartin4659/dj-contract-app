@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Email Function (Debug)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      display: none;
+    }
+    .actions {
+      display: flex;
+      margin-top: 20px;
+    }
+    #testImage {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+    }
+    .log {
+      font-family: monospace;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Email Function (Debug)</h1>
+  
+  <form id="emailForm">
+    <div class="form-group">
+      <label for="clientName">Client Name:</label>
+      <input type="text" id="clientName" value="Test Client" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" value="therealdjbobbydrake@gmail.com" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="eventType">Event Type:</label>
+      <input type="text" id="eventType" value="Test Event" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="eventDate">Event Date:</label>
+      <input type="text" id="eventDate" value="2025-05-01" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="venueName">Venue Name:</label>
+      <input type="text" id="venueName" value="Test Venue">
+    </div>
+    
+    <div class="form-group">
+      <label for="venueLocation">Venue Location:</label>
+      <input type="text" id="venueLocation" value="Test Location">
+    </div>
+    
+    <div class="form-group">
+      <label for="startTime">Start Time:</label>
+      <input type="text" id="startTime" value="7:00 PM">
+    </div>
+    
+    <div class="form-group">
+      <label for="endTime">End Time:</label>
+      <input type="text" id="endTime" value="11:00 PM">
+    </div>
+    
+    <div class="form-group">
+      <label for="paymentId">Payment ID:</label>
+      <input type="text" id="paymentId" value="TEST123">
+    </div>
+    
+    <div class="form-group">
+      <label for="totalAmount">Total Amount:</label>
+      <input type="text" id="totalAmount" value="100.00">
+    </div>
+    
+    <div class="actions">
+      <button type="submit">Send Test Email</button>
+      <button type="button" id="testImageBtn">Test Logo Image</button>
+    </div>
+  </form>
+  
+  <div id="result"></div>
+  
+  <div id="testImage" style="display: none;">
+    <h3>Image Test Result</h3>
+    <div>
+      <h4>Original Logo URL:</h4>
+      <p>https://dj-contract-app.web.app/dJ-bobby-drake-logo.png</p>
+      <img src="https://dj-contract-app.web.app/dJ-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" style="max-width: 200px;" id="originalLogo" onerror="document.getElementById('originalLogoError').style.display = 'block';">
+      <div id="originalLogoError" style="color: red; display: none;">Error loading image!</div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <h4>Alternative URL (lowercase):</h4>
+      <p>https://dj-contract-app.web.app/dj-bobby-drake-logo.png</p>
+      <img src="https://dj-contract-app.web.app/dj-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" style="max-width: 200px;" id="lowercaseLogo" onerror="document.getElementById('lowercaseLogoError').style.display = 'block';">
+      <div id="lowercaseLogoError" style="color: red; display: none;">Error loading image!</div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <h4>Console Log:</h4>
+      <div id="imageLog" class="log"></div>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('emailForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = 'Sending email...';
+      
+      const data = {
+        clientName: document.getElementById('clientName').value,
+        email: document.getElementById('email').value,
+        eventType: document.getElementById('eventType').value,
+        eventDate: document.getElementById('eventDate').value,
+        venueName: document.getElementById('venueName').value,
+        venueLocation: document.getElementById('venueLocation').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        paymentId: document.getElementById('paymentId').value,
+        totalAmount: document.getElementById('totalAmount').value
+      };
+      
+      fetch('https://us-central1-dj-contract-app.cloudfunctions.net/sendConfirmationEmailHttp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        resultDiv.innerHTML = `
+          <h3>Result:</h3>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      })
+      .catch(error => {
+        resultDiv.innerHTML = `
+          <h3>Error:</h3>
+          <pre>${error}</pre>
+        `;
+      });
+    });
+    
+    document.getElementById('testImageBtn').addEventListener('click', function() {
+      const testImageDiv = document.getElementById('testImage');
+      testImageDiv.style.display = 'block';
+      
+      const imageLog = document.getElementById('imageLog');
+      
+      // Test original logo
+      const originalLogo = document.getElementById('originalLogo');
+      originalLogo.onload = function() {
+        logMessage('Original logo loaded successfully', imageLog);
+      };
+      originalLogo.onerror = function() {
+        logMessage('ERROR: Original logo failed to load', imageLog);
+      };
+      
+      // Test lowercase logo
+      const lowercaseLogo = document.getElementById('lowercaseLogo');
+      lowercaseLogo.onload = function() {
+        logMessage('Lowercase logo loaded successfully', imageLog);
+      };
+      lowercaseLogo.onerror = function() {
+        logMessage('ERROR: Lowercase logo failed to load', imageLog);
+      };
+      
+      // Try other variations
+      testImageUrl('https://dj-contract-app.web.app/DJ-bobby-drake-logo.png', 'Uppercase DJ', imageLog);
+      testImageUrl('https://dj-contract-app.web.app/dj-bobby-drake-logo.PNG', 'Uppercase PNG extension', imageLog);
+      
+      // Check if the hosting domain is accessible
+      fetch('https://dj-contract-app.web.app/')
+        .then(response => {
+          if (response.ok) {
+            logMessage('Firebase hosting domain is accessible', imageLog);
+          } else {
+            logMessage(`Firebase hosting domain returned status: ${response.status}`, imageLog);
+          }
+        })
+        .catch(error => {
+          logMessage(`ERROR: Firebase hosting domain error: ${error}`, imageLog);
+        });
+    });
+    
+    function testImageUrl(url, description, logElement) {
+      const img = new Image();
+      img.onload = function() {
+        logMessage(`${description} loaded successfully`, logElement);
+      };
+      img.onerror = function() {
+        logMessage(`ERROR: ${description} failed to load`, logElement);
+      };
+      img.src = url;
+    }
+    
+    function logMessage(message, logElement) {
+      const now = new Date();
+      const timestamp = now.toTimeString().split(' ')[0];
+      logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+    }
+  </script>
+</body>
+</html> 

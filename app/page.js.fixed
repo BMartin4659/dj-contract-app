@@ -33,6 +33,13 @@ import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { v4 as uuidv4 } from 'uuid';
 
+// Payment method URL configurations
+const PAYMENT_URLS = {
+  VENMO: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
+  CASHAPP: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+  PAYPAL: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
+};
+
 // Payment confirmation banner component
 const PaymentConfirmation = ({ show, message }) => {
   if (!show) return null;
@@ -469,21 +476,21 @@ Live City DJ Contract Terms and Conditions:
           setLoading(false);
         }
       } else if (formData.paymentMethod === 'Venmo') {
-        window.open('https://venmo.com/livecityentertainment', '_blank');
+        window.open(PAYMENT_URLS.VENMO, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
         return;
       } else if (formData.paymentMethod === 'CashApp') {
-        window.open('https://cash.app/$LiveCity', '_blank');
+        window.open(PAYMENT_URLS.CASHAPP, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 5000);
         return;
       } else if (formData.paymentMethod === 'PayPal') {
-        window.open('https://www.paypal.biz/livecity', '_blank');
+        window.open(PAYMENT_URLS.PAYPAL, '_blank');
         // Longer delay to ensure popup isn't blocked
         setTimeout(() => setSubmitted(true), 1000);
         setShowConfirmation(true);
@@ -495,18 +502,13 @@ Live City DJ Contract Terms and Conditions:
       
       // Create a clean template params object with only string values
       const templateParams = {
-        to_name: formData.clientName || '',
-        to_email: formData.email || '',
-        event_type: formData.eventType || '',
-        event_date: formData.eventDate || '',
-        venue_name: formData.venueName || '',
-        venue_location: formData.venueLocation || '',
-        start_time: formData.startTime || '',
-        end_time: formData.endTime || '',
-        guest_count: String(formData.guestCount || 0),
-        phone_number: formData.contactPhone || '',
-        total_amount: `$${calculateTotal()}`,
-        payment_method: formData.paymentMethod || 'Other'
+        name: formData.clientName,
+        clientName: formData.clientName,
+        eventDate: formData.eventDate,
+        venueName: formData.venueName,
+        venueLocation: formData.venueLocation,
+        total: `$${calculateTotal()}`,
+        email: formData.email
       };
       
       console.log("Sending email with params:", templateParams);
@@ -778,16 +780,16 @@ Live City DJ Contract Terms and Conditions:
             )}
 
             {formData.paymentMethod === 'CashApp' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
-                <h3>Please send your deposit via Cash App:</h3>
-                <p>$LiveCity</p>
+              <div className="payment-instructions">
+                <h3>Please send your deposit via CashApp:</h3>
+                <p>$BobbyMartin64</p>
               </div>
             )}
 
             {formData.paymentMethod === 'PayPal' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
+              <div className="payment-instructions">
                 <h3>Please send your deposit via PayPal:</h3>
-                <p>LiveCity (https://www.paypal.biz/livecity)</p>
+                <p>Bobby Martin (https://paypal.me/bmartin4659)</p>
               </div>
             )}
           </div>

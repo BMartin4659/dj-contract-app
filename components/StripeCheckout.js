@@ -11,7 +11,7 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { FaLock, FaShieldAlt, FaCheck, FaCreditCard, FaReceipt, FaInfo } from 'react-icons/fa';
-import emailjs from '@emailjs/browser';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -19,78 +19,94 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 const EMAILJS_CONFIG = {
   SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
   TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
+  PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'default_public_key',
   USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
 };
 
 // Helper function to send confirmation email
 const sendConfirmationEmail = async (contractDetails, paymentId) => {
-  if (!contractDetails?.email) {
-    console.error("Cannot send confirmation email: missing email address");
-    return false;
-  }
-  
   try {
-    // Try multiple approaches to get a valid key for EmailJS
-    let publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    console.log("Sending payment confirmation email for contract:", contractDetails);
     
-    // Fallback to USER_ID if needed (for backwards compatibility)
-    if (!publicKey || publicKey === 'missing_public_key' || publicKey === 'default_public_key') {
-      publicKey = process.env.NEXT_PUBLIC_EMAILJS_USER_ID;
-      console.log("Falling back to USER_ID for EmailJS initialization");
-    }
-    
-    if (publicKey && publicKey !== 'missing_public_key' && publicKey !== 'default_public_key') {
-      emailjs.init(publicKey);
-      console.log("EmailJS initialized successfully with key");
-    } else {
-      console.error("EmailJS initialization failed: missing both PUBLIC_KEY and USER_ID");
-      return false;
-    }
-    
-    // Prepare template parameters - ensure all fields match the template's expected parameters
-    const templateParams = {
-      to_name: contractDetails.clientName || 'Customer',
-      to_email: contractDetails.email,
-      from_name: 'Live City DJ',
-      event_type: contractDetails.eventType || 'Event',
-      event_date: contractDetails.eventDate || 'TBD',
-      venue_name: contractDetails.venueName || 'Venue',
-      venue_location: contractDetails.venueLocation || 'TBD',
-      start_time: contractDetails.startTime || 'TBD',
-      end_time: contractDetails.endTime || 'TBD',
-      payment_id: paymentId || 'Unknown',
-      payment_method: 'Stripe',
-      total_amount: contractDetails.totalAmount || '$0.00',
-      message: `Thank you for booking with Live City DJ! Your payment of ${contractDetails.totalAmount || '$0.00'} has been successfully processed.`
+    // Format the amount if needed
+    const getFormattedAmount = () => {
+      // If there's a totalAmount property, use it
+      if (contractDetails.totalAmount) {
+        // Check if it's already a string with a dollar sign
+        if (typeof contractDetails.totalAmount === 'string' && contractDetails.totalAmount.includes('$')) {
+          return contractDetails.totalAmount;
+        }
+        
+        // If it's a number or numeric string, format it with dollar sign
+        const amount = Number(contractDetails.totalAmount);
+        if (!isNaN(amount)) {
+          return `$${amount.toFixed(2)}`;
+        }
+      }
+      
+      // If we're passed the raw Stripe amount in cents, convert it
+      if (typeof amount !== 'undefined') {
+        return `$${(amount/100).toFixed(2)}`;
+      }
+      
+      // Default fallback
+      return 'N/A';
     };
     
-    console.log("Sending payment confirmation email:", templateParams);
+    const formattedAmount = getFormattedAmount();
     
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
+    // Create email payload with all required fields
+    const emailPayload = {
+      clientName: contractDetails.clientName,
+      email: contractDetails.email,
+      eventType: contractDetails.eventType || 'Event',
+      eventDate: contractDetails.eventDate,
+      venueName: contractDetails.venueName || 'N/A',
+      venueLocation: contractDetails.venueLocation || 'N/A',
+      startTime: contractDetails.startTime || 'N/A',
+      endTime: contractDetails.endTime || 'N/A',
+      paymentId: paymentId || 'N/A',
+      totalAmount: formattedAmount
+    };
     
-    if (serviceId === 'default_service_id' || templateId === 'default_template_id') {
-      console.error("EmailJS sending failed: missing service ID or template ID");
-      return false;
+    console.log('Sending email with payload:', emailPayload);
+    
+    // Get project ID from environment
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    
+    // Call the HTTP endpoint directly instead of using httpsCallable
+    const functionUrl = `https://us-central1-${projectId}.cloudfunctions.net/sendConfirmationEmailHttp`;
+    
+    // Send the request
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailPayload),
+    });
+    
+    // Check for success
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
     }
     
-    // Send email with service ID and template ID only (public key is already initialized)
-    const response = await emailjs.send(
-      serviceId,
-      templateId,
-      templateParams
-    );
+    // Parse the result
+    const result = await response.json();
     
-    console.log("Email sent successfully:", response);
+    // Log success
+    console.log('📧 Email sent successfully:', result);
     return true;
   } catch (error) {
-    console.error("Failed to send confirmation email:", error);
-    // Return more specific error information
-    return {
-      success: false,
-      error: error.message || "Unknown error",
-      status: error.status || null
-    };
+    console.error("❌ Failed to send confirmation email:", error);
+    
+    // Log specific error details for debugging
+    if (error.message) console.error("Error message:", error.message);
+    if (error.code) console.error("Error code:", error.code);
+    if (error.details) console.error("Error details:", error.details);
+    
+    // Don't throw the error - just return false to indicate failure
+    return false;
   }
 };
 
@@ -231,33 +247,53 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           services
         });
         
-        await addDoc(collection(db, 'stripePayments'), {
-          paymentIntentId: paymentIntent.id,
-          amount: amountInCents,
-          currency: paymentIntent.currency,
-          clientName: contractDetails?.clientName,
-          email: contractDetails?.email,
-          eventType: contractDetails?.eventType,
-          eventDate: contractDetails?.eventDate,
-          venueName: contractDetails?.venueName,
-          venueLocation: contractDetails?.venueLocation,
-          lighting: services.lighting,
-          photography: services.photography,
-          videoVisuals: services.videoVisuals,
-          additionalHours: services.additionalHours,
-          timestamp: new Date()
-        });
-        
-        // Send confirmation email
-        await sendConfirmationEmail(
-          {
-            ...contractDetails,
-            totalAmount: `$${finalAmount}`
-          },
-          paymentIntent.id
-        );
-        
-        onSuccess(paymentIntent.id);
+        try {
+          await addDoc(collection(db, 'stripePayments'), {
+            paymentIntentId: paymentIntent.id,
+            amount: amountInCents,
+            currency: paymentIntent.currency,
+            clientName: contractDetails?.clientName,
+            email: contractDetails?.email,
+            eventType: contractDetails?.eventType,
+            eventDate: contractDetails?.eventDate,
+            venueName: contractDetails?.venueName,
+            venueLocation: contractDetails?.venueLocation,
+            lighting: services.lighting,
+            photography: services.photography,
+            videoVisuals: services.videoVisuals,
+            additionalHours: services.additionalHours,
+            timestamp: new Date()
+          });
+          
+          // Send confirmation email - catch errors here but don't let them stop the payment success
+          try {
+            const emailResult = await sendConfirmationEmail(
+              {
+                ...contractDetails,
+                totalAmount: `$${finalAmount}`
+              },
+              paymentIntent.id
+            );
+            
+            console.log("Email send attempt result:", emailResult);
+            
+            // If the result is an error object rather than true/false
+            if (emailResult && typeof emailResult === 'object' && emailResult.success === false) {
+              console.warn("Email sending failed but payment was successful:", emailResult);
+              // Continue with success - don't throw error that breaks payment flow
+            }
+          } catch (emailError) {
+            // Log but don't throw - don't stop the payment success due to email failure
+            console.error("Email sending failed but payment was successful. Error:", emailError);
+          }
+          
+          // Complete the payment process regardless of email status
+          onSuccess(paymentIntent.id);
+        } catch (dbError) {
+          console.error("Error saving payment to database:", dbError);
+          // Still consider payment successful even if DB save fails
+          onSuccess(paymentIntent.id);
+        }
       }
     } catch (err) {
       setError(err.message || 'Payment failed');
