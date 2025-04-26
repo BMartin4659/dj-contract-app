@@ -7,14 +7,15 @@ const Header = () => {
     <div className="text-center w-full mb-5">
       {/* Title with company logo */}
       <div className="flex flex-col items-center justify-center mb-3">
-        <div className="relative w-64 h-32 mb-2">
+        <div className="relative w-64 h-24 mb-2">
           <Image 
             src="/dj-bobby-drake-logo.png" 
             alt="Live City DJ Logo" 
             fill
-            sizes="(max-width: 768px) 100vw, 256px"
+            sizes="(max-width: 768px) 256px, 256px"
             style={{ objectFit: "contain" }}
             priority
+            unoptimized={true}
           />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-black" 
