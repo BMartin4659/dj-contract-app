@@ -201,6 +201,24 @@ Live City DJ Contract Terms and Conditions:
     USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
   };
 
+  // Music genre options for playlist preferences
+  const musicGenres = [
+    { id: 'hiphop', label: 'Hip Hop' },
+    { id: 'rnb', label: 'R&B' },
+    { id: 'pop', label: 'Pop' },
+    { id: 'dance', label: 'Dance/EDM' },
+    { id: 'latin', label: 'Latin' },
+    { id: 'reggae', label: 'Reggae/Dancehall' },
+    { id: 'afrobeats', label: 'Afrobeats' },
+    { id: 'house', label: 'House' },
+    { id: 'trap', label: 'Trap' },
+    { id: 'oldschool', label: 'Old School Classics' },
+    { id: 'rock', label: 'Rock' },
+    { id: 'country', label: 'Country' },
+    { id: 'jazz', label: 'Jazz' },
+    { id: 'other', label: 'Other' }
+  ];
+
   const [formData, setFormData] = useState({
     clientName: '',
     email: '',
@@ -219,6 +237,8 @@ Live City DJ Contract Terms and Conditions:
     videoVisuals: false,
     additionalHours: 0,
     agreeToTerms: false,
+    musicPreferences: [], // New field for music preferences
+    otherMusicPreference: '' // Field for "other" music preference specification
   });
   
   const router = useRouter();
@@ -747,6 +767,28 @@ Live City DJ Contract Terms and Conditions:
     }
     
     setFormData((prev) => {
+      // Special handler for musicPreferences checkboxes
+      if (name.startsWith('music_')) {
+        const genreId = name.replace('music_', '');
+        let updatedPreferences = [...prev.musicPreferences];
+        
+        if (checked) {
+          // Add genre to preferences if checked and not already there
+          if (!updatedPreferences.includes(genreId)) {
+            updatedPreferences.push(genreId);
+          }
+        } else {
+          // Remove genre from preferences if unchecked
+          updatedPreferences = updatedPreferences.filter(id => id !== genreId);
+        }
+        
+        return {
+          ...prev,
+          musicPreferences: updatedPreferences
+        };
+      }
+      
+      // Default handler for other form fields
       const newData = {
         ...prev,
         [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
@@ -979,7 +1021,10 @@ Live City DJ Contract Terms and Conditions:
           confirmationSent: false,
           reminderSent: false,
           status: 'pending',
-          createdAt: new Date()
+          createdAt: new Date(),
+          // Add music preferences data
+          musicPreferences: formData.musicPreferences,
+          otherMusicPreference: formData.otherMusicPreference || ''
         });
       } catch (firebaseError) {
         console.error("Firebase error:", firebaseError);
@@ -1056,7 +1101,15 @@ Live City DJ Contract Terms and Conditions:
         amountPaid: `$${getAmountToPay()}`,
         total: `$${calculateTotal()}`,
         remainingBalance: formData.paymentAmount === 'deposit' ? `$${calculateDepositAmount()}` : '$0',
-        email: formData.email
+        email: formData.email,
+        // Add music preferences to email
+        musicPreferences: formData.musicPreferences.length > 0 
+          ? musicGenres
+              .filter(genre => formData.musicPreferences.includes(genre.id))
+              .map(genre => genre.label)
+              .join(', ') 
+          : 'None specified',
+        otherMusicPreference: formData.otherMusicPreference || ''
       };
       
       console.log("Sending email with params:", templateParams);
@@ -1511,6 +1564,8 @@ Live City DJ Contract Terms and Conditions:
                 videoVisuals: false,
                 additionalHours: 0,
                 agreeToTerms: false,
+                musicPreferences: [], // New field for music preferences
+                otherMusicPreference: '' // Field for "other" music preference specification
               });
               setSubmitted(false);
             }}
@@ -1656,7 +1711,9 @@ Live City DJ Contract Terms and Conditions:
                   videoVisuals: formData.videoVisuals === true,
                   additionalHours: parseInt(formData.additionalHours || 0),
                   paymentAmount: formData.paymentAmount, // Pass payment amount type
-                  isDeposit: formData.paymentAmount === 'deposit'
+                  isDeposit: formData.paymentAmount === 'deposit',
+                  musicPreferences: formData.musicPreferences, // Add music preferences
+                  otherMusicPreference: formData.otherMusicPreference // Add other music preference if any
                 }}
                 onSuccess={(paymentId) => {
                   // Handle successful payment before form submission
@@ -2143,6 +2200,108 @@ Live City DJ Contract Terms and Conditions:
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Music Preferences Section - New "What's On Your Playlist" Section */}
+              <div style={{
+                marginTop: '2rem',
+                marginBottom: '1.5rem',
+                borderBottom: '2px solid #e0e0e0',
+                position: 'relative'
+              }} className="section-header">
+                <h3 style={{
+                  color: '#333',
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  display: 'inline-block',
+                  padding: '0 1rem 0.5rem 0',
+                  position: 'relative',
+                  marginBottom: '0'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px', marginRight: '8px', color: '#8B5CF6' }}>
+                      <path d="M19.952 1.651a.75.75 0 01.298.599V16.303a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.403-4.909l2.311-.66a1.5 1.5 0 001.088-1.442V6.994l-9 2.572v9.737a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.402-4.909l2.31-.66a1.5 1.5 0 001.088-1.442V5.25a.75.75 0 01.544-.721l10.5-3a.75.75 0 01.658.122z" />
+                    </svg>
+                    What&apos;s On Your Playlist?
+                  </span>
+                </h3>
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: '1rem' }}>
+                  Please select the music genres you&apos;d prefer for your event (select all that apply):
+                </p>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
+                  gap: '12px'
+                }}>
+                  {musicGenres.map(genre => (
+                    <div key={genre.id} style={{
+                      padding: '10px',
+                      border: formData.musicPreferences.includes(genre.id) 
+                        ? '2px solid #8B5CF6' 
+                        : '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      backgroundColor: formData.musicPreferences.includes(genre.id) 
+                        ? 'rgba(139, 92, 246, 0.1)' 
+                        : 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => {
+                      // Check if already selected, then toggle accordingly
+                      const isSelected = formData.musicPreferences.includes(genre.id);
+                      if (isSelected) {
+                        setFormData(prev => ({
+                          ...prev,
+                          musicPreferences: prev.musicPreferences.filter(id => id !== genre.id)
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          musicPreferences: [...prev.musicPreferences, genre.id]
+                        }));
+                      }
+                    }}>
+                      <input
+                        type="checkbox"
+                        name={`music_${genre.id}`}
+                        checked={formData.musicPreferences.includes(genre.id)}
+                        onChange={handleChange}
+                        style={{ marginRight: '10px' }}
+                      />
+                      <label htmlFor={`music_${genre.id}`} style={{
+                        fontWeight: formData.musicPreferences.includes(genre.id) ? '500' : 'normal',
+                        cursor: 'pointer',
+                        color: formData.musicPreferences.includes(genre.id) ? '#8B5CF6' : '#333',
+                      }}>
+                        {genre.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Optional: text field for 'Other' */}
+                {formData.musicPreferences.includes('other') && (
+                  <div style={{ marginTop: '15px' }}>
+                    <input
+                      type="text"
+                      name="otherMusicPreference"
+                      value={formData.otherMusicPreference || ''}
+                      onChange={handleChange}
+                      placeholder="Please specify other genres you enjoy"
+                      style={{
+                        ...inputStyle,
+                        borderColor: '#8B5CF6',
+                        borderWidth: '2px'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Compact Additional Hours Selector */}
