@@ -551,77 +551,90 @@ function PaymentSuccessContent() {
           maxWidth: '350px',
           margin: '0 auto'
         }}>
-          <button
-            onClick={(e) => openPaymentApp(PAYMENT_METHODS.VENMO.url, e)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: PAYMENT_METHODS.VENMO.color,
-              color: 'white',
-              padding: '16px 24px',
-              borderRadius: '10px',
-              border: 'none',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-              width: '100%'
-            }}
-          >
-            <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-            Secure Your Event Make A Deposit
-          </button>
+          {paymentMethod === 'Venmo' && (
+            <button
+              onClick={(e) => openPaymentApp(PAYMENT_METHODS.VENMO.url, e)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: PAYMENT_METHODS.VENMO.color,
+                color: 'white',
+                padding: '16px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                textDecoration: 'none',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+              Secure Your Event Make A Deposit
+            </button>
+          )}
           
-          <button
-            onClick={(e) => openPaymentApp(PAYMENT_METHODS.CASHAPP.url, e)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: PAYMENT_METHODS.CASHAPP.color,
-              color: 'white',
-              padding: '16px 24px',
-              borderRadius: '10px',
-              border: 'none',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-              width: '100%'
-            }}
-          >
-            <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-            Secure Your Event Make A Deposit
-          </button>
+          {paymentMethod === 'CashApp' && (
+            <button
+              onClick={(e) => openPaymentApp(PAYMENT_METHODS.CASHAPP.url, e)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: PAYMENT_METHODS.CASHAPP.color,
+                color: 'white',
+                padding: '16px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                textDecoration: 'none',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+              Secure Your Event Make A Deposit
+            </button>
+          )}
           
-          <button
-            onClick={(e) => openPaymentApp(PAYMENT_METHODS.PAYPAL.url, e)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: PAYMENT_METHODS.PAYPAL.color,
-              color: 'white',
-              padding: '16px 24px',
-              borderRadius: '10px',
-              border: 'none',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-              width: '100%'
-            }}
-          >
-            <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-            Secure Your Event Make A Deposit
-          </button>
+          {paymentMethod === 'PayPal' && (
+            <button
+              onClick={(e) => openPaymentApp(PAYMENT_METHODS.PAYPAL.url, e)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: PAYMENT_METHODS.PAYPAL.color,
+                color: 'white',
+                padding: '16px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                textDecoration: 'none',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+              Secure Your Event Make A Deposit
+            </button>
+          )}
+          
+          {/* Default button if no specific payment method is detected */}
+          {!paymentMethod && (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem', padding: '10px' }}>
+              Select a payment method on the booking form to make a deposit.
+            </div>
+          )}
         </div>
       </div>
     </div>
