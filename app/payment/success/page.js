@@ -364,6 +364,14 @@ function PaymentSuccessContent() {
               }}
             />
           </div>
+          <h2 style={{ 
+            fontSize: '1.875rem', 
+            fontWeight: 'bold',
+            marginTop: '10px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            EVENT CONTRACT
+          </h2>
         </div>
         
         <h1 style={{ 
