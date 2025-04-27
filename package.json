@@ -33,6 +33,7 @@
     "tippy.js": "^6.3.7"
   },
   "devDependencies": {
+    "@babel/parser": "^7.27.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22.14.1",
