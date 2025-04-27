@@ -442,7 +442,7 @@ function PaymentSuccessContent() {
           color: '#4b5563',
           padding: '0 15px'
         }}>
-          We look forward to making your event special! A confirmation email has been sent with the details of your booking.
+          I look forward to making your event special! A confirmation email has been sent with the details of your booking.
         </p>
 
         {/* Email confirmation section */}
