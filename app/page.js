@@ -267,6 +267,7 @@ Live City DJ Contract Terms and Conditions:
   const [modalText, setModalText] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState(null);
+  const [showGenreModal, setShowGenreModal] = useState(false);
   
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
@@ -1522,6 +1523,257 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [mapsError, isClient]);
 
+  // GenreSelectionModal component for selecting music genres
+  function GenreSelectionModal({ onClose }) {
+    const [selectedGenres, setSelectedGenres] = useState([...formData.musicPreferences]);
+    const [otherGenre, setOtherGenre] = useState(formData.otherMusicPreference || '');
+    const [animateIn, setAnimateIn] = useState(false);
+    
+    // Set animation on mount
+    useEffect(() => {
+      const timer = setTimeout(() => setAnimateIn(true), 50);
+      return () => clearTimeout(timer);
+    }, []);
+    
+    // Apply changes and close the modal
+    const applyChanges = () => {
+      setFormData(prev => ({
+        ...prev,
+        musicPreferences: selectedGenres,
+        otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
+      }));
+      onClose();
+    };
+    
+    // Handle genre selection
+    const toggleGenre = (genreId) => {
+      if (selectedGenres.includes(genreId)) {
+        setSelectedGenres(prev => prev.filter(id => id !== genreId));
+      } else {
+        setSelectedGenres(prev => [...prev, genreId]);
+      }
+    };
+    
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1050,
+          opacity: animateIn ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}
+        onClick={onClose}
+      >
+        <div 
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            maxWidth: '800px',
+            width: '90%',
+            maxHeight: '85vh',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+            border: '2px solid #0070f3',
+            overflow: 'hidden',
+            transform: animateIn ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'transform 0.4s ease-out',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{
+            padding: '20px 25px',
+            borderBottom: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'linear-gradient(90deg, #0070f3, #3291ff)'
+          }}>
+            <h2 style={{ 
+              margin: 0, 
+              color: 'white',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <span style={{ marginRight: '12px', fontSize: '1.8rem' }}>🎵</span>
+              Choose Your Music Style
+            </h2>
+            <button 
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                transition: 'background-color 0.2s',
+                ':hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
+              }}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div style={{ 
+            padding: '20px 25px',
+            overflowY: 'auto',
+            flexGrow: 1
+          }}>
+            <p style={{ 
+              marginBottom: '20px', 
+              fontSize: '1.1rem',
+              color: '#444'
+            }}>
+              Select the music genres you&apos;d like to hear at your event:
+            </p>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '15px',
+              marginBottom: '25px'
+            }}>
+              {musicGenres.map(genre => (
+                <div key={genre.id} 
+                  onClick={() => toggleGenre(genre.id)}
+                  style={{
+                    padding: '15px',
+                    borderRadius: '8px',
+                    border: `2px solid ${selectedGenres.includes(genre.id) ? '#0070f3' : '#e0e0e0'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: selectedGenres.includes(genre.id) ? 'rgba(0, 112, 243, 0.08)' : 'white',
+                    transition: 'all 0.2s ease',
+                    transform: selectedGenres.includes(genre.id) ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: selectedGenres.includes(genre.id) 
+                      ? '0 6px 14px rgba(0, 112, 243, 0.15)' 
+                      : '0 2px 5px rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    border: '2px solid',
+                    borderColor: selectedGenres.includes(genre.id) ? '#0070f3' : '#ddd',
+                    marginRight: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: selectedGenres.includes(genre.id) ? '#0070f3' : 'white',
+                    transition: 'all 0.15s ease',
+                    flexShrink: 0
+                  }}>
+                    {selectedGenres.includes(genre.id) && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                  <label style={{
+                    margin: 0,
+                    fontSize: '1.05rem',
+                    fontWeight: selectedGenres.includes(genre.id) ? '600' : '500', 
+                    color: selectedGenres.includes(genre.id) ? '#0070f3' : '#444',
+                    cursor: 'pointer',
+                    flexGrow: 1
+                  }}>
+                    {genre.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            
+            {selectedGenres.includes('other') && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#555'
+                }}>
+                  Please specify other genres:
+                </label>
+                <input
+                  type="text"
+                  value={otherGenre}
+                  onChange={(e) => setOtherGenre(e.target.value)}
+                  placeholder="Tell us about your other music preferences"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '2px solid #0070f3',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+          
+          <div style={{
+            padding: '15px 25px',
+            borderTop: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'space-between',
+            backgroundColor: '#f9f9f9'
+          }}>
+            <button
+              onClick={onClose}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '6px',
+                border: '1px solid #ddd',
+                backgroundColor: 'white',
+                color: '#555',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                ':hover': { backgroundColor: '#f5f5f5' }
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={applyChanges}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: '#0070f3',
+                color: 'white',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                ':hover': { backgroundColor: '#0060df' }
+              }}
+            >
+              Apply Selections
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isClient) {
     return null;
   }
@@ -2263,101 +2515,85 @@ Live City DJ Contract Terms and Conditions:
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
-                <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: '1rem' }}>
-                  Please select the music genres you&apos;d prefer for your event (select all that apply):
-                </p>
-                
-                {/* Genre selector - Clean tick box layout */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                  gap: '8px',
-                  marginBottom: '2rem'
-                }}>
-                  {musicGenres.map(genre => (
-                    <div key={genre.id} 
-                      onClick={() => {
-                        const isSelected = formData.musicPreferences.includes(genre.id);
-                        if (isSelected) {
-                          setFormData(prev => ({
-                            ...prev,
-                            musicPreferences: prev.musicPreferences.filter(id => id !== genre.id)
-                          }));
-                        } else {
-                          setFormData(prev => ({
-                            ...prev,
-                            musicPreferences: [...prev.musicPreferences, genre.id]
-                          }));
-                        }
-                      }}
-                      style={{
-                        padding: '10px 15px',
-                        borderRadius: '4px',
-                        border: '1px solid #e0e0e0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        backgroundColor: 'white',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <div style={{
-                        width: '22px',
-                        height: '22px',
-                        border: '2px solid #ddd',
-                        borderRadius: '4px',
-                        marginRight: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: formData.musicPreferences.includes(genre.id) ? '#0070f3' : 'white',
-                        transition: 'all 0.15s ease'
-                      }}>
-                        {formData.musicPreferences.includes(genre.id) && (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        )}
-                      </div>
-                      <label style={{
-                        margin: 0,
-                        fontSize: '1rem',
-                        fontWeight: '500', 
-                        color: '#333',
-                        cursor: 'pointer',
-                        flexGrow: 1,
-                        textAlign: 'center'
-                      }}>
-                        {genre.label}
-                      </label>
-                      <input
-                        type="checkbox"
-                        name={`music_${genre.id}`}
-                        checked={formData.musicPreferences.includes(genre.id)}
-                        onChange={handleChange}
-                        style={{ display: 'none' }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Optional: text field for 'Other' */}
-                {formData.musicPreferences.includes('other') && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <input
-                      type="text"
-                      name="otherMusicPreference"
-                      value={formData.otherMusicPreference || ''}
-                      onChange={handleChange}
-                      placeholder="Please specify other genres you enjoy"
-                      style={{
-                        ...inputStyle,
-                        borderColor: '#0070f3',
-                        borderWidth: '1px'
-                      }}
-                    />
+                {/* Genre selection card that opens the modal */}
+                <div 
+                  onClick={() => setShowGenreModal(true)}
+                  style={{
+                    padding: '15px 20px',
+                    borderRadius: '12px',
+                    border: '2px solid #e0e0e0',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '1.5rem',
+                    ':hover': {
+                      borderColor: '#0070f3',
+                      boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)'
+                    }
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '10px'
+                  }}>
+                    <p style={{ 
+                      fontWeight: '500', 
+                      fontSize: '1.05rem', 
+                      color: '#333',
+                      margin: 0
+                    }}>
+                      Choose your preferred music genres
+                    </p>
+                    
+                    <span style={{ 
+                      backgroundColor: '#0070f3', 
+                      color: 'white',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      padding: '5px 10px',
+                      borderRadius: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '70px'
+                    }}>
+                      Select
+                    </span>
                   </div>
-                )}
+                  
+                  {formData.musicPreferences.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {musicGenres
+                        .filter(genre => formData.musicPreferences.includes(genre.id))
+                        .map(genre => (
+                          <span key={genre.id} style={{
+                            backgroundColor: 'rgba(0, 112, 243, 0.1)',
+                            color: '#0070f3',
+                            padding: '5px 12px',
+                            borderRadius: '30px',
+                            fontSize: '0.9rem',
+                            fontWeight: '500'
+                          }}>
+                            {genre.label}
+                          </span>
+                        ))
+                      }
+                    </div>
+                  ) : (
+                    <p style={{ 
+                      color: '#666', 
+                      fontStyle: 'italic', 
+                      margin: 0 
+                    }}>
+                      No genres selected yet. Click to choose your preferences
+                    </p>
+                  )}
+                </div>
                 
                 {/* Streaming Service Integration */}
                 <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
@@ -2988,6 +3224,15 @@ Live City DJ Contract Terms and Conditions:
         show={showConfirmation} 
         message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
       />
+      {/* Render the genre selection modal */}
+      {showGenreModal && (
+        <GenreSelectionModal onClose={() => setShowGenreModal(false)} />
+      )}
+      {/* Other modals */}
+      {modalText && <InfoModal text={modalText} onClose={() => setModalText(null)} />}
+      {showTerms && (
+        <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
+      )}
     </div>
   );
 }
