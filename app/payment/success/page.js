@@ -351,12 +351,12 @@ function PaymentSuccessContent() {
         zIndex: 2
       }}>
         {/* Custom header with smaller logo */}
-        <div style={{ marginBottom: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+        <div style={{ marginBottom: '25px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
             <img 
               src="/dj-bobby-drake-logo.png" 
               alt="DJ Bobby Drake Logo"
-              style={{ height: '40px', objectFit: 'contain' }}
+              style={{ height: '70px', objectFit: 'contain', maxWidth: '80%' }}
             />
           </div>
           <h2 style={{ 
@@ -369,7 +369,7 @@ function PaymentSuccessContent() {
           </h2>
         </div>
         
-        <div style={{ marginTop: '20px', marginBottom: '25px' }}>
+        <div style={{ marginTop: '15px', marginBottom: '25px' }}>
           <FaCheckCircle style={{ color: '#22c55e', fontSize: '90px' }} />
         </div>
         
