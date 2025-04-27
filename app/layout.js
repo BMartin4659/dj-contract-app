@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preload" href="/dj-background-new.jpg" as="image" />
-        <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" fetchpriority="high" />
+        <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" />
       </head>
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
