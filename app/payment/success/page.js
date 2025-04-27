@@ -465,7 +465,7 @@ function PaymentSuccessContent() {
                 <p style={{ fontSize: '1rem', color: '#4b5563', marginBottom: '10px' }}>
                   {emailError 
                     ? "There was an issue sending the confirmation email:" 
-                    : "A confirmation email has been sent to your email address. If you didn't receive it, you can resend it:"}
+                    : "A confirmation email has been sent to your email address. If you didn't receive it, click on the link below to resend it:"}
                 </p>
                 
                 <button
