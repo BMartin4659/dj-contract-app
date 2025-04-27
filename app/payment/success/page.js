@@ -366,10 +366,6 @@ function PaymentSuccessContent() {
           </div>
         </div>
         
-        <div style={{ marginTop: '0', marginBottom: '15px' }}>
-          <FaCheckCircle style={{ color: '#22c55e', fontSize: '90px' }} />
-        </div>
-        
         <h1 style={{ 
           color: '#3b82f6', 
           marginTop: '0',
