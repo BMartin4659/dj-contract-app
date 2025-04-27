@@ -2233,7 +2233,7 @@ Live City DJ Contract Terms and Conditions:
                 })}
               </div>
 
-              {/* Music Preferences Section - Redesigned "What's On Your Playlist" Section */}
+              {/* Music Preferences Section - Revamped with Tick Boxes */}
               <div style={{
                 marginTop: '2rem',
                 marginBottom: '1.5rem',
@@ -2248,14 +2248,17 @@ Live City DJ Contract Terms and Conditions:
                   display: 'inline-block',
                   padding: '0 1rem 0.5rem 0',
                   position: 'relative',
-                  marginBottom: '0'
+                  marginBottom: '0',
+                  display: 'flex',
+                  alignItems: 'center'
                 }}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px', marginRight: '8px', color: '#0070f3' }}>
-                      <path d="M19.952 1.651a.75.75 0 01.298.599V16.303a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.403-4.909l2.311-.66a1.5 1.5 0 001.088-1.442V6.994l-9 2.572v9.737a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.402-4.909l2.31-.66a1.5 1.5 0 001.088-1.442V5.25a.75.75 0 01.544-.721l10.5-3a.75.75 0 01.658.122z" />
-                    </svg>
-                    What&apos;s On Your Playlist?
-                  </span>
+                  <span className="music-icon" style={{ 
+                    color: '#0070f3', 
+                    marginRight: '10px', 
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>🎵</span>
+                  What&apos;s On Your Playlist?
                 </h3>
               </div>
 
@@ -2264,12 +2267,12 @@ Live City DJ Contract Terms and Conditions:
                   Please select the music genres you&apos;d prefer for your event (select all that apply):
                 </p>
                 
-                {/* Genre selector - Card style with 2 columns on mobile, more on larger screens */}
+                {/* Genre selector - Clean tick box layout */}
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                  gap: '10px',
-                  marginBottom: '1.5rem'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '8px',
+                  marginBottom: '2rem'
                 }}>
                   {musicGenres.map(genre => (
                     <div key={genre.id} 
@@ -2288,63 +2291,52 @@ Live City DJ Contract Terms and Conditions:
                         }
                       }}
                       style={{
-                        padding: '12px',
-                        border: formData.musicPreferences.includes(genre.id) 
-                          ? '2px solid #0070f3' 
-                          : '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        backgroundColor: formData.musicPreferences.includes(genre.id) 
-                          ? 'rgba(0, 112, 243, 0.05)' 
-                          : 'white',
+                        padding: '10px 15px',
+                        borderRadius: '4px',
+                        border: '1px solid #e0e0e0',
                         display: 'flex',
                         alignItems: 'center',
                         cursor: 'pointer',
+                        backgroundColor: 'white',
                         transition: 'all 0.2s ease',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: formData.musicPreferences.includes(genre.id) 
-                          ? '0 2px 5px rgba(0, 0, 0, 0.08)' 
-                          : 'none',
+                      }}
+                    >
+                      <div style={{
+                        width: '22px',
+                        height: '22px',
+                        border: '2px solid #ddd',
+                        borderRadius: '4px',
+                        marginRight: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: formData.musicPreferences.includes(genre.id) ? '#0070f3' : 'white',
+                        transition: 'all 0.15s ease'
                       }}>
-                      
-                      {formData.musicPreferences.includes(genre.id) && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '6px',
-                          right: '6px',
-                          backgroundColor: '#0070f3',
-                          borderRadius: '50%',
-                          width: '18px',
-                          height: '18px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <FaCheck color="white" size={10} />
-                        </div>
-                      )}
-                      
+                        {formData.musicPreferences.includes(genre.id) && (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        )}
+                      </div>
+                      <label style={{
+                        margin: 0,
+                        fontSize: '1rem',
+                        fontWeight: '500', 
+                        color: '#333',
+                        cursor: 'pointer',
+                        flexGrow: 1,
+                        textAlign: 'center'
+                      }}>
+                        {genre.label}
+                      </label>
                       <input
                         type="checkbox"
                         name={`music_${genre.id}`}
                         checked={formData.musicPreferences.includes(genre.id)}
                         onChange={handleChange}
-                        style={{ 
-                          marginRight: '10px', 
-                          accentColor: '#0070f3' 
-                        }}
+                        style={{ display: 'none' }}
                       />
-                      <label htmlFor={`music_${genre.id}`} style={{
-                        fontWeight: formData.musicPreferences.includes(genre.id) ? '500' : 'normal',
-                        cursor: 'pointer',
-                        color: formData.musicPreferences.includes(genre.id) ? '#0070f3' : '#333',
-                        fontSize: '0.95rem',
-                        margin: '0',
-                        userSelect: 'none',
-                        flex: 1
-                      }}>
-                        {genre.label}
-                      </label>
                     </div>
                   ))}
                 </div>
@@ -2377,20 +2369,7 @@ Live City DJ Contract Terms and Conditions:
                     display: 'flex',
                     alignItems: 'center'
                   }}>
-                    <span style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: 'rgba(0, 112, 243, 0.1)',
-                      borderRadius: '50%',
-                      marginRight: '8px'
-                    }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px', color: '#0070f3' }}>
-                        <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-                      </svg>
-                    </span>
+                    <span style={{ marginRight: '8px' }}>📱</span>
                     Share your playlist (optional)
                   </p>
                   
