@@ -350,8 +350,8 @@ function PaymentSuccessContent() {
         position: 'relative',
         zIndex: 2
       }}>
-        {/* Custom header with smaller logo */}
-        <div style={{ marginBottom: '40px', marginTop: '20px' }}>
+        {/* Custom header with logo */}
+        <div style={{ marginBottom: '15px', marginTop: '5px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', margin: '0 auto 30px' }}>
             <img 
               src="/dj-bobby-drake-logo.png" 
@@ -360,19 +360,20 @@ function PaymentSuccessContent() {
                 height: '180px', 
                 objectFit: 'contain', 
                 maxWidth: '100%',
-                margin: '10px auto'
+                margin: '0 auto 0'
               }}
             />
           </div>
         </div>
         
-        <div style={{ marginTop: '0', marginBottom: '25px' }}>
+        <div style={{ marginTop: '0', marginBottom: '15px' }}>
           <FaCheckCircle style={{ color: '#22c55e', fontSize: '90px' }} />
         </div>
         
         <h1 style={{ 
           color: '#3b82f6', 
-          marginBottom: '1.5rem', 
+          marginTop: '0',
+          marginBottom: '1.5rem',  
           fontSize: '3rem', 
           fontWeight: 'bold',
           textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
