@@ -351,25 +351,22 @@ function PaymentSuccessContent() {
         zIndex: 2
       }}>
         {/* Custom header with smaller logo */}
-        <div style={{ marginBottom: '25px', marginTop: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+        <div style={{ marginBottom: '40px', marginTop: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 auto 30px' }}>
             <img 
               src="/dj-bobby-drake-logo.png" 
               alt="DJ Bobby Drake Logo"
-              style={{ height: '70px', objectFit: 'contain', maxWidth: '80%' }}
+              style={{ 
+                height: '180px', 
+                objectFit: 'contain', 
+                maxWidth: '100%',
+                margin: '10px auto'
+              }}
             />
           </div>
-          <h2 style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: 'bold',
-            marginTop: '5px',
-            fontFamily: 'Poppins, sans-serif'
-          }}>
-            Event Contract
-          </h2>
         </div>
         
-        <div style={{ marginTop: '15px', marginBottom: '25px' }}>
+        <div style={{ marginTop: '0', marginBottom: '25px' }}>
           <FaCheckCircle style={{ color: '#22c55e', fontSize: '90px' }} />
         </div>
         
