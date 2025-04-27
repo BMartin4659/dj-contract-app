@@ -519,7 +519,7 @@ function PaymentSuccessContent() {
                   }}>
                     {emailError}
                     <p style={{ marginTop: '8px', color: '#4b5563', fontSize: '0.85rem' }}>
-                      Don't worry - your booking is confirmed. Our team will send you a manual confirmation soon.
+                      Don&apos;t worry - your booking is confirmed. Our team will send you a manual confirmation soon.
                     </p>
                   </div>
                 )}
