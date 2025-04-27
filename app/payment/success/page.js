@@ -350,18 +350,26 @@ function PaymentSuccessContent() {
         position: 'relative',
         zIndex: 2
       }}>
-        {/* Increase the header size and prominence */}
-        <div style={{ 
-          transform: 'scale(1.3)', 
-          marginBottom: '30px',
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%'
-        }}>
-          <Header />
+        {/* Custom header with smaller logo */}
+        <div style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+            <img 
+              src="/dj-bobby-drake-logo.png" 
+              alt="DJ Bobby Drake Logo"
+              style={{ height: '40px', objectFit: 'contain' }}
+            />
+          </div>
+          <h2 style={{ 
+            fontSize: '1.5rem', 
+            fontWeight: 'bold',
+            marginTop: '5px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            Event Contract
+          </h2>
         </div>
         
-        <div style={{ marginTop: '50px', marginBottom: '25px' }}>
+        <div style={{ marginTop: '20px', marginBottom: '25px' }}>
           <FaCheckCircle style={{ color: '#22c55e', fontSize: '90px' }} />
         </div>
         

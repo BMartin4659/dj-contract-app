@@ -2,7 +2,7 @@
 export default function handler(req, res) {
   const paymentUrls = {
     venmo: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
-    cashapp: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
+    cashapp: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$LiveCity',
     paypal: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
   };
   
@@ -14,14 +14,14 @@ export default function handler(req, res) {
     venmoFormatted = `https://venmo.com/u/${cleanUsername}`;
   }
   
-  // Process CashApp URL
-  let cashappFormatted = paymentUrls.cashapp;
-  if (cashappFormatted.includes('cash.app/')) {
-    let username = cashappFormatted.split('cash.app/').pop();
-    if (!username.startsWith('$')) {
-      username = `$${username}`;
+  // Get CashApp username - we won't try to format a deep link as it's unreliable
+  let cashappUsername = '$LiveCity';
+  if (paymentUrls.cashapp.includes('cash.app/')) {
+    let username = paymentUrls.cashapp.split('cash.app/').pop();
+    if (username.includes('?')) {
+      username = username.split('?')[0];
     }
-    cashappFormatted = `https://cash.app/${username}`;
+    cashappUsername = username;
   }
   
   // Return all payment links with their processed versions
@@ -30,9 +30,12 @@ export default function handler(req, res) {
     originalUrls: paymentUrls,
     processedUrls: {
       venmo: venmoFormatted,
-      cashapp: cashappFormatted,
+      cashapp: paymentUrls.cashapp,
       paypal: paymentUrls.paypal
     },
-    message: 'Use these processed URLs to ensure payment links work correctly'
+    usernames: {
+      cashapp: cashappUsername
+    },
+    message: 'For CashApp, instruct users to open their app and send to the username directly'
   });
 } 
