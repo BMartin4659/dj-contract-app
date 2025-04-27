@@ -12,9 +12,14 @@ const Header = () => {
             src="/dj-bobby-drake-logo.png" 
             alt="Live City DJ Logo" 
             fill
-            sizes="(max-width: 768px) 256px, 256px"
-            style={{ objectFit: "contain" }}
+            sizes="(max-width: 768px) 100vw, 256px"
+            style={{ 
+              objectFit: "contain",
+              maxWidth: "100%",
+              height: "auto"
+            }}
             priority
+            fetchpriority="high"
             unoptimized={true}
           />
         </div>

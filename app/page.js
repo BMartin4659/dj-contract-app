@@ -165,6 +165,16 @@ const PAYMENT_URLS = {
   PAYPAL: process.env.NEXT_PUBLIC_PAYPAL_URL || 'https://paypal.me/bmartin4659'
 };
 
+// We won't use a direct URL for CashApp as deep linking isn't working reliably
+const getCashAppInfo = () => {
+  const baseURL = PAYMENT_URLS.CASHAPP;
+  const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : '$LiveCity';
+  return {
+    username: username,
+    url: baseURL
+  };
+};
+
 export default function DJContractForm() {
   // Terms and conditions text
   const termsAndConditionsText = `
@@ -979,40 +989,54 @@ Live City DJ Contract Terms and Conditions:
       
       // Handle based on payment method
       if (formData.paymentMethod === 'Stripe') {
-        // Show the Stripe checkout component
+        // Show the Stripe checkout component without the redundant confirmation banner
         setShowStripe(true);
-        setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 5000);
+        // Don't show the confirmation banner for Stripe payments
+        // setShowConfirmation(true);
+        // setTimeout(() => setShowConfirmation(false), 5000);
         return; // Exit the function early to let the Stripe component handle payment
       } else if (formData.paymentMethod === 'Venmo') {
         try {
+          // Generate a payment ID for non-Stripe payments
+          const venmoPaymentId = `vm_${uuidv4().substring(0, 10)}`;
+          
+          // Open Venmo in a new tab
           window.open(PAYMENT_URLS.VENMO, '_blank');
-          // Longer delay to ensure popup isn't blocked
-          setTimeout(() => setSubmitted(true), 1000);
-          setShowConfirmation(true);
-          setTimeout(() => setShowConfirmation(false), 5000);
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${venmoPaymentId}`);
         } catch (error) {
           console.error('Error opening Venmo payment URL:', error);
           alert('Could not open Venmo. Please try again or use another payment method.');
         }
       } else if (formData.paymentMethod === 'CashApp') {
         try {
+          // Generate a payment ID for non-Stripe payments
+          const cashAppPaymentId = `ca_${uuidv4().substring(0, 10)}`;
+          
+          // Get CashApp info
+          const cashAppInfo = getCashAppInfo();
+          const amount = formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal();
+          
+          // Open CashApp in a new tab
           window.open(PAYMENT_URLS.CASHAPP, '_blank');
-          // Longer delay to ensure popup isn't blocked
-          setTimeout(() => setSubmitted(true), 1000);
-          setShowConfirmation(true);
-          setTimeout(() => setShowConfirmation(false), 5000);
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${cashAppPaymentId}`);
         } catch (error) {
-          console.error('Error opening CashApp payment URL:', error);
-          alert('Could not open CashApp. Please try again or use another payment method.');
+          console.error('Error processing CashApp payment:', error);
+          alert('Could not process CashApp payment. Please try again or use another payment method.');
         }
       } else if (formData.paymentMethod === 'PayPal') {
         try {
+          // Generate a payment ID for non-Stripe payments
+          const paypalPaymentId = `pp_${uuidv4().substring(0, 10)}`;
+          
+          // Open PayPal in a new tab
           window.open(PAYMENT_URLS.PAYPAL, '_blank');
-          // Longer delay to ensure popup isn't blocked
-          setTimeout(() => setSubmitted(true), 1000);
-          setShowConfirmation(true);
-          setTimeout(() => setShowConfirmation(false), 5000);
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${paypalPaymentId}`);
         } catch (error) {
           console.error('Error opening PayPal payment URL:', error);
           alert('Could not open PayPal. Please try again or use another payment method.');
@@ -1226,6 +1250,50 @@ Live City DJ Contract Terms and Conditions:
               padding: '8px 16px',
               borderRadius: '5px',
               cursor: 'pointer',
+            }}
+          >
+            Ok
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // PaymentModal component for displaying payment information with HTML content
+  function PaymentModal({ htmlContent, onClose }) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '25px',
+          borderRadius: '12px',
+          maxWidth: '500px',
+          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+          border: '2px solid #0070f3',
+        }}>
+          <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#0070f3',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              marginTop: '15px',
+              width: '100%'
             }}
           >
             Ok
@@ -1475,26 +1543,22 @@ Live City DJ Contract Terms and Conditions:
   }
 
   return (
-    <div className="main-wrapper" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
+    <div className="main-wrapper" style={{ 
+      width: '100%', 
+      position: 'relative',
+      minHeight: '100vh',
+      overflowX: 'hidden',
       paddingBottom: '2rem'
     }}>
-      {/* Development Environment Indicator */}
-      {process.env.NODE_ENV === 'development' && <EnvChecker />}
-      
-      {/* Test environment variables (hidden) */}
-      <EnvTest />
-      
       {showConfirmation && (
         <PaymentConfirmationBanner 
           paymentMethod={formData.paymentMethod} 
-          onClose={() => setShowConfirmation(false)}
+          onClose={() => setShowConfirmation(false)} 
         />
       )}
       {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
+      {modalText && <PaymentModal htmlContent={modalText} onClose={() => setModalText(null)} />}
       
       <div className="main-content" style={{ 
         display: 'flex', 
@@ -1598,16 +1662,11 @@ Live City DJ Contract Terms and Conditions:
                   // Handle successful payment before form submission
                   console.log("Payment successful with ID:", paymentId);
                   
-                  // Only hide the Stripe component and redirect
+                  // Only hide the Stripe component
                   setShowStripe(false);
                   
-                  // Display success message before redirecting
-                  setSubmitted(true);
-                  
-                  // Delayed redirect to success page
-                  setTimeout(() => {
-                    router.push(`/payment/success?id=${paymentId}`);
-                  }, 1500);
+                  // Redirect immediately to the success page without showing the intermediate confirmation
+                  router.push(`/payment/success?id=${paymentId}`);
                 }}
               />
             </div>

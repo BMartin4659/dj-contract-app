@@ -71,6 +71,29 @@ const sendEmail = async (bookingData) => {
   }
 };
 
+// Function to format CashApp URL with amount
+const formatCashAppURL = (username, amount = 0) => {
+  // Remove $ if it exists
+  const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
+  return `https://cash.app/$${cleanUsername}/pay?amount=${amount}&note=DJ%20Service%20Payment`;
+};
+
+// We won't use a direct URL for CashApp as deep linking isn't working reliably
+const getCashAppInfo = (url) => {
+  if (!url || !url.includes('cash.app/')) {
+    return { username: '$LiveCity', url: 'https://cash.app/$LiveCity' };
+  }
+  
+  let username = url.split('cash.app/').pop();
+  
+  // Remove any URL parameters if they exist
+  if (username.includes('?')) {
+    username = username.split('?')[0];
+  }
+  
+  return { username, url };
+};
+
 // Payment method configurations
 const PAYMENT_METHODS = {
   VENMO: {
@@ -81,8 +104,8 @@ const PAYMENT_METHODS = {
     name: 'Venmo'
   },
   CASHAPP: {
-    url: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$BobbyMartin64',
-    handle: '$BobbyMartin64',
+    url: process.env.NEXT_PUBLIC_CASHAPP_URL || 'https://cash.app/$LiveCity',
+    handle: '$LiveCity',
     color: '#00C244',
     icon: SiCashapp,
     name: 'CashApp'
@@ -174,12 +197,25 @@ function PaymentSuccessContent() {
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailError, setEmailError] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('');
 
   useEffect(() => {
     // Get the payment ID from the URL
     const id = searchParams.get('id');
     if (id) {
       setPaymentId(id);
+      
+      // Determine payment method from the ID prefix
+      if (id.startsWith('pi_')) {
+        setPaymentMethod('Stripe');
+      } else if (id.startsWith('vm_')) {
+        setPaymentMethod('Venmo');
+      } else if (id.startsWith('ca_')) {
+        setPaymentMethod('CashApp');
+      } else if (id.startsWith('pp_')) {
+        setPaymentMethod('PayPal');
+      }
+      
       fetchBookingDetails(id);
     }
   }, [searchParams]);
@@ -262,26 +298,11 @@ function PaymentSuccessContent() {
         formattedUrl = `https://venmo.com/u/${cleanUsername}`;
       }
       
-      // Handle Cash App URL formatting
+      // Show a helpful message for CashApp instead of trying to deep link
       if (url.includes('cash.app/')) {
-        // Extract the username from the URL
-        let username = url.split('cash.app/').pop();
-        
-        // Remove any URL parameters if they exist
-        if (username.includes('?')) {
-          username = username.split('?')[0];
-        }
-        
-        // Handle $ character in username
-        if (username.startsWith('$')) {
-          // URL already has $ character
-          formattedUrl = `https://cash.app/${username}`;
-        } else {
-          // Add $ if it doesn't exist
-          formattedUrl = `https://cash.app/$${username}`;
-        }
-        
-        console.log('Formatted CashApp URL:', formattedUrl);
+        const cashAppInfo = getCashAppInfo(url);
+        alert(`Please open your CashApp app and send payment to: ${cashAppInfo.username}`);
+        return;
       }
       
       console.log('Opening payment URL:', formattedUrl);
@@ -302,7 +323,7 @@ function PaymentSuccessContent() {
       padding: '20px',
       background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
       color: 'white',
-      backgroundImage: 'url(/images/dj-bg.jpg)',
+      backgroundImage: 'url(/dj-background-new.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       position: 'relative'
@@ -330,7 +351,13 @@ function PaymentSuccessContent() {
         zIndex: 2
       }}>
         {/* Increase the header size and prominence */}
-        <div style={{ transform: 'scale(1.3)', marginBottom: '30px' }}>
+        <div style={{ 
+          transform: 'scale(1.3)', 
+          marginBottom: '30px',
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%'
+        }}>
           <Header />
         </div>
         
@@ -364,6 +391,17 @@ function PaymentSuccessContent() {
           }}>
             Thank you for your payment. Your booking has been confirmed!
           </p>
+          
+          {paymentMethod && (
+            <p style={{
+              fontSize: '1.1rem',
+              color: '#4b5563',
+              marginTop: '10px',
+              fontWeight: '500'
+            }}>
+              Payment Method: {paymentMethod}
+            </p>
+          )}
           
           {paymentId && (
             <p style={{ 
