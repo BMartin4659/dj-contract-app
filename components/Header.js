@@ -6,27 +6,26 @@ const Header = () => {
   return (
     <header className="w-full pt-3 pb-2 text-center">
       <div className="flex flex-col items-center justify-center">
-        {/* Logo - 20% increased size */}
-        <div className="relative w-32 h-32 mb-0">
-          <Image 
+        {/* Logo with circular styling */}
+        <div className="relative w-32 h-32 mb-2">
+          <img 
             src="/dj-bobby-drake-logo.png" 
             alt="DJ Bobby Drake Logo" 
-            width={128}
-            height={128}
-            sizes="(max-width: 768px) 100vw, 128px"
             style={{ 
+              width: '128px',
+              height: '128px',
               objectFit: "contain",
-              maxWidth: "100%",
-              height: "auto"
+              borderRadius: '50%',
+              display: 'block',
+              margin: '0 auto'
             }}
-            priority
           />
         </div>
         
         {/* Title */}
-        <div className="text-center mt-0">
+        <div className="text-center mt-1">
           <h1 
-            className="mb-2 text-2xl font-bold text-black" 
+            className="mb-2 font-bold text-black" 
             style={{ 
               fontFamily: 'Poppins, sans-serif',
               lineHeight: '1.2',
