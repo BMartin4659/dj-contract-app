@@ -542,22 +542,87 @@ function PaymentSuccessContent() {
           </div>
         )}
         
-        <Link href="/" style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          padding: '16px 32px',
-          borderRadius: '10px',
-          textDecoration: 'none',
-          fontWeight: 'bold',
-          fontSize: '1.2rem',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-          transition: 'all 0.2s ease'
+        <div style={{
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '15px',
+          marginBottom: '2rem',
+          width: '100%',
+          maxWidth: '350px',
+          margin: '0 auto'
         }}>
-          <FaHome style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-          Book Another Event
-        </Link>
+          <button
+            onClick={(e) => openPaymentApp(PAYMENT_METHODS.VENMO.url, e)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: PAYMENT_METHODS.VENMO.color,
+              color: 'white',
+              padding: '16px 24px',
+              borderRadius: '10px',
+              border: 'none',
+              textDecoration: 'none',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
+            <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+            Secure Your Event Make A Deposit
+          </button>
+          
+          <button
+            onClick={(e) => openPaymentApp(PAYMENT_METHODS.CASHAPP.url, e)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: PAYMENT_METHODS.CASHAPP.color,
+              color: 'white',
+              padding: '16px 24px',
+              borderRadius: '10px',
+              border: 'none',
+              textDecoration: 'none',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
+            <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+            Secure Your Event Make A Deposit
+          </button>
+          
+          <button
+            onClick={(e) => openPaymentApp(PAYMENT_METHODS.PAYPAL.url, e)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: PAYMENT_METHODS.PAYPAL.color,
+              color: 'white',
+              padding: '16px 24px',
+              borderRadius: '10px',
+              border: 'none',
+              textDecoration: 'none',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
+            <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+            Secure Your Event Make A Deposit
+          </button>
+        </div>
       </div>
     </div>
   );
