@@ -41,6 +41,7 @@ import LoadingDots from '../components/LoadingDots';
 import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
+import FormBanner from '../components/FormBanner';
 
 // Constants and Pricing
 const SERVICES = {
@@ -2064,7 +2065,7 @@ Live City DJ Contract Terms and Conditions:
               marginBottom: '50px'
             }}>
               {/* Add Header at the top of the form */}
-              <Header />
+              <FormBanner />
               
               {/* Spacer div between email address and client name */}
               <div style={{ 
