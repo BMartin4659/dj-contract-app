@@ -169,13 +169,16 @@ const PAYMENT_URLS = {
 // We won't use a direct URL for CashApp as deep linking isn't working reliably
 const getCashAppInfo = () => {
   const baseURL = PAYMENT_URLS.CASHAPP;
-  const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : '$LiveCity';
+  const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : 'LiveCity';
   
-  // Format the CashApp payment URL properly with amount parameter for direct payment
+  // Format the CashApp payment URL properly
+  // Cash App now uses a simpler format
   const formatPaymentUrl = (amount = 0) => {
     // Remove $ if it exists at the beginning
     const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
-    return `https://cash.app/$${cleanUsername}/pay?amount=${amount}&note=DJ%20Service%20Payment`;
+    
+    // Use the official format for Cash App
+    return `https://cash.app/$${cleanUsername}`;
   };
   
   return {
@@ -1059,14 +1062,19 @@ Live City DJ Contract Terms and Conditions:
           // Get CashApp info with the payment URL formatter
           const cashAppInfo = getCashAppInfo();
           
-          // Create a formatted payment URL with the amount
+          // Create a formatted payment URL 
           const paymentUrl = cashAppInfo.formatPaymentUrl(amount);
           
-          // Open CashApp directly with payment parameters - bypass success page
-          window.location.href = paymentUrl;
+          // Set confirmation message
+          setConfirmationMessage(`Please send $${amount} to $LiveCity via CashApp to complete your booking.`);
+          setShowConfirmation(true);
           
-          // We don't redirect to success page to avoid the intermediate step
-          return; // Skip the rest of the submission flow
+          // Open CashApp in a new tab instead of redirecting
+          window.open(paymentUrl, '_blank');
+          
+          // Continue with form submission - this will keep user on the page
+          // and show them a confirmation
+          
         } catch (error) {
           console.error('Error processing CashApp payment:', error);
           alert('Could not process CashApp payment. Please try again or use another payment method.');
