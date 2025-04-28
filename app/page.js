@@ -41,8 +41,6 @@ import LoadingDots from '../components/LoadingDots';
 import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
-import FormBanner from '../components/FormBanner';
-import Banner from './banner';
 
 // Constants and Pricing
 const SERVICES = {
@@ -2065,30 +2063,49 @@ Live City DJ Contract Terms and Conditions:
               width: '100%',
               marginBottom: '50px'
             }}>
-              {/* Add Header at the top of the form */}
-              <Banner />
-              
-              {/* Direct logo image as a fallback */}
-              <div style={{textAlign: 'center', marginBottom: '30px'}}>
+              {/* Form Header with Logo */}
+              <div style={{textAlign: 'center', marginBottom: '30px', position: 'relative'}}>
                 <img 
-                  src="/dj-bobby-drake-logo.png"
+                  src="/dj-bobby-drake-logo.png" 
                   alt="DJ Bobby Drake Logo"
                   style={{
-                    width: '220px',
+                    width: '200px',
                     height: 'auto',
-                    margin: '0 auto 15px',
+                    margin: '0 auto',
                     display: 'block'
                   }}
                 />
                 
-                <h2 style={{
+                <h1 style={{
                   fontSize: '32px',
                   fontWeight: 'bold',
-                  margin: '10px 0',
+                  margin: '15px 0 10px',
                   color: '#000'
                 }}>
                   Event Contract
-                </h2>
+                </h1>
+                
+                <div style={{
+                  fontSize: '16px',
+                  color: '#0070f3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '15px'
+                }}>
+                  <a 
+                    href="mailto:therealdjbobbydrake@gmail.com"
+                    style={{
+                      color: '#0070f3',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{marginRight: '8px'}}>✉️</span>
+                    therealdjbobbydrake@gmail.com
+                  </a>
+                </div>
               </div>
               
               {/* Spacer div between email address and client name */}
