@@ -1,5 +1,4 @@
 import React from 'react';
-import { MdEmail } from 'react-icons/md';
 import Image from 'next/image';
 
 const Header = () => {
@@ -40,21 +39,6 @@ const Header = () => {
           >
             Event Contract
           </h1>
-          
-          {/* Email address */}
-          <div className="mt-1 text-blue-700">
-            <a 
-              href="mailto:therealdjbobbydrake@gmail.com"
-              className="flex items-center justify-center font-medium text-sm hover:underline md:text-base"
-              style={{ 
-                fontFamily: 'Poppins, sans-serif',
-                letterSpacing: '0.01em'
-              }}
-            >
-              <MdEmail className="mr-1 text-blue-600" />
-              therealdjbobbydrake@gmail.com
-            </a>
-          </div>
         </div>
       </div>
     </header>

@@ -57,10 +57,30 @@ const PaymentConfirmation = ({ show, message }) => {
   if (!show) return null;
   
   return (
-    <div className="payment-confirmation-banner">
-      <div className="payment-confirmation-content">
-        <FaCheckCircle style={{ color: 'green', marginRight: '10px', fontSize: '20px' }} />
-        <span>{message || 'Payment initiated successfully!'}</span>
+    <div className="payment-confirmation-banner" style={{
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      width: '100%',
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      zIndex: '1000',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      padding: '15px',
+      borderRadius: '0 0 8px 8px'
+    }}>
+      <div className="payment-confirmation-content" style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+        <FaCheckCircle style={{ color: 'green', marginRight: '10px', fontSize: '24px', marginTop: '3px' }} />
+        <div>
+          <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>{message || 'Payment initiated successfully!'}</div>
+          <div style={{ fontSize: '0.95rem', marginTop: '5px', color: '#555' }}>
+            If you have any questions or concerns, please contact us at <a href="mailto:therealdjbobbydrake@gmail.com" style={{ color: '#0070f3', textDecoration: 'underline' }}>therealdjbobbydrake@gmail.com</a>
+          </div>
+        </div>
       </div>
     </div>
   );
