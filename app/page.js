@@ -2057,7 +2057,7 @@ Live City DJ Contract Terms and Conditions:
                   color: '#000',
                   textTransform: 'uppercase'  // Added to make it all capitals
                 }}>
-                  Event Contract
+                  📝 EVENT CONTRACT
                 </h1>
                 
                 <div style={{
