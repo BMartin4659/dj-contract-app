@@ -6,24 +6,24 @@ const Header = () => {
   return (
     <header className="w-full pt-3 pb-2 text-center">
       <div className="flex flex-col items-center justify-center">
-        {/* Logo with circular styling */}
-        <div className="relative w-32 h-32 mb-2">
-          <img 
+        {/* Logo with Next.js Image for better optimization */}
+        <div className="relative" style={{ width: '200px', height: '200px', margin: '0 auto' }}>
+          <Image 
             src="/dj-bobby-drake-logo.png" 
             alt="DJ Bobby Drake Logo" 
+            fill
+            sizes="(max-width: 768px) 200px, 200px"
+            priority={true}
+            quality={100}
             style={{ 
-              width: '128px',
-              height: '128px',
               objectFit: "contain",
-              borderRadius: '50%',
-              display: 'block',
-              margin: '0 auto'
+              objectPosition: "center",
             }}
           />
         </div>
         
         {/* Title */}
-        <div className="text-center mt-1">
+        <div className="text-center mt-4">
           <h1 
             className="mb-2 font-bold text-black" 
             style={{ 
@@ -35,10 +35,10 @@ const Header = () => {
               width: '100%',
               display: 'flex',
               justifyContent: 'center',
-              fontSize: 'calc(1.5rem * 1.5)' // 50% larger than text-2xl (1.5rem)
+              fontSize: 'calc(1.5rem * 1.2)'
             }}
           >
-            <span style={{ display: 'inline-block', padding: '0 0.5rem' }}>Event Contract</span>
+            Event Contract
           </h1>
           
           {/* Email address */}

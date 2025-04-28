@@ -25,8 +25,8 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1.0,
-  maximumScale: 1.0,
-  userScalable: false, // Prevents pinch zoom on forms for better experience
+  maximumScale: 5.0,
+  userScalable: true, // Allow zooming for better accessibility
   viewportFit: 'cover',
 };
 
@@ -38,6 +38,8 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        
+        {/* Preload critical images */}
         <link rel="preload" href="/dj-background-new.jpg" as="image" />
         <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" />
       </head>
@@ -95,6 +97,15 @@ export default function RootLayout({ children }) {
                 setTimeout(setAppHeight, 100);
               });
             });
+
+            // Fix for mobile viewport
+            const metas = document.getElementsByTagName('meta');
+            for (let i = 0; i < metas.length; i++) {
+              if (metas[i].name === 'viewport') {
+                metas[i].content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
+                break;
+              }
+            }
           `}
         </Script>
       </body>
