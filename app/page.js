@@ -2051,10 +2051,11 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: '32px',
+                  fontSize: '48px',  // Increased from 32px (50% bigger)
                   fontWeight: 'bold',
                   margin: '15px 0 10px',
-                  color: '#000'
+                  color: '#000',
+                  textTransform: 'uppercase'  // Added to make it all capitals
                 }}>
                   Event Contract
                 </h1>
