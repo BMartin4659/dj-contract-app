@@ -2051,7 +2051,7 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: '48px',  // Increased from 32px (50% bigger)
+                  fontSize: '38px',  // Reduced from 48px (20% smaller)
                   fontWeight: 'bold',
                   margin: '15px 0 10px',
                   color: '#000',
