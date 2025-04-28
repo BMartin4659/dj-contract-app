@@ -1740,6 +1740,48 @@ Live City DJ Contract Terms and Conditions:
     );
   }
 
+  // Near the top of the component where other useEffect hooks are defined
+  // Add responsive styles for header and logo
+  useEffect(() => {
+    if (isClient) {
+      const responsiveStyles = document.createElement('style');
+      responsiveStyles.textContent = `
+        @media (max-width: 768px) {
+          .logo-container {
+            width: 150px !important;
+            height: 150px !important;
+          }
+          .header-title {
+            font-size: 32px !important;
+          }
+          .header-email {
+            font-size: 15px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .logo-container {
+            width: 120px !important;
+            height: 120px !important;
+          }
+          .header-title {
+            font-size: 28px !important;
+          }
+          .header-email {
+            font-size: 14px !important;
+          }
+        }
+      `;
+      document.head.appendChild(responsiveStyles);
+      
+      return () => {
+        if (document.head.contains(responsiveStyles)) {
+          document.head.removeChild(responsiveStyles);
+        }
+      };
+    }
+  }, [isClient]);
+
   if (!isClient) {
     return null;
   }
@@ -2030,19 +2072,27 @@ Live City DJ Contract Terms and Conditions:
               marginBottom: '50px'
             }}>
               {/* Form Header with Logo */}
-              <div style={{textAlign: 'center', marginBottom: '30px', position: 'relative'}}>
-                <div style={{ 
-                  position: 'relative', 
-                  width: '200px', 
-                  height: '200px', 
-                  margin: '0 auto'
-                }}>
+              <div style={{
+                textAlign: 'center', 
+                marginBottom: '30px', 
+                position: 'relative'
+              }}>
+                <div 
+                  className="logo-container"
+                  style={{ 
+                    position: 'relative', 
+                    width: '200px', 
+                    height: '200px', 
+                    margin: '0 auto',
+                    maxWidth: '100%'
+                  }}
+                >
                   <Image 
                     src="/dj-bobby-drake-logo.png" 
                     alt="DJ Bobby Drake Logo"
                     fill
                     priority
-                    sizes="(max-width: 768px) 200px, 200px"
+                    sizes="(max-width: 480px) 120px, (max-width: 768px) 150px, 200px"
                     style={{
                       objectFit: 'contain',
                       objectPosition: 'center'
@@ -2050,31 +2100,39 @@ Live City DJ Contract Terms and Conditions:
                   />
                 </div>
                 
-                <h1 style={{
-                  fontSize: '38px',  // Reduced from 48px (20% smaller)
-                  fontWeight: 'bold',
-                  margin: '15px 0 10px',
-                  color: '#000',
-                  textTransform: 'uppercase'  // Added to make it all capitals
-                }}>
+                <h1 
+                  className="header-title"
+                  style={{
+                    fontSize: '38px',
+                    fontWeight: 'bold',
+                    margin: '15px 0 10px',
+                    color: '#000',
+                    textTransform: 'uppercase'
+                  }}
+                >
                   📝 EVENT CONTRACT
                 </h1>
                 
-                <div style={{
-                  fontSize: '16px',
-                  color: '#0070f3',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '15px'
-                }}>
+                <div 
+                  className="header-email"
+                  style={{
+                    fontSize: '16px',
+                    color: '#0070f3',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '15px'
+                  }}
+                >
                   <a 
                     href="mailto:therealdjbobbydrake@gmail.com"
                     style={{
                       color: '#0070f3',
                       textDecoration: 'none',
                       display: 'flex',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center'
                     }}
                   >
                     <span style={{marginRight: '8px'}}>✉️</span>
