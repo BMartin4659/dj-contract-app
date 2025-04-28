@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 
 const FormBanner = () => {
   return (
@@ -16,18 +15,16 @@ const FormBanner = () => {
       padding: '1rem 0'
     }}>
       <div style={{ 
-        position: 'relative', 
         width: '220px', 
-        height: '220px',
+        height: 'auto',
         margin: '0 auto'
       }}>
-        <Image
+        <img
           src="/dj-bobby-drake-logo.png"
           alt="DJ Bobby Drake Logo"
-          fill
-          priority
-          sizes="(max-width: 768px) 220px, 220px"
           style={{ 
+            width: '100%',
+            height: 'auto',
             objectFit: 'contain',
             objectPosition: 'center'
           }}

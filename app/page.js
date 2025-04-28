@@ -42,6 +42,7 @@ import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
 import FormBanner from '../components/FormBanner';
+import Banner from './banner';
 
 // Constants and Pricing
 const SERVICES = {
@@ -2065,7 +2066,30 @@ Live City DJ Contract Terms and Conditions:
               marginBottom: '50px'
             }}>
               {/* Add Header at the top of the form */}
-              <FormBanner />
+              <Banner />
+              
+              {/* Direct logo image as a fallback */}
+              <div style={{textAlign: 'center', marginBottom: '30px'}}>
+                <img 
+                  src="/dj-bobby-drake-logo.png"
+                  alt="DJ Bobby Drake Logo"
+                  style={{
+                    width: '220px',
+                    height: 'auto',
+                    margin: '0 auto 15px',
+                    display: 'block'
+                  }}
+                />
+                
+                <h2 style={{
+                  fontSize: '32px',
+                  fontWeight: 'bold',
+                  margin: '10px 0',
+                  color: '#000'
+                }}>
+                  Event Contract
+                </h2>
+              </div>
               
               {/* Spacer div between email address and client name */}
               <div style={{ 
