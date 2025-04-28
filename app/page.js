@@ -458,10 +458,10 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
-  // Add mobile scrolling fix
+  // Add mobile viewport fix for proper display on mobile devices and Vercel
   useEffect(() => {
     if (isClient) {
-      // Create a style element to add CSS fix for mobile scrolling
+      // Create a style element to add CSS fix for mobile scrolling and display
       const styleEl = document.createElement('style');
       styleEl.textContent = `
         html, body {
@@ -485,14 +485,9 @@ Live City DJ Contract Terms and Conditions:
           position: relative;
           z-index: 1;
         }
-        .form-grid-1col {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
         @media (max-width: 767px) {
           .main-content {
-            padding: 0;
+            padding: 10px;
             margin-bottom: 80px;
           }
           .form-container {
@@ -505,99 +500,69 @@ Live City DJ Contract Terms and Conditions:
             margin-left: auto !important;
             margin-right: auto !important;
           }
-          form h1 {
+          .form-header h1 {
             line-height: 1.3 !important;
             margin-bottom: 1rem !important;
           }
-          form h2 {
-            line-height: 1.3 !important;
-            margin-bottom: 0.75rem !important;
-          }
-          form h3 {
-            line-height: 1.3 !important;
-          }
-          .form-grid-2col {
-            grid-template-columns: 1fr !important;
-            gap: 0.5rem !important;
-          }
-          .form-grid-1col {
-            gap: 0.5rem !important;
+          input, select, textarea {
+            font-size: 16px !important;
           }
           .payment-options {
             grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .payment-option-item {
-            padding: 10px 5px !important;
-          }
-          .service-options {
-            grid-template-columns: 1fr !important;
-          }
-          .service-card {
-            padding: 15px !important;
-          }
-          .hours-selector button {
-            width: 36px !important;
-            height: 36px !important;
-          }
-          .submit-button {
-            padding: 1.2rem !important;
-            font-size: 1.1rem !important;
-            margin-top: 1.5rem !important;
-            position: sticky !important;
-            bottom: 20px !important;
-            z-index: 100 !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-          }
-          .field-label {
-            font-size: 0.95rem !important;
-            margin-bottom: 0.3rem !important;
-          }
-          .field-input {
-            padding: 10px !important;
-            margin-bottom: 0.7rem !important;
-          }
-          .section-header {
-            margin-top: 1.5rem !important;
-            margin-bottom: 1rem !important;
-          }
-          .section-divider {
-            margin: 1.5rem 0 !important;
-          }
-          .payment-confirmation-banner {
-            padding: 10px !important;
-            width: 100% !important;
-            border-radius: 0 !important;
-          }
-          .confirmation-content {
-            padding: 15px !important;
-          }
-          .terms-container {
-            padding: 12px !important;
-          }
-          .event-summary {
-            padding: 12px !important;
-            margin-bottom: 70px !important;
-          }
-          .event-summary h3 {
-            font-size: 1.1rem !important;
-          }
-          .event-summary-list {
-            font-size: 0.9rem !important;
-          }
-          .event-summary-list div {
-            margin-bottom: 4px !important;
-          }
-          .event-total {
-            padding-top: 8px !important;
-            font-size: 1.1rem !important;
           }
         }
       `;
       document.head.appendChild(styleEl);
       
+      // Create and add a meta viewport tag to prevent scaling issues
+      const metaViewport = document.createElement('meta');
+      metaViewport.name = 'viewport';
+      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover';
+      
+      // Remove any existing viewport meta tags first to avoid conflicts
+      const existingMetaTags = document.querySelectorAll('meta[name="viewport"]');
+      existingMetaTags.forEach(tag => tag.remove());
+      
+      document.head.appendChild(metaViewport);
+      
+      // Add iOS-specific fixes
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Create iOS specific style fixes
+        const iOSStyleEl = document.createElement('style');
+        iOSStyleEl.textContent = `
+          @supports (-webkit-touch-callout: none) {
+            body {
+              background-attachment: scroll !important;
+            }
+            
+            .ios-background-fix {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-image: url('/dj-background-new.jpg');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              z-index: -1;
+            }
+          }
+        `;
+        document.head.appendChild(iOSStyleEl);
+        
+        // Add iOS background fix div
+        const iOSBackgroundFix = document.createElement('div');
+        iOSBackgroundFix.className = 'ios-background-fix';
+        document.body.prepend(iOSBackgroundFix);
+      }
+      
       return () => {
         if (document.head.contains(styleEl)) {
           document.head.removeChild(styleEl);
+        }
+        if (document.head.contains(metaViewport)) {
+          document.head.removeChild(metaViewport);
         }
       };
     }
