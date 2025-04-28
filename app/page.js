@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -2030,16 +2031,24 @@ Live City DJ Contract Terms and Conditions:
             }}>
               {/* Form Header with Logo */}
               <div style={{textAlign: 'center', marginBottom: '30px', position: 'relative'}}>
-                <img 
-                  src="/dj-bobby-drake-logo.png" 
-                  alt="DJ Bobby Drake Logo"
-                  style={{
-                    width: '200px',
-                    height: 'auto',
-                    margin: '0 auto',
-                    display: 'block'
-                  }}
-                />
+                <div style={{ 
+                  position: 'relative', 
+                  width: '200px', 
+                  height: '200px', 
+                  margin: '0 auto'
+                }}>
+                  <Image 
+                    src="/dj-bobby-drake-logo.png" 
+                    alt="DJ Bobby Drake Logo"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 200px, 200px"
+                    style={{
+                      objectFit: 'contain',
+                      objectPosition: 'center'
+                    }}
+                  />
+                </div>
                 
                 <h1 style={{
                   fontSize: '32px',

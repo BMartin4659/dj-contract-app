@@ -20,6 +20,37 @@ if (sendEmailExists) {
   console.log(contents.substring(0, 500) + '...');
 }
 
+// Check for the DJ logo file
+const logoPath = path.join(process.cwd(), 'public', 'dj-bobby-drake-logo.png');
+const logoExists = fs.existsSync(logoPath);
+console.log(`Logo exists at ${logoPath}: ${logoExists}`);
+
+// If logo doesn't exist, check if it exists with different case
+if (!logoExists) {
+  // Get all files in the public directory
+  const publicFiles = fs.readdirSync(path.join(process.cwd(), 'public'));
+  console.log('Files in public directory:', publicFiles);
+  
+  // Check for any case-insensitive match
+  const logoMatch = publicFiles.find(file => 
+    file.toLowerCase() === 'dj-bobby-drake-logo.png'
+  );
+  
+  if (logoMatch && logoMatch !== 'dj-bobby-drake-logo.png') {
+    console.log(`Found logo with different case: ${logoMatch}`);
+    
+    // Create a copy with the correct case
+    fs.copyFileSync(
+      path.join(process.cwd(), 'public', logoMatch),
+      path.join(process.cwd(), 'public', 'dj-bobby-drake-logo.png')
+    );
+    
+    console.log('Created copy of logo with correct case');
+  } else if (!logoMatch) {
+    console.warn('WARNING: Could not find DJ logo file in any case variation!');
+  }
+}
+
 // Check if the imports in success page are correct
 const successPagePath = path.join(process.cwd(), 'app', 'payment', 'success', 'page.js');
 const successPageExists = fs.existsSync(successPagePath);
