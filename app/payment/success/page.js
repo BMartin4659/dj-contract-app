@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Image from 'next/image';
 
 // Inline implementation of sendEmail to avoid import issues
 const sendEmail = async (bookingData) => {
@@ -350,17 +351,18 @@ function PaymentSuccessContent() {
         position: 'relative',
         zIndex: 2
       }}>
-        {/* Custom header with logo */}
-        <div style={{ marginBottom: '15px', marginTop: '5px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 auto 30px' }}>
-            <img 
-              src="/dj-bobby-drake-logo.png" 
+        {/* Banner with logo */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
+            <Image
+              src="/dj-bobby-drake-logo.png"
               alt="DJ Bobby Drake Logo"
-              style={{ 
-                height: '180px', 
-                objectFit: 'contain', 
-                maxWidth: '100%',
-                margin: '0 auto 0'
+              fill
+              priority
+              sizes="(max-width: 768px) 200px, 200px"
+              style={{
+                objectFit: 'contain',
+                objectPosition: 'center'
               }}
             />
           </div>

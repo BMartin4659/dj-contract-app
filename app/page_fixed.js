@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -29,11 +28,7 @@ import {
   FaPlus,
   FaMinus,
   FaPaypal,
-  FaCreditCard,
-  FaInfoCircle,
-  CheckIcon,
-  ClipboardIcon,
-  FaMobileAlt,
+  FaCreditCard
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
@@ -46,7 +41,6 @@ import LoadingDots from '../components/LoadingDots';
 import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
-import { getStreamingLogo } from './components/StreamingLogos';
 
 // Constants and Pricing
 const SERVICES = {
@@ -62,30 +56,10 @@ const PaymentConfirmation = ({ show, message }) => {
   if (!show) return null;
   
   return (
-    <div className="payment-confirmation-banner" style={{
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100%',
-      backgroundColor: 'rgba(255,255,255,0.95)',
-      zIndex: '1000',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      padding: '15px',
-      borderRadius: '0 0 8px 8px'
-    }}>
-      <div className="payment-confirmation-content" style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        maxWidth: '800px',
-        margin: '0 auto'
-      }}>
-        <FaCheckCircle style={{ color: 'green', marginRight: '10px', fontSize: '24px', marginTop: '3px' }} />
-        <div>
-          <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>{message || 'Payment initiated successfully!'}</div>
-          <div style={{ fontSize: '0.95rem', marginTop: '5px', color: '#555' }}>
-            If you have any questions or concerns, please contact us at <a href="mailto:therealdjbobbydrake@gmail.com" style={{ color: '#0070f3', textDecoration: 'underline' }}>therealdjbobbydrake@gmail.com</a>
-          </div>
-        </div>
+    <div className="payment-confirmation-banner">
+      <div className="payment-confirmation-content">
+        <FaCheckCircle style={{ color: 'green', marginRight: '10px', fontSize: '20px' }} />
+        <span>{message || 'Payment initiated successfully!'}</span>
       </div>
     </div>
   );
@@ -194,382 +168,12 @@ const PAYMENT_URLS = {
 // We won't use a direct URL for CashApp as deep linking isn't working reliably
 const getCashAppInfo = () => {
   const baseURL = PAYMENT_URLS.CASHAPP;
-  const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : 'LiveCity';
-  
-  // Format the CashApp payment URL properly
-  // Cash App now uses a simpler format
-  const formatPaymentUrl = (amount = 0) => {
-    // Remove $ if it exists at the beginning
-    const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
-    
-    // Use the official format for Cash App
-    return `https://cash.app/$${cleanUsername}`;
-  };
-  
+  const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : '$LiveCity';
   return {
     username: username,
-    url: baseURL,
-    formatPaymentUrl
+    url: baseURL
   };
 };
-
-// Add this component before the main DJContractForm component
-function PlaylistHelpModal({ streamingService, onClose }) {
-  const [animateIn, setAnimateIn] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimateIn(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const stepStyle = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '16px',
-    padding: '16px',
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    border: '1px solid #eaeaea',
-    margin: '12px 0',
-    transition: 'transform 0.2s ease',
-    cursor: 'default',
-    ':hover': {
-      transform: 'translateY(-2px)',
-    }
-  };
-
-  const numberBadgeStyle = (color) => ({
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    backgroundColor: color,
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '14px',
-    fontWeight: '600',
-    flexShrink: 0
-  });
-
-  const getServiceColor = () => {
-    switch(streamingService) {
-      case 'spotify': return '#1DB954';
-      case 'apple': return '#FC3C44';
-      case 'youtube': return '#FF0000';
-      case 'tidal': return '#000000';
-      default: return '#0070f3';
-    }
-  };
-
-  const getServiceIcon = () => {
-    switch(streamingService) {
-      case 'spotify': return '🎵';
-      case 'apple': return '🎵';
-      case 'youtube': return '▶️';
-      case 'tidal': return '🎵';
-      default: return '🎵';
-    }
-  };
-
-  const getInstructions = () => {
-    if (!streamingService) {
-      return (
-        <div className="space-y-6">
-          <div style={{
-            backgroundColor: '#0070f3',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '24px',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            {getStreamingLogo(null, 'w-8 h-8')}
-            <h4 style={{ 
-              margin: 0, 
-              fontSize: '1.1rem',
-              fontWeight: '600'
-            }}>
-              Sharing Guide
-            </h4>
-          </div>
-          
-          <div style={{
-            padding: '24px',
-            backgroundColor: '#f5f9ff',
-            borderRadius: '12px',
-            border: '1px solid #e1e8ff'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '12px',
-              marginBottom: '16px'
-            }}>
-              <span style={{ fontSize: '24px' }}>👋</span>
-              <div>
-                <h5 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#333'
-                }}>
-                  Welcome to the Playlist Sharing Guide!
-                </h5>
-                <p style={{
-                  margin: 0,
-                  fontSize: '0.95rem',
-                  lineHeight: '1.5',
-                  color: '#555'
-                }}>
-                  To get started:
-                </p>
-              </div>
-            </div>
-
-            <ol style={{
-              margin: '0',
-              paddingLeft: '24px',
-              listStyle: 'decimal',
-              color: '#555'
-            }}>
-              <li style={{
-                marginBottom: '12px',
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
-              }}>
-                First, select your streaming service from the options below
-              </li>
-              <li style={{
-                marginBottom: '12px',
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
-              }}>
-                Once selected, I&apos;ll show you specific steps for sharing your playlist
-              </li>
-              <li style={{
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
-              }}>
-                Follow the steps to copy and paste your playlist link
-              </li>
-            </ol>
-          </div>
-
-          <div style={{
-            marginTop: '24px',
-            padding: '16px',
-            backgroundColor: '#f7f7f7',
-            borderRadius: '12px',
-            border: '1px solid #eaeaea'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginBottom: '12px'
-            }}>
-              <span style={{ fontSize: '20px' }}>💡</span>
-              <h5 style={{ 
-                margin: 0,
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                color: '#333'
-              }}>
-                Pro Tip
-              </h5>
-            </div>
-            <p style={{
-              margin: 0,
-              fontSize: '0.85rem',
-              color: '#666',
-              lineHeight: '1.5'
-            }}>
-              Make sure your playlist is set to &quot;Public&quot; so we can access it. Don&apos;t worry, you can change it back to private after we&apos;ve reviewed it.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    const color = getServiceColor();
-    const Logo = () => getStreamingLogo(streamingService, 'w-8 h-8');
-    
-    const steps = {
-      'spotify': [
-        'Open Spotify and go to your playlist',
-        'Click the three dots (...) next to the playlist',
-        'Select "Share" → "Copy link to playlist"',
-        'Paste the copied link in the playlist field below'
-      ],
-      'apple': [
-        'Open Apple Music and select your playlist',
-        'Click the three dots (...) in the top right',
-        'Choose "Share" → "Copy Link"',
-        'Paste the copied link in the playlist field below'
-      ],
-      'youtube': [
-        'Go to your YouTube playlist',
-        'Click "SHARE" below the playlist title',
-        'Click "Copy" to copy the link',
-        'Paste the copied link in the playlist field below'
-      ],
-      'tidal': [
-        'Open TIDAL and navigate to your playlist',
-        'Click the three dots (...) menu',
-        'Select "Share" → "Copy Link"',
-        'Paste the copied link in the playlist field below'
-      ]
-    };
-
-    const currentSteps = steps[streamingService] || [];
-
-    return (
-      <div className="space-y-6">
-        <div style={{
-          backgroundColor: color,
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '24px',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <Logo />
-          <h4 style={{ 
-            margin: 0, 
-            fontSize: '1.1rem',
-            fontWeight: '600'
-          }}>
-            {streamingService?.charAt(0).toUpperCase() + streamingService?.slice(1)} Sharing Guide
-          </h4>
-        </div>
-
-        <div className="steps-container">
-          {currentSteps.map((step, index) => (
-            <div key={index} style={stepStyle}>
-              <div style={numberBadgeStyle(color)}>
-                {index + 1}
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ 
-                  margin: 0,
-                  fontSize: '0.95rem',
-                  lineHeight: '1.5',
-                  color: '#333'
-                }}>
-                  {step}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{
-          marginTop: '24px',
-          padding: '16px',
-          backgroundColor: '#f7f7f7',
-          borderRadius: '12px',
-          border: '1px solid #eaeaea'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '12px'
-          }}>
-            <span style={{ fontSize: '20px' }}>💡</span>
-            <h5 style={{ 
-              margin: 0,
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              color: '#333'
-            }}>
-              Pro Tip
-            </h5>
-          </div>
-          <p style={{
-            margin: 0,
-            fontSize: '0.85rem',
-            color: '#666',
-            lineHeight: '1.5'
-          }}>
-            Make sure your playlist is set to &quot;Public&quot; so we can access it. Don&apos;t worry, you can change it back to private after we&apos;ve reviewed it.
-          </p>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        opacity: animateIn ? 1 : 0,
-        transition: 'opacity 0.2s ease-in-out',
-        padding: '16px'
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          maxWidth: '90%',
-          width: '400px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          position: 'relative',
-          transform: animateIn ? 'scale(1)' : 'scale(0.95)',
-          transition: 'transform 0.2s ease-in-out'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            border: 'none',
-            background: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            color: '#666',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            transition: 'all 0.2s ease',
-            ':hover': {
-              backgroundColor: '#f5f5f5'
-            }
-          }}
-        >
-          ×
-        </button>
-        
-        {getInstructions()}
-      </div>
-    </div>
-  );
-}
 
 export default function DJContractForm() {
   // Terms and conditions text
@@ -664,11 +268,6 @@ Live City DJ Contract Terms and Conditions:
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState(null);
   const [showGenreModal, setShowGenreModal] = useState(false);
-  const [showPlaylistHelp, setShowPlaylistHelp] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [submitError, setSubmitError] = useState(null);
   
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
@@ -859,10 +458,10 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
-  // Add mobile viewport fix for proper display on mobile devices and Vercel
+  // Add mobile scrolling fix
   useEffect(() => {
     if (isClient) {
-      // Create a style element to add CSS fix for mobile scrolling and display
+      // Create a style element to add CSS fix for mobile scrolling
       const styleEl = document.createElement('style');
       styleEl.textContent = `
         html, body {
@@ -886,9 +485,14 @@ Live City DJ Contract Terms and Conditions:
           position: relative;
           z-index: 1;
         }
+        .form-grid-1col {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
         @media (max-width: 767px) {
           .main-content {
-            padding: 10px;
+            padding: 0;
             margin-bottom: 80px;
           }
           .form-container {
@@ -901,69 +505,99 @@ Live City DJ Contract Terms and Conditions:
             margin-left: auto !important;
             margin-right: auto !important;
           }
-          .form-header h1 {
+          form h1 {
             line-height: 1.3 !important;
             margin-bottom: 1rem !important;
           }
-          input, select, textarea {
-            font-size: 16px !important;
+          form h2 {
+            line-height: 1.3 !important;
+            margin-bottom: 0.75rem !important;
+          }
+          form h3 {
+            line-height: 1.3 !important;
+          }
+          .form-grid-2col {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+          }
+          .form-grid-1col {
+            gap: 0.5rem !important;
           }
           .payment-options {
             grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .payment-option-item {
+            padding: 10px 5px !important;
+          }
+          .service-options {
+            grid-template-columns: 1fr !important;
+          }
+          .service-card {
+            padding: 15px !important;
+          }
+          .hours-selector button {
+            width: 36px !important;
+            height: 36px !important;
+          }
+          .submit-button {
+            padding: 1.2rem !important;
+            font-size: 1.1rem !important;
+            margin-top: 1.5rem !important;
+            position: sticky !important;
+            bottom: 20px !important;
+            z-index: 100 !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+          }
+          .field-label {
+            font-size: 0.95rem !important;
+            margin-bottom: 0.3rem !important;
+          }
+          .field-input {
+            padding: 10px !important;
+            margin-bottom: 0.7rem !important;
+          }
+          .section-header {
+            margin-top: 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .section-divider {
+            margin: 1.5rem 0 !important;
+          }
+          .payment-confirmation-banner {
+            padding: 10px !important;
+            width: 100% !important;
+            border-radius: 0 !important;
+          }
+          .confirmation-content {
+            padding: 15px !important;
+          }
+          .terms-container {
+            padding: 12px !important;
+          }
+          .event-summary {
+            padding: 12px !important;
+            margin-bottom: 70px !important;
+          }
+          .event-summary h3 {
+            font-size: 1.1rem !important;
+          }
+          .event-summary-list {
+            font-size: 0.9rem !important;
+          }
+          .event-summary-list div {
+            margin-bottom: 4px !important;
+          }
+          .event-total {
+            padding-top: 8px !important;
+            font-size: 1.1rem !important;
           }
         }
       `;
       document.head.appendChild(styleEl);
       
-      // Create and add a meta viewport tag to prevent scaling issues
-      const metaViewport = document.createElement('meta');
-      metaViewport.name = 'viewport';
-      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover';
-      
-      // Remove any existing viewport meta tags first to avoid conflicts
-      const existingMetaTags = document.querySelectorAll('meta[name="viewport"]');
-      existingMetaTags.forEach(tag => tag.remove());
-      
-      document.head.appendChild(metaViewport);
-      
-      // Add iOS-specific fixes
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // Create iOS specific style fixes
-        const iOSStyleEl = document.createElement('style');
-        iOSStyleEl.textContent = `
-          @supports (-webkit-touch-callout: none) {
-            body {
-              background-attachment: scroll !important;
-            }
-            
-            .ios-background-fix {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg');
-              background-size: cover;
-              background-position: center;
-              background-repeat: no-repeat;
-              z-index: -1;
-            }
-          }
-        `;
-        document.head.appendChild(iOSStyleEl);
-        
-        // Add iOS background fix div
-        const iOSBackgroundFix = document.createElement('div');
-        iOSBackgroundFix.className = 'ios-background-fix';
-        document.body.prepend(iOSBackgroundFix);
-      }
-      
       return () => {
         if (document.head.contains(styleEl)) {
           document.head.removeChild(styleEl);
-        }
-        if (document.head.contains(metaViewport)) {
-          document.head.removeChild(metaViewport);
         }
       };
     }
@@ -1211,314 +845,336 @@ Live City DJ Contract Terms and Conditions:
 
   // Function to send confirmation email with retry logic
   const sendConfirmationEmail = async (templateParams) => {
-    try {
-      console.log("Preparing to send confirmation email with params:", templateParams);
-      
-      // Get project ID from environment
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dj-contract-app';
-      
-      // Create email payload with all required fields
-      const emailPayload = {
-        clientName: templateParams.name || templateParams.clientName,
-        email: templateParams.email,
-        eventType: templateParams.eventType || 'Event',
-        eventDate: templateParams.eventDate,
-        venueName: templateParams.venueName || 'N/A',
-        venueLocation: templateParams.venueLocation || 'N/A',
-        startTime: templateParams.startTime || 'N/A',
-        endTime: templateParams.endTime || 'N/A',
-        paymentId: templateParams.paymentId || 'N/A',
-        totalAmount: templateParams.total || templateParams.totalAmount || 'N/A'
-      };
+    // Skip actual email sending in development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Development mode - skipping actual email sending");
+      console.log("Email would be sent with params:", templateParams);
+      return { success: true, devMode: true };
+    }
 
-      // Call the Firebase function HTTP endpoint
-      const functionUrl = `https://us-central1-${projectId}.cloudfunctions.net/sendConfirmationEmailHttp`;
-      
-      console.log('Sending email request to:', functionUrl);
-      
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailPayload),
-      });
+    const maxRetries = 3;
+    let retryCount = 0;
+    let success = false;
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Email API error response:', errorText);
-        throw new Error(`HTTP error ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('📧 Email sent successfully:', result);
-      
-      return { success: true };
-    } catch (error) {
-      console.error("❌ Failed to send confirmation email:", error);
-      
-      // Log specific error details for debugging
-      if (error.message) console.error("Error message:", error.message);
-      if (error.code) console.error("Error code:", error.code);
-      if (error.details) console.error("Error details:", error.details);
-      
-      // Return a structured error response
-      return {
-        success: false,
-        error: error.message || "Failed to send confirmation email",
-        fallbackMessage: "We've saved your booking but couldn't send the confirmation email. We'll contact you shortly."
+    console.log("Preparing to send confirmation email with params:", templateParams);
+    
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || EMAILJS_CONFIG.SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || EMAILJS_CONFIG.TEMPLATE_ID;
+    
+    // Make sure all required parameters are properly set
+    const emailParams = {
+      from_name: 'Live City DJ',
+      to_name: templateParams.clientName || templateParams.name || 'Valued Customer',
+      to_email: templateParams.email,
+      event_type: templateParams.eventType || 'Event',
+      event_date: templateParams.eventDate || 'TBD',
+      venue_name: templateParams.venueName || 'TBD',
+      venue_location: templateParams.venueLocation || 'TBD',
+      payment_method: templateParams.paymentMethod || 'Online Payment',
+      total_amount: templateParams.total || `$${templateParams.totalAmount || '0.00'}`,
+      // Pass through any other parameters
+      ...templateParams
+    };
+    
+    // Verify EmailJS configuration
+    if (!serviceId || !templateId || 
+        serviceId === 'default_service_id' || 
+        templateId === 'default_template_id') {
+      console.error("EmailJS environment variables are missing or using fallbacks");
+      return { 
+        success: false, 
+        error: "Email service configuration is incomplete",
+        fallbackMessage: "Email couldn't be sent due to missing configuration. We'll contact you shortly." 
       };
     }
+    
+    // Attempt to send with retries
+    while (retryCount < maxRetries && !success) {
+      try {
+        console.log(`Email send attempt ${retryCount + 1}/${maxRetries}`);
+        
+        const emailResponse = await emailjs.send(
+          serviceId,
+          templateId,
+          emailParams
+        );
+
+        console.log("EmailJS Response:", emailResponse);
+
+        if (emailResponse && emailResponse.status === 200) {
+          console.log("Email sent successfully!");
+          success = true;
+          return { success: true };
+        } else {
+          throw new Error(`Unexpected response: ${JSON.stringify(emailResponse)}`);
+        }
+      } catch (emailError) {
+        // Log more details about the error
+        console.error(`Email send attempt ${retryCount + 1} failed:`, emailError);
+        
+        // Special handling for empty error objects (common with CORS issues)
+        if (!emailError || Object.keys(emailError).length === 0) {
+          console.error("Empty error object detected - likely a CORS or network issue");
+          console.error("Current environment:", {
+            serviceId,
+            templateId: templateId?.substring(0, 5) + "...",
+            hasPublicKey: !!process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+            environment: process.env.NODE_ENV
+          });
+          
+          // In case of CORS error, we'll treat it as a non-fatal error and allow the form submission to continue
+          if (retryCount === maxRetries - 1) {
+            return {
+              success: false,
+              error: "Browser security prevented email sending. We'll contact you manually.",
+              cors: true
+            };
+          }
+        }
+        
+        retryCount++;
+        
+        if (retryCount < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const delayMs = 1000 * Math.pow(2, retryCount);
+          console.log(`Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: `Failed to send email after ${maxRetries} attempts`,
+      fallbackMessage: "We couldn't send your confirmation email automatically, but your booking is confirmed. We'll follow up shortly."
+    };
   };
 
-  const validateForm = () => {
-    let errors = {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     
-    // Validate required fields
-    if (!formData.clientName) errors.clientName = 'Client name is required';
-    if (!formData.email) errors.email = 'Email is required';
-    if (!formData.contactPhone) errors.contactPhone = 'Phone number is required';
-    if (!formData.eventType) errors.eventType = 'Event type is required';
-    if (!formData.venueName) errors.venueName = 'Venue name is required';
-    if (!formData.venueLocation) errors.venueLocation = 'Venue location is required';
-    if (!formData.eventDate) errors.eventDate = 'Event date is required';
-    if (!formData.startTime) errors.startTime = 'Start time is required';
-    if (!formData.endTime) errors.endTime = 'End time is required';
-    if (!formData.paymentMethod) errors.paymentMethod = 'Payment method is required';
+    // Validate all required fields
+    const errors = {};
+    const requiredFields = ['clientName', 'email', 'contactPhone', 'eventType', 'venueName', 'venueLocation', 'eventDate', 'startTime', 'endTime', 'paymentMethod'];
     
-    // Validate email format
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        errors[field] = `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`;
+      }
+    });
+    
+    // Validate email format if present
     if (formData.email && !validateEmail(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
     
-    // Validate phone format
+    // Validate phone format if present
     if (formData.contactPhone && !validatePhone(formData.contactPhone)) {
-      errors.contactPhone = 'Please enter a valid phone number';
+      errors.contactPhone = 'Please enter a valid 10-digit phone number';
     }
     
-    // Validate venue location
-    if (formData.venueLocation && !validateAddress(formData.venueLocation)) {
-      errors.venueLocation = 'Please enter a valid address';
+    // Check terms agreement
+    if (!formData.agreeToTerms) {
+      errors.agreeToTerms = 'You must agree to the terms and conditions';
     }
     
-    // If there are errors, update state and return false
+    // If any errors, update state and return
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      // Scroll to first error field
+      // Scroll to the first error
       const firstErrorField = Object.keys(errors)[0];
       const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
       if (errorElement) {
         errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      return false;
+      return;
     }
+
+    // Show payment confirmation
+    setShowConfirmation(true);
     
+    // Scroll to top to show the confirmation banner
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // Clear any previous errors
     setFormErrors({});
-    return true;
-  };
+    
+    // Generate a unique contract ID
+    const contractId = uuidv4();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    // Set submitting state
     setIsSubmitting(true);
-    setSubmitError(null);
-
+    
     try {
-      // Validate form data
-      if (!validateForm()) {
-        setIsSubmitting(false);
-        return;
+      let docRef;
+      
+      // Try to create contract in Firestore
+      try {
+        docRef = await addDoc(collection(db, 'djContracts'), {
+          eventType: formData.eventType,
+          numberOfGuests: formData.guestCount,
+          venueName: formData.venueName,
+          venueLocation: formData.venueLocation,
+          eventDate: formData.eventDate,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          additionalHours: formData.additionalHours,
+          email: formData.email,
+          clientName: formData.clientName,
+          phoneNumber: formData.contactPhone,
+          paymentMethod: formData.paymentMethod,
+          paymentAmount: formData.paymentAmount, // Store payment amount type
+          isDeposit: formData.paymentAmount === 'deposit', // Boolean flag for easy querying
+          amountDue: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal(),
+          totalAmount: calculateTotal(),
+          remainingBalance: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : 0,
+          depositPaid: false,
+          confirmationSent: false,
+          reminderSent: false,
+          status: 'pending',
+          createdAt: new Date(),
+          // Add music preferences data
+          musicPreferences: formData.musicPreferences.length > 0 
+            ? musicGenres
+                .filter(genre => formData.musicPreferences.includes(genre.id))
+                .map(genre => genre.label)
+                .join(', ') 
+            : 'None specified',
+          otherMusicPreference: formData.otherMusicPreference || '',
+          // Add streaming service info
+          hasPlaylist: !!formData.streamingService && !!formData.playlistLink,
+          streamingService: formData.streamingService 
+            ? streamingServices.find(s => s.id === formData.streamingService)?.label || formData.streamingService
+            : '',
+          playlistLink: formData.playlistLink || ''
+        });
+      } catch (firebaseError) {
+        console.error("Firebase error:", firebaseError);
+        // Continue with form submission even if Firebase fails
+        // This allows the user to still proceed with payment/email
       }
-
-      // Create the document in Firebase
-      const docRef = await addDoc(collection(db, 'djContracts'), {
-        ...formData,
-        createdAt: serverTimestamp(),
-        status: 'submitted',
-        totalAmount: calculateTotal(),
-        depositAmount: calculateDepositAmount()
-      });
-
-      console.log("Document written with ID: ", docRef.id);
-
-      // Prepare email template parameters
+      
+      // Handle based on payment method
+      if (formData.paymentMethod === 'Stripe') {
+        // Show the Stripe checkout component without the redundant confirmation banner
+        setShowStripe(true);
+        // Don't show the confirmation banner for Stripe payments
+        // setShowConfirmation(true);
+        // setTimeout(() => setShowConfirmation(false), 5000);
+        return; // Exit the function early to let the Stripe component handle payment
+      } else if (formData.paymentMethod === 'Venmo') {
+        try {
+          // Generate a payment ID for non-Stripe payments
+          const venmoPaymentId = `vm_${uuidv4().substring(0, 10)}`;
+          
+          // Open Venmo in a new tab
+          window.open(PAYMENT_URLS.VENMO, '_blank');
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${venmoPaymentId}`);
+        } catch (error) {
+          console.error('Error opening Venmo payment URL:', error);
+          alert('Could not open Venmo. Please try again or use another payment method.');
+        }
+      } else if (formData.paymentMethod === 'CashApp') {
+        try {
+          // Generate a payment ID for non-Stripe payments
+          const cashAppPaymentId = `ca_${uuidv4().substring(0, 10)}`;
+          
+          // Get CashApp info
+          const cashAppInfo = getCashAppInfo();
+          const amount = formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal();
+          
+          // Open CashApp in a new tab
+          window.open(PAYMENT_URLS.CASHAPP, '_blank');
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${cashAppPaymentId}`);
+        } catch (error) {
+          console.error('Error processing CashApp payment:', error);
+          alert('Could not process CashApp payment. Please try again or use another payment method.');
+        }
+      } else if (formData.paymentMethod === 'PayPal') {
+        try {
+          // Generate a payment ID for non-Stripe payments
+          const paypalPaymentId = `pp_${uuidv4().substring(0, 10)}`;
+          
+          // Open PayPal in a new tab
+          window.open(PAYMENT_URLS.PAYPAL, '_blank');
+          
+          // Redirect to success page
+          router.push(`/payment/success?id=${paypalPaymentId}`);
+        } catch (error) {
+          console.error('Error opening PayPal payment URL:', error);
+          alert('Could not open PayPal. Please try again or use another payment method.');
+        }
+      }
+      
+      // For other payment methods, continue with email flow
+      
+      // Create a clean template params object with only string values
       const templateParams = {
+        name: formData.clientName, // for {{name}} greeting
         clientName: formData.clientName,
-        email: formData.email,
-        eventType: formData.eventType,
         eventDate: formData.eventDate,
         venueName: formData.venueName,
         venueLocation: formData.venueLocation,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        totalAmount: calculateTotal(),
-        paymentMethod: formData.paymentMethod,
-        bookingId: docRef.id
+        paymentType: formData.paymentAmount === 'deposit' ? 'Deposit' : 'Full Payment',
+        amountPaid: `$${getAmountToPay()}`,
+        total: `$${calculateTotal()}`,
+        remainingBalance: formData.paymentAmount === 'deposit' ? `$${calculateDepositAmount()}` : '$0',
+        email: formData.email,
+        // Add music preferences to email
+        musicPreferences: formData.musicPreferences.length > 0 
+          ? musicGenres
+              .filter(genre => formData.musicPreferences.includes(genre.id))
+              .map(genre => genre.label)
+              .join(', ') 
+          : 'None specified',
+        otherMusicPreference: formData.otherMusicPreference || '',
+        // Add streaming service info
+        hasPlaylist: !!formData.streamingService && !!formData.playlistLink,
+        streamingService: formData.streamingService 
+          ? streamingServices.find(s => s.id === formData.streamingService)?.label || formData.streamingService
+          : '',
+        playlistLink: formData.playlistLink || ''
       };
-
-      // Send confirmation email
+      
+      console.log("Sending email with params:", templateParams);
+      
+      // Use the new email sending function with retry logic
       const emailResult = await sendConfirmationEmail(templateParams);
-
-      if (emailResult.success) {
-        // Update the document with email confirmation
-        try {
-          await updateDoc(doc(db, 'djContracts', docRef.id), {
-            confirmationSent: true,
-            status: 'emailSent'
-          });
-        } catch (updateError) {
-          console.error("Error updating document status:", updateError);
+      
+      if (emailResult.success || emailResult.devMode) {
+        // Update the document with email confirmation if Firebase was successful
+        if (docRef) {
+          try {
+            await updateDoc(doc(db, 'djContracts', docRef.id), {
+              confirmationSent: true,
+              status: 'emailSent'
+            });
+          } catch (updateError) {
+            console.error("Error updating document status:", updateError);
+          }
         }
       } else {
         console.warn("Email sending failed:", emailResult.error);
-        // Show a user-friendly message but don't block form submission
-        setSubmitError(emailResult.fallbackMessage || "We'll send your confirmation email shortly.");
+        // Still mark as submitted even if email fails - we've already handled the error appropriately
       }
-
-      // Mark submission as complete
+      
+      // Mark submission as complete regardless of email success
       setSubmitted(true);
-      setShowConfirmation(true);
-      setTimeout(() => setShowConfirmation(false), 5000);
-
+      
     } catch (error) {
-      console.error("Error in form submission:", error);
-      setSubmitError("An error occurred while submitting the form. Please try again or contact support.");
+      console.error("Something went wrong:", error);
+      alert("An error occurred while submitting the contract, but we've saved your information. Please contact support if you don't receive a confirmation email.");
+      // Still mark as submitted so user can try again or contact support
+      setSubmitted(true);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Add payment confirmation component
-  const PaymentInstructions = ({ paymentMethod, bookingId }) => {
-    const [copySuccess, setCopySuccess] = useState(false);
-
-    const copyToClipboard = async (text) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      } catch (err) {
-        console.error('Failed to copy text: ', err);
-        setShowErrorMessage('Failed to copy to clipboard');
-      }
-    };
-
-    const getPaymentDetails = () => {
-      switch (paymentMethod) {
-        case 'Venmo':
-          return {
-            username: '@Bobby-Martin-64',
-            color: '#3D95CE'
-          };
-        case 'CashApp':
-          return {
-            username: '$BobbyMartin64',
-            color: '#00C244'
-          };
-        case 'PayPal':
-          return {
-            username: 'paypal.me/bmartin4659',
-            color: '#0070BA'
-          };
-        default:
-          return null;
-      }
-    };
-
-    const paymentDetails = getPaymentDetails();
-
-    return (
-      <div className="payment-instructions bg-white rounded-lg shadow-lg p-6 mt-8">
-        <h3 className="text-2xl font-semibold text-primary mb-4">
-          Payment Instructions for {paymentMethod}
-        </h3>
-        
-        <div className="mb-6 space-y-2">
-          <p className="text-lg">
-            <strong>Amount Due:</strong> ${calculateDepositAmount()}
-          </p>
-          <p className="text-lg">
-            <strong>Booking Reference:</strong> {bookingId}
-          </p>
-        </div>
-
-        {paymentDetails && (
-          <div className="space-y-4">
-            <p className="text-lg">
-              Please send payment to: <strong>{paymentDetails.username}</strong>
-            </p>
-            <button
-              onClick={() => copyToClipboard(paymentDetails.username)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-all"
-              style={{ backgroundColor: paymentDetails.color }}
-            >
-              {copySuccess ? (
-                <>
-                  <CheckIcon className="w-5 h-5" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <ClipboardIcon className="w-5 h-5" />
-                  <span>Copy Username</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Success message component
-  const SuccessMessage = () => (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      padding: '16px 24px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    }}>
-      <FaCheckCircle />
-      <div>
-        <p style={{ margin: 0, fontWeight: '500' }}>Booking Submitted Successfully!</p>
-        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>
-          Please check your email for confirmation details.
-        </p>
-      </div>
-    </div>
-  );
-
-  // Error message component
-  const ErrorMessage = ({ message }) => (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      backgroundColor: '#f44336',
-      color: 'white',
-      padding: '16px 24px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    }}>
-      <FaInfoCircle />
-      <p style={{ margin: 0 }}>{message}</p>
-    </div>
-  );
-
+  
   const labelStyle = {
     display: 'block',
     marginBottom: '0.5rem',
@@ -2118,48 +1774,6 @@ Live City DJ Contract Terms and Conditions:
     );
   }
 
-  // Near the top of the component where other useEffect hooks are defined
-  // Add responsive styles for header and logo
-  useEffect(() => {
-    if (isClient) {
-      const responsiveStyles = document.createElement('style');
-      responsiveStyles.textContent = `
-        @media (max-width: 768px) {
-          .logo-container {
-            width: 150px !important;
-            height: 150px !important;
-          }
-          .header-title {
-            font-size: 32px !important;
-          }
-          .header-email {
-            font-size: 15px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .logo-container {
-            width: 120px !important;
-            height: 120px !important;
-          }
-          .header-title {
-            font-size: 28px !important;
-          }
-          .header-email {
-            font-size: 14px !important;
-          }
-        }
-      `;
-      document.head.appendChild(responsiveStyles);
-      
-      return () => {
-        if (document.head.contains(responsiveStyles)) {
-          document.head.removeChild(responsiveStyles);
-        }
-      };
-    }
-  }, [isClient]);
-
   if (!isClient) {
     return null;
   }
@@ -2209,97 +1823,6 @@ Live City DJ Contract Terms and Conditions:
             Thank you! Your DJ booking request has been submitted successfully. You will receive a confirmation email shortly.
             We look forward to celebrating with you!
           </p>
-
-          {/* Payment Method Buttons */}
-          <div style={{ marginTop: '2rem' }}>
-            {formData.paymentMethod === 'Venmo' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.VENMO, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#3D95CE',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Venmo
-              </button>
-            )}
-
-            {formData.paymentMethod === 'CashApp' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.CASHAPP, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#00C244',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Cash App
-              </button>
-            )}
-
-            {formData.paymentMethod === 'PayPal' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.PAYPAL, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#0070BA',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via PayPal
-              </button>
-            )}
-
-            <p style={{ 
-              marginTop: '1.5rem', 
-              fontSize: '0.9rem', 
-              color: '#666',
-              fontStyle: 'italic'
-            }}>
-              Click the button above to complete your deposit payment and secure your event date.
-            </p>
-          </div>
-
           <button
             onClick={() => {
               setFormData({
@@ -2328,19 +1851,27 @@ Live City DJ Contract Terms and Conditions:
               setSubmitted(false);
             }}
             style={{
-              backgroundColor: 'transparent',
-              color: '#3b82f6',
-              border: '2px solid #3b82f6',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
               borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '1rem',
+              padding: '12px 30px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
               cursor: 'pointer',
-              marginTop: '2rem',
-              fontWeight: '500',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
               transition: 'all 0.2s ease'
             }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
-            Book Another Event
+            Secure Your Event Date
           </button>
         </div>
       </div>
@@ -2534,27 +2065,16 @@ Live City DJ Contract Terms and Conditions:
             }}>
               {/* Form Header with Logo */}
               <div style={{textAlign: 'center', marginBottom: '30px', position: 'relative'}}>
-                <div style={{
-                  width: '200px',
-                  height: '200px',
-                  margin: '0 auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Image
-                    src="/dj-bobby-drake-logo.png"
-                    alt="DJ Bobby Drake Logo"
-                    width={200}
-                    height={200}
-                    priority
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      objectFit: 'contain'
-                    }}
-                  />
-                </div>
+                <img 
+                  src="/dj-bobby-drake-logo.png" 
+                  alt="DJ Bobby Drake Logo"
+                  style={{
+                    width: '200px',
+                    height: 'auto',
+                    margin: '0 auto',
+                    display: 'block'
+                  }}
+                />
                 
                 <h1 style={{
                   fontSize: '32px',
@@ -2564,6 +2084,28 @@ Live City DJ Contract Terms and Conditions:
                 }}>
                   Event Contract
                 </h1>
+                
+                <div style={{
+                  fontSize: '16px',
+                  color: '#0070f3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '15px'
+                }}>
+                  <a 
+                    href="mailto:therealdjbobbydrake@gmail.com"
+                    style={{
+                      color: '#0070f3',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{marginRight: '8px'}}>✉️</span>
+                    therealdjbobbydrake@gmail.com
+                  </a>
+                </div>
               </div>
               
               {/* Spacer div between email address and client name */}
@@ -2614,7 +2156,7 @@ Live City DJ Contract Terms and Conditions:
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['contactPhone']} Contact Phone *
+                      {fieldIcons['contactPhone']} Contact Phone:
                     </span>
                   </label>
                   <input
@@ -2625,11 +2167,7 @@ Live City DJ Contract Terms and Conditions:
                     className="field-input"
                     value={formData.contactPhone}
                     onChange={handleChange}
-                    placeholder="(123) 456-7890"
                   />
-                  {formErrors.contactPhone && (
-                    <p className="text-red-500 text-xs italic">{formErrors.contactPhone}</p>
-                  )}
                 </div>
               </div>
 
@@ -3101,36 +2639,17 @@ Live City DJ Contract Terms and Conditions:
                 
                 {/* Streaming Service Integration */}
                 <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <p style={{ 
+                    color: '#333', 
+                    fontSize: '1rem', 
+                    fontWeight: '500',
                     marginBottom: '0.75rem',
-                    gap: '8px'
+                    display: 'flex',
+                    alignItems: 'center'
                   }}>
-                    <p style={{ 
-                      color: '#333', 
-                      fontSize: '1rem', 
-                      fontWeight: '500',
-                      margin: 0,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ marginRight: '8px' }}>📱</span>
-                      Share your playlist (optional)
-                    </p>
-                    <FaInfoCircle
-                      style={{ 
-                        color: '#0070f3',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowPlaylistHelp(true);
-                      }}
-                      title="Click for help sharing your playlist"
-                    />
-                  </div>
+                    <span style={{ marginRight: '8px' }}>📱</span>
+                    Share your playlist (optional)
+                  </p>
                   
                   <div style={{ 
                     display: 'flex',
@@ -3463,84 +2982,168 @@ Live City DJ Contract Terms and Conditions:
                   <div 
                     className="payment-option"
                     data-method="Stripe"
-                    onClick={() => handlePaymentMethodSelect('Stripe')}
-                    style={getPaymentOptionStyle('Stripe')}
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Stripe' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Stripe' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Stripe' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Stripe' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
                   >
                     <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Stripe
+                      fontSize: '28px', 
+                      color: '#6772E5',
+                      marginBottom: '6px' 
                     }}>
                       <FaCreditCard />
                     </div>
                     <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
+                      fontWeight: 'bold',
                       fontSize: '1rem'
                     }}>
                       Stripe
                     </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Stripe"
+                      checked={formData.paymentMethod === 'Stripe'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
                   {/* Venmo Payment Option */}
                   <div 
                     className="payment-option"
                     data-method="Venmo"
-                    onClick={() => handlePaymentMethodSelect('Venmo')}
-                    style={getPaymentOptionStyle('Venmo')}
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Venmo' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'Venmo' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'Venmo' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'Venmo' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
                   >
                     <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Venmo
+                      fontSize: '28px', 
+                      color: '#3D95CE',
+                      marginBottom: '6px' 
                     }}>
                       <SiVenmo />
                     </div>
                     <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
+                      fontWeight: 'bold',
                       fontSize: '1rem'
                     }}>
                       Venmo
                     </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Venmo"
+                      checked={formData.paymentMethod === 'Venmo'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
                   {/* Cash App Payment Option */}
                   <div 
                     className="payment-option"
                     data-method="CashApp"
-                    onClick={() => handlePaymentMethodSelect('CashApp')}
-                    style={getPaymentOptionStyle('CashApp')}
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'CashApp' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'CashApp' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'CashApp' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'CashApp' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
                   >
                     <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.CashApp
+                      fontSize: '28px', 
+                      color: '#00C244',
+                      marginBottom: '6px' 
                     }}>
                       <SiCashapp />
                     </div>
                     <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
+                      fontWeight: 'bold',
                       fontSize: '1rem'
                     }}>
                       CashApp
                     </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="CashApp"
+                      checked={formData.paymentMethod === 'CashApp'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                   
                   {/* PayPal Payment Option */}
                   <div 
                     className="payment-option"
                     data-method="PayPal"
-                    onClick={() => handlePaymentMethodSelect('PayPal')}
-                    style={getPaymentOptionStyle('PayPal')}
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'PayPal' }))}
+                    style={{
+                      border: `2px solid ${formData.paymentMethod === 'PayPal' ? '#0070f3' : '#ddd'}`,
+                      borderRadius: '12px',
+                      padding: '15px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: formData.paymentMethod === 'PayPal' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                      transition: 'all 0.2s ease',
+                      boxShadow: formData.paymentMethod === 'PayPal' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
                   >
                     <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.PayPal
+                      fontSize: '28px', 
+                      color: '#0070BA',
+                      marginBottom: '6px' 
                     }}>
                       <FaPaypal />
                     </div>
                     <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
+                      fontWeight: 'bold',
                       fontSize: '1rem'
                     }}>
                       PayPal
                     </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="PayPal"
+                      checked={formData.paymentMethod === 'PayPal'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      style={{ position: 'absolute', opacity: 0 }}
+                    />
                   </div>
                 </div>
                 {formErrors.paymentMethod && (
@@ -3672,21 +3275,6 @@ Live City DJ Contract Terms and Conditions:
       {showTerms && (
         <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
       )}
-      {showPlaylistHelp && (
-        <PlaylistHelpModal
-          streamingService={formData.streamingService}
-          onClose={() => setShowPlaylistHelp(false)}
-        />
-      )}
-      {showSuccessMessage && <SuccessMessage />}
-      {showErrorMessage && <ErrorMessage message={showErrorMessage} />}
-      {submitted && formData.paymentMethod !== 'Stripe' && (
-        <PaymentInstructions 
-          paymentMethod={formData.paymentMethod}
-          bookingId={formData.bookingId}
-        />
-      )}
     </div>
   );
 }
-
