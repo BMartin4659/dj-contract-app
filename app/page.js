@@ -1522,16 +1522,18 @@ Live City DJ Contract Terms and Conditions:
     marginBottom: '0.5rem',
     fontWeight: 'bold',
     color: '#333',
+    fontSize: 'clamp(16px, 2.5vw, 18px)'
   };
 
   const inputStyle = {
     backgroundColor: 'white',
     width: '100%',
-    padding: '12px',
+    padding: 'clamp(12px, 2vw, 16px)',
     marginBottom: '1rem',
     borderRadius: '8px',
     border: '1px solid #ccc',
     color: 'black',
+    fontSize: 'clamp(16px, 2.5vw, 18px)'
   };
 
   const iconStyle = {
@@ -2555,16 +2557,17 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: '42px',
+                  fontSize: 'clamp(32px, 5vw, 42px)', // Responsive font size
                   fontWeight: 'bold',
                   margin: '15px 0 10px',
                   color: '#000',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  lineHeight: '1.2'
                 }}>
-                  <span>📝</span>
+                  <span style={{ fontSize: 'clamp(32px, 5vw, 42px)' }}>📝</span>
                   EVENT CONTRACT
                 </h1>
               </div>
@@ -2578,26 +2581,31 @@ Live City DJ Contract Terms and Conditions:
               }} className="section-divider"></div>
               
               {/* Client Information Section */}
-              <div>
-                <label style={labelStyle} className="field-label">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {fieldIcons['clientName']} Client Name:
-                  </span>
-                </label>
-                <input
-                  name="clientName"
-                  type="text"
-                  required
-                  style={inputStyle}
-                  className="field-input"
-                  value={formData.clientName}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              {/* Two-column grid for contact information - changed to single column */}
               <div className="form-grid-1col">
+                <div>
+                  <label style={{
+                    ...labelStyle,
+                    fontSize: 'clamp(16px, 2.5vw, 18px)'
+                  }} className="field-label">
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      {fieldIcons['clientName']} Client Name *
+                    </span>
+                  </label>
+                  <input
+                    name="clientName"
+                    type="text"
+                    required
+                    style={{
+                      ...inputStyle,
+                      fontSize: 'clamp(16px, 2.5vw, 18px)',
+                      padding: 'clamp(12px, 2vw, 16px)'
+                    }}
+                    className="field-input"
+                    value={formData.clientName}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                  />
+                </div>
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -2859,7 +2867,7 @@ Live City DJ Contract Terms and Conditions:
               }} className="section-header">
                 <h3 style={{
                   color: '#333',
-                  fontSize: '1.2rem',
+                  fontSize: 'clamp(20px, 3vw, 24px)',
                   fontWeight: '600',
                   backgroundColor: 'rgba(255,255,255,0.92)',
                   display: 'inline-block',
@@ -3001,7 +3009,7 @@ Live City DJ Contract Terms and Conditions:
               }} className="section-header">
                 <h3 style={{
                   color: '#333',
-                  fontSize: '1.2rem',
+                  fontSize: 'clamp(20px, 3vw, 24px)',
                   fontWeight: '600',
                   backgroundColor: 'rgba(255,255,255,0.92)',
                   display: 'inline-block',
