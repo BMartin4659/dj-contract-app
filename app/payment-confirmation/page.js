@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
-export default function PaymentConfirmation() {
+function PaymentConfirmationContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
@@ -129,5 +129,13 @@ export default function PaymentConfirmation() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function PaymentConfirmation() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentConfirmationContent />
+    </Suspense>
   );
 } 

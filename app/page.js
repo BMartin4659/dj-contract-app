@@ -31,8 +31,6 @@ import {
   FaPaypal,
   FaCreditCard,
   FaInfoCircle,
-  CheckIcon,
-  ClipboardIcon,
   FaMobileAlt,
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
@@ -1454,12 +1452,12 @@ Live City DJ Contract Terms and Conditions:
             >
               {copySuccess ? (
                 <>
-                  <CheckIcon className="w-5 h-5" />
+                  <FaCheckCircle className="w-5 h-5" />
                   <span>Copied!</span>
                 </>
               ) : (
                 <>
-                  <ClipboardIcon className="w-5 h-5" />
+                  <FaMobileAlt className="w-5 h-5" />
                   <span>Copy Username</span>
                 </>
               )}
@@ -2557,12 +2555,17 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: '32px',
+                  fontSize: '42px',
                   fontWeight: 'bold',
                   margin: '15px 0 10px',
-                  color: '#000'
+                  color: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}>
-                  Event Contract
+                  <span>📝</span>
+                  EVENT CONTRACT
                 </h1>
               </div>
               
