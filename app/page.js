@@ -2792,17 +2792,15 @@ Live City DJ Contract Terms and Conditions:
                   
                   /* Ensure the date picker renders properly on mobile */
                   @media (max-width: 640px) {
-                    .react-datepicker-wrapper {
-                      width: 100%;
-                    }
-                    .react-datepicker-popper {
+                    /* Custom date picker styles for mobile */
+                    .custom-datepicker .calendar-dropdown {
                       width: 100%;
                       max-width: 320px;
-                      transform: none !important;
                       position: fixed !important;
                       top: 50% !important;
                       left: 50% !important;
                       transform: translate(-50%, -50%) !important;
+                      z-index: 1000;
                     }
                   }
                 `}</style>

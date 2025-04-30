@@ -355,13 +355,13 @@ function PaymentSuccessContent() {
         <div style={{ marginBottom: '20px' }}>
           <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
             <Image
-              src="/dj-bobby-drake-logo.png"
+              src="/dj-bobby-drake-logo.png" 
               alt="DJ Bobby Drake Logo"
               fill
               priority
               sizes="(max-width: 768px) 200px, 200px"
-              style={{
-                objectFit: 'contain',
+              style={{ 
+                objectFit: 'contain', 
                 objectPosition: 'center'
               }}
             />
