@@ -2533,11 +2533,17 @@ Live City DJ Contract Terms and Conditions:
               marginBottom: '50px'
             }}>
               {/* Form Header with Logo */}
-              <div style={{textAlign: 'center', marginBottom: '30px', position: 'relative'}}>
+              <div style={{
+                textAlign: 'center',
+                marginBottom: '30px',
+                position: 'relative',
+                maxWidth: '100%',
+                padding: '0 10px'
+              }}>
                 <div style={{
-                  width: '200px',
-                  height: '200px',
-                  margin: '0 auto',
+                  width: '150px',
+                  height: '150px',
+                  margin: '0 auto 15px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -2545,8 +2551,8 @@ Live City DJ Contract Terms and Conditions:
                   <Image
                     src="/dj-bobby-drake-logo.png"
                     alt="DJ Bobby Drake Logo"
-                    width={200}
-                    height={200}
+                    width={150}
+                    height={150}
                     priority
                     style={{
                       width: '100%',
@@ -2557,20 +2563,22 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: 'clamp(32px, 5vw, 42px)',
+                  fontSize: 'clamp(28px, 4vw, 36px)',
                   fontWeight: 'bold',
-                  margin: '15px 0 10px',
+                  margin: '10px auto',
                   color: '#000',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '12px',
+                  gap: '8px',
                   lineHeight: '1.2',
-                  width: '100%',
-                  textAlign: 'center'
+                  maxWidth: '100%',
+                  textAlign: 'center',
+                  flexWrap: 'nowrap',
+                  whiteSpace: 'nowrap'
                 }}>
                   <span style={{ 
-                    fontSize: 'clamp(32px, 5vw, 42px)'
+                    fontSize: 'clamp(28px, 4vw, 36px)'
                   }}>📝</span>
                   <span>EVENT CONTRACT</span>
                 </h1>
