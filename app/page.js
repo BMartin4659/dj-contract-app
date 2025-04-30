@@ -2557,18 +2557,31 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 <h1 style={{
-                  fontSize: 'clamp(32px, 5vw, 42px)', // Responsive font size
+                  fontSize: 'clamp(32px, 5vw, 42px)',
                   fontWeight: 'bold',
                   margin: '15px 0 10px',
                   color: '#000',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  lineHeight: '1.2'
+                  gap: '4px',
+                  lineHeight: '1.2',
+                  width: '100%',
+                  textAlign: 'center'
                 }}>
-                  <span style={{ fontSize: 'clamp(32px, 5vw, 42px)' }}>📝</span>
-                  EVENT CONTRACT
+                  <span style={{ 
+                    fontSize: 'clamp(32px, 5vw, 42px)',
+                    marginBottom: '4px'
+                  }}>📝</span>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px'
+                  }}>
+                    <span>EVENT</span>
+                    <span>CONTRACT</span>
+                  </div>
                 </h1>
               </div>
               
