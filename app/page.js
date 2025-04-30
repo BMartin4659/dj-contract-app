@@ -2731,12 +2731,13 @@ Live City DJ Contract Terms and Conditions:
                       style={{ 
                         backgroundColor: 'white', 
                         width: '100%', 
-                        padding: '12px 36px 12px 12px', 
+                        padding: 'clamp(12px, 2vw, 16px)', 
                         marginBottom: '1rem', 
                         borderRadius: '8px', 
                         border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
                         color: 'black',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        fontSize: 'clamp(16px, 2.5vw, 18px)'
                       }}
                       className="field-input"
                     />
@@ -2780,7 +2781,6 @@ Live City DJ Contract Terms and Conditions:
                         }
                       });
                     }}
-                    labelStyle={labelStyle}
                   />
                   {formErrors.eventDate && (
                     <p className="text-red-500 text-xs italic">{formErrors.eventDate}</p>

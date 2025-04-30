@@ -14,10 +14,11 @@ const CustomInput = forwardRef(({ value, onClick }, ref) => (
       width: '100%',
       backgroundColor: '#fff',
       border: '1px solid #e2e8f0',
-      borderRadius: '0.375rem',
+      borderRadius: '8px',
       padding: 'clamp(12px, 2vw, 16px)',
       fontSize: 'clamp(16px, 2.5vw, 18px)',
-      color: value ? '#000' : '#6b7280'
+      color: value ? '#000' : '#6b7280',
+      marginBottom: '1rem'
     }}
   >
     {value || 'Select a date'}
@@ -44,7 +45,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   };
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       <DatePicker
         selected={selectedDate}
         onChange={(date) => {
@@ -61,8 +62,24 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
         calendarClassName="custom-calendar"
         popperClassName="custom-popper"
         popperPlacement="bottom-start"
+        wrapperClassName="date-picker-full-width"
       />
       <style jsx global>{`
+        .date-picker-full-width {
+          width: 100%;
+          display: block;
+        }
+        
+        .react-datepicker-wrapper {
+          width: 100%;
+          display: block;
+        }
+        
+        .react-datepicker__input-container {
+          width: 100%;
+          display: block;
+        }
+        
         .custom-calendar {
           font-family: system-ui, -apple-system, sans-serif;
           border: none;
@@ -70,6 +87,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
           z-index: 1000;
         }
+        
         .react-datepicker__header {
           background-color: #6366f1;
           border-bottom: none;
@@ -77,21 +95,26 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
           border-top-right-radius: 8px;
           padding-top: 12px;
         }
+        
         .react-datepicker__current-month {
           color: white;
           font-weight: 600;
         }
+        
         .react-datepicker__day-name {
           color: white;
         }
+        
         .react-datepicker__day--selected {
           background-color: #6366f1;
           border-radius: 50%;
         }
+        
         .react-datepicker__day--disabled {
           color: #dc2626;
           text-decoration: line-through;
         }
+        
         .react-datepicker__day:hover {
           border-radius: 50%;
         }
