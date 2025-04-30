@@ -2755,32 +2755,56 @@ Live City DJ Contract Terms and Conditions:
                 {/* Event Date */}
                 <div>
                   <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {timeIcons['eventDate']} Event Date:
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
                     </span>
                   </label>
                   <div 
-                    style={{position: 'relative'}}
+                    style={{ position: 'relative', cursor: 'pointer' }}
                     onClick={() => {
-                      // Find and click the date input when clicking anywhere in this div
                       const dateInput = document.querySelector('input[name="eventDate"]');
                       if (dateInput) {
-                        dateInput.focus();
-                        dateInput.click();
+                        dateInput.showPicker();
                       }
                     }}
                   >
                     <input
                       name="eventDate"
-                      type="date"
+                      type="text"
+                      onFocus={(e) => {
+                        e.target.type = 'date';
+                        e.target.showPicker();
+                      }}
+                      onBlur={(e) => {
+                        if (!e.target.value) {
+                          e.target.type = 'text';
+                        }
+                      }}
                       required
-                      style={inputStyle}
+                      style={{
+                        ...inputStyle,
+                        fontSize: 'clamp(16px, 2.5vw, 18px)',
+                        padding: 'clamp(12px, 2vw, 16px)',
+                        colorScheme: 'light',
+                        cursor: 'pointer',
+                        width: '100%'
+                      }}
                       className="field-input"
                       value={formData.eventDate}
                       onChange={handleChange}
+                      min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
+                  {formErrors.eventDate && (
+                    <p className="text-red-500 text-xs italic">{formErrors.eventDate}</p>
+                  )}
                 </div>
+
+                <style jsx global>{`
+                  .custom-date-input::-webkit-datetime-edit { color: transparent; }
+                  .custom-date-input:focus::-webkit-datetime-edit { color: #000; }
+                  .custom-date-input[value]::-webkit-datetime-edit { color: #000; }
+                `}</style>
 
                 {/* Start Time */}
                 <div>
