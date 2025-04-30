@@ -2525,12 +2525,14 @@ Live City DJ Contract Terms and Conditions:
             margin: '2rem auto 3rem auto'
           }}>
             <form onSubmit={handleSubmit} style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: 'rgba(255, 255, 255, 0.85)',
               padding: '2.5rem',
               borderRadius: '20px',
               boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
               width: '100%',
-              marginBottom: '50px'
+              marginBottom: '50px',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)'
             }}>
               {/* Form Header with Logo */}
               <div style={{
