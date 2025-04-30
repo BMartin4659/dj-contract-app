@@ -6,6 +6,22 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+
+// Check for react-datepicker dependency
+console.log('Checking for react-datepicker dependency...');
+try {
+  require.resolve('react-datepicker');
+  console.log('react-datepicker is already installed.');
+} catch (e) {
+  console.log('react-datepicker is not installed. Installing now...');
+  try {
+    execSync('npm install react-datepicker', { stdio: 'inherit' });
+    console.log('Successfully installed react-datepicker');
+  } catch (installError) {
+    console.error('Failed to install react-datepicker:', installError);
+  }
+}
 
 // Check if lib/sendEmail.js exists
 const sendEmailPath = path.join(process.cwd(), 'lib', 'sendEmail.js');
