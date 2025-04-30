@@ -1,12 +1,11 @@
-import React, { useState, useEffect, forwardRef } from 'react';
+import React, { useState, forwardRef } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { FaCalendarAlt } from 'react-icons/fa';
 
 // Custom input component with display name for linting
 const CustomInput = forwardRef(({ value, onClick }, ref) => (
   <div 
-    className="custom-datepicker-input"
+    className="custom-datepicker-input field-input"
     onClick={onClick}
     ref={ref}
     style={{
@@ -28,7 +27,7 @@ const CustomInput = forwardRef(({ value, onClick }, ref) => (
 // Set display name for linting
 CustomInput.displayName = 'CustomDatePickerInput';
 
-const CustomDatePicker = ({ selectedDate, onChange, labelStyle }) => {
+const CustomDatePicker = ({ selectedDate, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Simple approach - use hardcoded dates for now
@@ -46,11 +45,6 @@ const CustomDatePicker = ({ selectedDate, onChange, labelStyle }) => {
 
   return (
     <div>
-      <label style={labelStyle} className="field-label">
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
-        </span>
-      </label>
       <DatePicker
         selected={selectedDate}
         onChange={(date) => {
