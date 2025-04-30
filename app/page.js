@@ -2779,20 +2779,6 @@ Live City DJ Contract Terms and Conditions:
                           value: date ? date.toISOString().split('T')[0] : ''
                         }
                       });
-                      
-                      // Close any mobile keyboards that might be open
-                      if (document.activeElement) {
-                        document.activeElement.blur();
-                      }
-                      
-                      // Scroll to make sure the user can see the selection
-                      setTimeout(() => {
-                        window.scrollBy({
-                          top: 1,
-                          left: 0,
-                          behavior: 'smooth'
-                        });
-                      }, 100);
                     }}
                     labelStyle={labelStyle}
                   />

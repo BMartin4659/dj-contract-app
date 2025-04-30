@@ -9,17 +9,58 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Check for react-datepicker dependency
-console.log('Checking for react-datepicker dependency...');
+console.log('Checking for date picker dependencies...');
 try {
-  require.resolve('react-datepicker');
-  console.log('react-datepicker is already installed.');
+  // Check if it's already in package.json
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  
+  const dependencies = packageJson.dependencies || {};
+  
+  if (!dependencies['react-datepicker']) {
+    console.log('react-datepicker not found in package.json, adding it now...');
+    
+    // Add it to dependencies
+    dependencies['react-datepicker'] = '^4.18.0';
+    packageJson.dependencies = dependencies;
+    
+    // Write updated package.json
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    
+    // Install the dependency
+    console.log('Installing react-datepicker...');
+    try {
+      execSync('npm install', { stdio: 'inherit' });
+      console.log('Successfully installed react-datepicker');
+    } catch (installError) {
+      console.error('Failed to install react-datepicker:', installError);
+    }
+  } else {
+    console.log(`react-datepicker found in package.json: ${dependencies['react-datepicker']}`);
+    
+    // Verify it's actually installed
+    try {
+      require.resolve('react-datepicker');
+      console.log('react-datepicker is properly installed');
+    } catch (e) {
+      console.log('react-datepicker is in package.json but not installed, reinstalling...');
+      try {
+        execSync('npm install', { stdio: 'inherit' });
+        console.log('Successfully reinstalled dependencies');
+      } catch (installError) {
+        console.error('Failed to reinstall dependencies:', installError);
+      }
+    }
+  }
 } catch (e) {
-  console.log('react-datepicker is not installed. Installing now...');
+  console.error('Error checking for react-datepicker:', e);
+  
+  // Fallback: just try to install it directly
   try {
     execSync('npm install react-datepicker', { stdio: 'inherit' });
-    console.log('Successfully installed react-datepicker');
+    console.log('Installed react-datepicker as fallback');
   } catch (installError) {
-    console.error('Failed to install react-datepicker:', installError);
+    console.error('Failed to install react-datepicker as fallback:', installError);
   }
 }
 
@@ -65,6 +106,20 @@ if (!logoExists) {
   } else if (!logoMatch) {
     console.warn('WARNING: Could not find DJ logo file in any case variation!');
   }
+}
+
+// Ensure the app/api/booked-dates directory exists
+const bookedDatesApiDir = path.join(process.cwd(), 'app', 'api', 'booked-dates');
+if (!fs.existsSync(bookedDatesApiDir)) {
+  console.log('Creating booked-dates API directory...');
+  fs.mkdirSync(bookedDatesApiDir, { recursive: true });
+}
+
+// Ensure the app/components directory exists
+const componentsDir = path.join(process.cwd(), 'app', 'components');
+if (!fs.existsSync(componentsDir)) {
+  console.log('Creating components directory...');
+  fs.mkdirSync(componentsDir, { recursive: true });
 }
 
 // Check if the imports in success page are correct

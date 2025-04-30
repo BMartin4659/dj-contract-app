@@ -5,39 +5,21 @@ function formatDate(date) {
   return new Date(date).toISOString();
 }
 
+// Simple API to return a list of booked dates
 export async function GET() {
   try {
-    // Here you would typically fetch booked dates from your database
-    // For demonstration, creating a date range for the next few months
-    const bookedDates = [];
+    // Hardcoded sample dates - in a real app, these would come from a database
+    const bookedDates = [
+      new Date(2024, 5, 15), // June 15, 2024
+      new Date(2024, 5, 22), // June 22, 2024
+      new Date(2024, 6, 6),  // July 6, 2024
+      new Date(2024, 6, 20), // July 20, 2024
+    ];
     
-    // Current date
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    // Convert to ISO string format
+    const formattedDates = bookedDates.map(date => date.toISOString());
     
-    // Add some sample weekend dates (Saturdays) as booked for the next 3 months
-    for (let month = currentMonth; month < currentMonth + 3; month++) {
-      const actualMonth = month % 12;
-      const year = currentYear + Math.floor(month / 12);
-      
-      // Create a date for each Saturday in this month
-      const date = new Date(year, actualMonth, 1);
-      
-      // Find the first Saturday of the month
-      while (date.getDay() !== 6) { // 6 is Saturday
-        date.setDate(date.getDate() + 1);
-      }
-      
-      // Add all Saturdays in this month
-      const monthEnd = new Date(year, actualMonth + 1, 0).getDate();
-      while (date.getDate() <= monthEnd) {
-        bookedDates.push(new Date(date));
-        date.setDate(date.getDate() + 7); // Move to next Saturday
-      }
-    }
-
-    return NextResponse.json(bookedDates.map(formatDate));
+    return NextResponse.json(formattedDates);
   } catch (error) {
     console.error('Error generating booked dates:', error);
     return NextResponse.json({ error: 'Failed to fetch booked dates' }, { status: 500 });
