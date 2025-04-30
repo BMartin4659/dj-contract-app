@@ -69,7 +69,13 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   };
   
   // Go to previous month
-  const prevMonth = () => {
+  const prevMonth = (e) => {
+    // Prevent default to avoid scrolling
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear(currentYear - 1);
@@ -79,7 +85,13 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   };
   
   // Go to next month
-  const nextMonth = () => {
+  const nextMonth = (e) => {
+    // Prevent default to avoid scrolling
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear(currentYear + 1);
@@ -88,8 +100,22 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
     }
   };
   
+  // Toggle calendar visibility
+  const toggleCalendar = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setIsOpen(!isOpen);
+  };
+  
   // Handle date selection
-  const handleDateClick = (date) => {
+  const handleDateClick = (date, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!date || isDateBooked(date) || isDateInPast(date)) return;
     onChange(date);
     setIsOpen(false);
@@ -115,7 +141,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
     <div className="custom-datepicker" style={{ width: '100%', position: 'relative' }}>
       <div 
         className="custom-datepicker-input field-input"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleCalendar}
         style={{
           position: 'relative',
           cursor: 'pointer',
@@ -161,7 +187,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
             alignItems: 'center'
           }}>
             <button 
-              onClick={prevMonth}
+              onClick={(e) => prevMonth(e)}
               style={{ 
                 background: 'none', 
                 border: 'none', 
@@ -172,6 +198,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
                 justifyContent: 'center',
                 padding: '8px'
               }}
+              type="button"
             >
               <FaChevronLeft />
             </button>
@@ -179,7 +206,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
               {MONTHS[currentMonth]} {currentYear}
             </div>
             <button 
-              onClick={nextMonth}
+              onClick={(e) => nextMonth(e)}
               style={{ 
                 background: 'none', 
                 border: 'none', 
@@ -190,6 +217,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
                 justifyContent: 'center',
                 padding: '8px'
               }}
+              type="button"
             >
               <FaChevronRight />
             </button>
@@ -216,7 +244,7 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
               {calendarDates.map((date, index) => (
                 <div 
                   key={index}
-                  onClick={() => handleDateClick(date)}
+                  onClick={(e) => handleDateClick(date, e)}
                   style={{
                     padding: '8px',
                     textAlign: 'center',
