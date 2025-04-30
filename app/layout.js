@@ -106,6 +106,26 @@ export default function RootLayout({ children }) {
                 break;
               }
             }
+            
+            // Fix for date picker on mobile
+            document.addEventListener('DOMContentLoaded', function() {
+              // Add a click handler to the document to help with iOS touch events
+              document.addEventListener('click', function(e) {
+                // Check if clicked element is part of the date picker
+                if (e.target.closest('.react-datepicker') || 
+                    e.target.closest('.custom-datepicker-input')) {
+                  // Do nothing, let the event propagate
+                } else {
+                  // Close any open date pickers
+                  const datePickerPopper = document.querySelector('.react-datepicker-popper');
+                  if (datePickerPopper && !datePickerPopper.contains(e.target)) {
+                    datePickerPopper.style.display = 'none';
+                    // Force removal of the react-datepicker__portal class from the body
+                    document.body.classList.remove('react-datepicker__portal');
+                  }
+                }
+              }, true);
+            });
           `}
         </Script>
       </body>

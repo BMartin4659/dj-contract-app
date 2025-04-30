@@ -45,6 +45,7 @@ import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
 import { getStreamingLogo } from './components/StreamingLogos';
+import CustomDatePicker from './components/CustomDatePicker';
 
 // Constants and Pricing
 const SERVICES = {
@@ -2769,42 +2770,32 @@ Live City DJ Contract Terms and Conditions:
                       <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
                     </span>
                   </label>
-                  <div 
-                    style={{ position: 'relative', cursor: 'pointer' }}
-                    onClick={() => {
-                      const dateInput = document.querySelector('input[name="eventDate"]');
-                      if (dateInput) {
-                        dateInput.showPicker();
-                      }
-                    }}
-                  >
-                    <input
-                      name="eventDate"
-                      type="text"
-                      onFocus={(e) => {
-                        e.target.type = 'date';
-                        e.target.showPicker();
-                      }}
-                      onBlur={(e) => {
-                        if (!e.target.value) {
-                          e.target.type = 'text';
+                  <CustomDatePicker
+                    selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
+                    onChange={(date) => {
+                      handleChange({
+                        target: {
+                          name: 'eventDate',
+                          value: date ? date.toISOString().split('T')[0] : ''
                         }
-                      }}
-                      required
-                      style={{
-                        ...inputStyle,
-                        fontSize: 'clamp(16px, 2.5vw, 18px)',
-                        padding: 'clamp(12px, 2vw, 16px)',
-                        colorScheme: 'light',
-                        cursor: 'pointer',
-                        width: '100%'
-                      }}
-                      className="field-input"
-                      value={formData.eventDate}
-                      onChange={handleChange}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
+                      });
+                      
+                      // Close any mobile keyboards that might be open
+                      if (document.activeElement) {
+                        document.activeElement.blur();
+                      }
+                      
+                      // Scroll to make sure the user can see the selection
+                      setTimeout(() => {
+                        window.scrollBy({
+                          top: 1,
+                          left: 0,
+                          behavior: 'smooth'
+                        });
+                      }, 100);
+                    }}
+                    labelStyle={labelStyle}
+                  />
                   {formErrors.eventDate && (
                     <p className="text-red-500 text-xs italic">{formErrors.eventDate}</p>
                   )}
@@ -2814,6 +2805,22 @@ Live City DJ Contract Terms and Conditions:
                   .custom-date-input::-webkit-datetime-edit { color: transparent; }
                   .custom-date-input:focus::-webkit-datetime-edit { color: #000; }
                   .custom-date-input[value]::-webkit-datetime-edit { color: #000; }
+                  
+                  /* Ensure the date picker renders properly on mobile */
+                  @media (max-width: 640px) {
+                    .react-datepicker-wrapper {
+                      width: 100%;
+                    }
+                    .react-datepicker-popper {
+                      width: 100%;
+                      max-width: 320px;
+                      transform: none !important;
+                      position: fixed !important;
+                      top: 50% !important;
+                      left: 50% !important;
+                      transform: translate(-50%, -50%) !important;
+                    }
+                  }
                 `}</style>
 
                 {/* Start Time */}
