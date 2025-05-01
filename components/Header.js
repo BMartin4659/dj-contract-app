@@ -1,45 +1,38 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import Logo from './Logo';
+import { FaCalendarAlt, FaSignInAlt } from 'react-icons/fa';
 
-const Header = () => {
+const Header = ({ minimal = false }) => {
   return (
-    <header className="w-full pt-3 pb-2 text-center">
-      <div className="flex flex-col items-center justify-center">
-        {/* Logo with Next.js Image for better optimization */}
-        <div className="relative" style={{ width: '200px', height: '200px', margin: '0 auto' }}>
-          <Image 
-            src="/dj-bobby-drake-logo.png" 
-            alt="DJ Bobby Drake Logo" 
-            fill
-            sizes="(max-width: 768px) 200px, 200px"
-            priority={true}
-            quality={100}
-            style={{ 
-              objectFit: "contain",
-              objectPosition: "center",
-            }}
-          />
-        </div>
+    <header className="py-4 mb-6">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <Link href="/" className="text-white font-bold text-xl flex items-center">
+          <Logo width={40} height={40} />
+          <span className="ml-2">Live City DJ</span>
+        </Link>
         
-        {/* Title */}
-        <div className="text-center mt-4">
-          <h1 
-            className="mb-2 font-bold text-black" 
-            style={{ 
-              fontFamily: 'Poppins, sans-serif',
-              lineHeight: '1.2',
-              position: 'relative',
-              zIndex: 10,
-              letterSpacing: '0.05em',
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              fontSize: 'calc(1.5rem * 1.2)'
-            }}
-          >
-            Event Contract
-          </h1>
-        </div>
+        <nav>
+          <ul className="flex space-x-6">
+            {!minimal && (
+              <>
+                <li>
+                  <Link href="/booking" className="text-white hover:text-purple-400 flex items-center">
+                    <FaCalendarAlt className="mr-2" />
+                    Book Now
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard" className="text-white hover:text-purple-400 flex items-center">
+                    <FaSignInAlt className="mr-2" />
+                    Dashboard
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
       </div>
     </header>
   );

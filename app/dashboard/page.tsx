@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaCalendarAlt } from "react-icons/fa";
 import { parseISO, isAfter, format, compareAsc } from "date-fns";
-import Header from "@/components/Header";
+import Link from "next/link";
 
 interface DjContract {
   id: string;
@@ -48,11 +48,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 text-white">
-      <Header />
-      
-      <h1 className="text-3xl font-bold">🎧 DJ Dashboard</h1>
-
+    <div className="container mx-auto px-4 pb-6 space-y-6">
       {upcomingGigs.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-2">🗓️ Next Upcoming Gig</h2>
@@ -136,38 +132,87 @@ export default function Dashboard() {
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-4">
-          <h2 className="text-xl font-semibold mb-2">📋 All Upcoming Gigs</h2>
-          {upcomingGigs.length === 0 ? (
-            <p>No upcoming bookings.</p>
-          ) : (
-            <ul className="space-y-4">
-              {upcomingGigs.map((gig, index) => (
-                <li
-                  key={gig.id}
-                  className={`p-4 rounded-xl backdrop-blur shadow
-                    ${index === 0 ? "bg-white/10" : "bg-white/5"}`}
-                >
-                  <p className="font-bold">{gig.eventType} @ {gig.venueName}</p>
-                  <p className="text-sm">
-                    {format(parseISO(gig.eventDate), "MMMM d, yyyy")} • {gig.numberOfGuests} guests
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-xl font-semibold mb-2">📋 All Upcoming Gigs</h2>
+            {upcomingGigs.length === 0 ? (
+              <p>No upcoming bookings.</p>
+            ) : (
+              <ul className="space-y-4">
+                {upcomingGigs.map((gig, index) => (
+                  <li
+                    key={gig.id}
+                    className={`p-4 rounded-xl backdrop-blur shadow
+                      ${index === 0 ? "bg-white/10" : "bg-white/5"}`}
+                  >
+                    <p className="font-bold">{gig.eventType} @ {gig.venueName}</p>
+                    <p className="text-sm">
+                      {format(parseISO(gig.eventDate), "MMMM d, yyyy")} • {gig.numberOfGuests} guests
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardContent className="p-4">
-          <h2 className="text-xl font-semibold mb-2">Promotion Tools</h2>
-          <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white shadow">
-            Generate Social Post
-          </button>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-xl font-semibold mb-2">Booking Links</h2>
+            <div className="space-y-4">
+              <p>Share these links with potential clients to streamline your booking process.</p>
+              
+              <div>
+                <h3 className="text-md font-medium mb-1">Online Booking Page</h3>
+                <div className="bg-white/5 p-3 rounded flex items-center justify-between">
+                  <code className="text-sm text-green-300">{typeof window !== 'undefined' ? window.location.origin : ''}/booking</code>
+                  <button 
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined') {
+                        navigator.clipboard.writeText(`${window.location.origin}/booking`);
+                        alert('Link copied to clipboard!');
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-xl font-semibold mb-2">Quick Links</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Link 
+                href="/dashboard/calendar" 
+                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-3 rounded-lg flex items-center justify-center"
+              >
+                <FaCalendarAlt className="mr-2" /> Calendar View
+              </Link>
+              <Link 
+                href="/booking" 
+                className="bg-emerald-600 hover:bg-emerald-700 px-4 py-3 rounded-lg flex items-center justify-center"
+              >
+                Add New Booking
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-xl font-semibold mb-2">Promotion Tools</h2>
+            <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white shadow">
+              Generate Social Post
+            </button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
