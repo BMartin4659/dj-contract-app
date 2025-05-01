@@ -88,7 +88,7 @@ export function downloadICalFile(event: DjEvent): void {
   
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `${event.eventType.replace(/\s+/g, '_')}_${event.clientName.replace(/\s+/g, '_')}.ics`;
+  link.download = `${event.eventType?.replace(/\s+/g, '_') || 'Event'}_${event.clientName?.replace(/\s+/g, '_') || 'Client'}.ics`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

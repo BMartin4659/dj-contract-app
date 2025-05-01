@@ -114,13 +114,13 @@ export default function LogoTestPage() {
           <div style={{ border: '1px solid #eee', padding: '20px', borderRadius: '8px' }}>
             <h2>Test 3: Regular img tag</h2>
             <div style={{ textAlign: 'center' }}>
-              <img
+              <Image
                 id="regular-img"
                 src="/dj-bobby-drake-logo.png"
                 alt="DJ Bobby Drake Logo"
-                width={200}
-                height={200}
-                style={{ objectFit: 'contain' }}
+                width={300}
+                height={120}
+                className="w-auto h-auto"
               />
             </div>
             <div style={{ 
@@ -139,13 +139,13 @@ export default function LogoTestPage() {
           <div style={{ border: '1px solid #eee', padding: '20px', borderRadius: '8px' }}>
             <h2>Test 4: Direct URL (full path)</h2>
             <div style={{ textAlign: 'center' }}>
-              <img
+              <Image
                 id="direct-url"
-                src={typeof window !== 'undefined' ? window.location.origin + '/dj-bobby-drake-logo.png' : ''}
+                src="/dj-bobby-drake-logo.png"
                 alt="DJ Bobby Drake Logo"
-                width={200}
-                height={200}
-                style={{ objectFit: 'contain' }}
+                width={300}
+                height={120}
+                className="w-auto h-auto"
               />
             </div>
             <div style={{ 

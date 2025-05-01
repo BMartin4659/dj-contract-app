@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import SignatureCanvas from 'react-signature-canvas';
 import { toast } from 'react-toastify';
+import Image from 'next/image';
 
 type PageParams = {
   id: string;
@@ -139,13 +140,37 @@ export default function ContractPage() {
             <div className="border-t pt-4">
               <h3 className="text-lg font-semibold mb-2">Client Signature</h3>
               <div className="space-y-2">
-                <p>Signed by: {contract.clientSignature.name}</p>
-                <p>Date: {format(new Date(contract.clientSignature.timestamp), 'PPpp')}</p>
-                <img
-                  src={contract.clientSignature.signature}
-                  alt="Client Signature"
-                  className="max-w-md border rounded-md"
-                />
+                <div className="flex justify-between items-center mb-8">
+                  <div className="flex items-center">
+                    <Image
+                      src="/dj-bobby-drake-logo.png"
+                      alt="DJ Bobby Drake Logo"
+                      width={150}
+                      height={60}
+                      className="h-15"
+                    />
+                  </div>
+                  <div className="text-right">
+                    <div className="relative w-[200px] h-[80px]">
+                      <Image
+                        src="/signature-placeholder.png"
+                        alt="DJ Signature"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">DJ Bobby Drake</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Image
+                    src={contract.clientSignature.signature}
+                    alt="Client Signature"
+                    width={500}
+                    height={200}
+                    className="max-w-md border rounded-md mt-2"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -156,9 +181,11 @@ export default function ContractPage() {
               <div className="space-y-2">
                 <p>Signed by: {contract.djSignature.name}</p>
                 <p>Date: {format(new Date(contract.djSignature.timestamp), 'PPpp')}</p>
-                <img
+                <Image
                   src={contract.djSignature.signature}
                   alt="DJ Signature"
+                  width={500}
+                  height={200}
                   className="max-w-md border rounded-md"
                 />
               </div>

@@ -1774,6 +1774,20 @@ Live City DJ Contract Terms and Conditions:
     );
   }
 
+  // Memoize the generatePreviewHtml function
+  const generatePreviewHtml = useCallback((data) => {
+    // Your existing generatePreviewHtml logic here
+  }, []); // Empty dependency array since it doesn't depend on any props or state
+
+  useEffect(() => {
+    emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+  }, [EMAILJS_CONFIG.PUBLIC_KEY]);
+
+  useEffect(() => {
+    // Update preview whenever form data changes
+    setPreviewHtml(generatePreviewHtml(formData));
+  }, [formData, generatePreviewHtml]);
+
   if (!isClient) {
     return null;
   }

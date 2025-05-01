@@ -600,7 +600,7 @@ export default function BookingPage() {
                 </div>
                 
                 <h2 className="text-2xl font-bold mb-2">Booking Request Submitted!</h2>
-                <p className="mb-6">Thank you for your booking request. We'll review your details and get back to you shortly to confirm your booking.</p>
+                <p className="mb-6">Thank you for your booking request. We&apos;ll review your details and get back to you shortly to confirm your booking.</p>
                 
                 <div className="bg-gray-700/50 p-4 rounded-lg text-left max-w-md mx-auto mb-6">
                   <h3 className="font-semibold mb-2">Booking Summary:</h3>

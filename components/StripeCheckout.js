@@ -12,6 +12,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { FaLock, FaShieldAlt, FaCheck, FaCreditCard, FaReceipt, FaInfo } from 'react-icons/fa';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import Image from 'next/image';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -621,10 +622,12 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
           gap: '1rem',
           marginTop: '1rem'
         }}>
-          <img 
-            src="https://js.stripe.com/v3/fingerprinted/img/stripe-badge-payment.f4bd5a1b.png" 
-            alt="Powered by Stripe" 
-            style={{ height: '40px' }}
+          <Image
+            src="https://js.stripe.com/v3/fingerprinted/img/stripe-badge-payment.f4bd5a1b.png"
+            alt="Powered by Stripe"
+            width={128}
+            height={40}
+            className="w-32 h-8"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg";

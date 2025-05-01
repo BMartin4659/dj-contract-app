@@ -51,7 +51,7 @@ export default function TestPage() {
         margin: '2rem',
         border: '1px solid green' 
       }}>
-        <img
+        <Image
           src="/dj-bobby-drake-logo.png"
           alt="Test 3: img tag"
           width={200}
@@ -73,6 +73,14 @@ export default function TestPage() {
           priority
         />
       </div>
+
+      <Image
+        src="/dj-bobby-drake-logo.png"
+        alt="DJ Bobby Drake Logo"
+        width={300}
+        height={120}
+        className="w-auto h-auto"
+      />
     </div>
   );
 } 
