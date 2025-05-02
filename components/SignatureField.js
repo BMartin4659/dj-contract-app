@@ -7,7 +7,14 @@ const SignatureField = ({ onSignatureChange }) => {
   const [nameError, setNameError] = useState('');
   
   const handleNameChange = (e) => {
-    const name = e.target.value;
+    // Get input value
+    let name = e.target.value;
+    
+    // Auto-capitalize the first letter of each word
+    if (name) {
+      name = name.replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+    
     setSignerName(name);
     setNameError('');
     
@@ -35,7 +42,7 @@ const SignatureField = ({ onSignatureChange }) => {
           type="text"
           value={signerName}
           onChange={handleNameChange}
-          placeholder="Enter your full name"
+          placeholder="Type your legal full name"
           style={{
             width: '100%',
             padding: '0.75rem',
@@ -49,9 +56,13 @@ const SignatureField = ({ onSignatureChange }) => {
           }}
           required
         />
-        {nameError && (
+        {nameError ? (
           <div style={{ color: '#f44336', fontSize: '0.85rem', marginTop: '0.25rem' }}>
             {nameError}
+          </div>
+        ) : (
+          <div style={{ color: '#666', fontSize: '0.85rem', marginTop: '0.25rem', fontStyle: 'italic' }}>
+            Your name will automatically be formatted with proper capitalization
           </div>
         )}
       </div>
