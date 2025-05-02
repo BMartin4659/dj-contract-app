@@ -1216,15 +1216,15 @@ Live City DJ Contract Terms and Conditions:
 
   // Handle signature changes
   const handleSignatureChange = (data, isSigned, name = '') => {
-    console.log('Signature changed:', isSigned, name);
+    console.log('Name entered as signature:', name);
     setHasSignature(isSigned);
     setFormData(prev => ({
       ...prev,
-      signature: data,
+      signature: name, // Now using the name as the signature data
       signerName: name || prev.signerName
     }));
     
-    // Clear signature-related errors when user starts signing
+    // Clear signature-related errors when user enters their name
     if (isSigned && formErrors.signature) {
       setFormErrors(prev => {
         const newErrors = {...prev};
@@ -1335,15 +1335,10 @@ Live City DJ Contract Terms and Conditions:
     if (!formData.endTime) errors.endTime = 'End time is required';
     if (!formData.paymentMethod) errors.paymentMethod = 'Payment method is required';
     
-    // Validate signature
-    if (!hasSignature || !formData.signature) {
-      errors.signature = 'Signature is required';
-      setSubmitError('Please sign the contract before submitting.');
-    }
-    
-    if (!formData.signerName.trim()) {
-      errors.signerName = 'Please enter your name for the signature';
-      setSubmitError('Please enter your name and sign the contract before submitting.');
+    // Validate signature (now just the name)
+    if (!formData.signerName || !formData.signerName.trim()) {
+      errors.signerName = 'Please enter your full name to authorize the contract';
+      setSubmitError('Please enter your full name to authorize the contract before submitting.');
     }
     
     // Validate email format
@@ -2225,6 +2220,8 @@ Live City DJ Contract Terms and Conditions:
   }, [isClient]);
 
   // Handle signature field interactions on mobile devices - optimized version
+  // Removing this effect as we no longer use a signature canvas
+  /*
   useEffect(() => {
     if (isClient) {
       // More targeted approach to handle signature canvas interactions
@@ -2249,6 +2246,7 @@ Live City DJ Contract Terms and Conditions:
       };
     }
   }, [isClient]);
+  */
 
   if (!isClient) {
     return null;
