@@ -32,6 +32,17 @@ import {
   FaCreditCard,
   FaInfoCircle,
   FaMobileAlt,
+  FaPhoneAlt,
+  FaUserAlt,
+  FaFacebookSquare, 
+  FaInstagram, 
+  FaArrowRight,
+  FaPlayCircle,
+  FaMusic,
+  FaTimes,
+  FaList,
+  FaRegClock,
+  FaRegMoneyBillAlt
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
@@ -46,6 +57,7 @@ import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
 import { getStreamingLogo } from './components/StreamingLogos';
 import CustomDatePicker from './components/CustomDatePicker';
+import SignatureField from '../components/SignatureField';
 
 // Constants and Pricing
 const SERVICES = {
@@ -643,7 +655,9 @@ Live City DJ Contract Terms and Conditions:
     musicPreferences: [], // New field for music preferences
     otherMusicPreference: '', // Field for "other" music preference specification
     streamingService: '', // Selected streaming service
-    playlistLink: '' // URL to user's playlist
+    playlistLink: '', // URL to user's playlist
+    signature: null, // Signature data
+    signerName: '' // Signer name
   });
   
   const router = useRouter();
@@ -655,6 +669,7 @@ Live City DJ Contract Terms and Conditions:
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [mapsError, setMapsError] = useState(null);
   const [isChangingPayment, setIsChangingPayment] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false); // Track signature status
   
   const [showStripe, setShowStripe] = useState(false);
   const [infoPopup, setInfoPopup] = useState(null);
@@ -908,6 +923,15 @@ Live City DJ Contract Terms and Conditions:
           .payment-options {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+          /* Fix for signature field on mobile */
+          #signature-section {
+            touch-action: none !important;
+            -ms-touch-action: none !important;
+          }
+          #signature-section canvas {
+            touch-action: none !important;
+            -ms-touch-action: none !important;
+          }
         }
       `;
       document.head.appendChild(styleEl);
@@ -915,7 +939,7 @@ Live City DJ Contract Terms and Conditions:
       // Create and add a meta viewport tag to prevent scaling issues
       const metaViewport = document.createElement('meta');
       metaViewport.name = 'viewport';
-      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover';
+      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
       
       // Remove any existing viewport meta tags first to avoid conflicts
       const existingMetaTags = document.querySelectorAll('meta[name="viewport"]');
@@ -944,6 +968,13 @@ Live City DJ Contract Terms and Conditions:
               background-position: center;
               background-repeat: no-repeat;
               z-index: -1;
+            }
+            
+            /* Fix for signature pad on iOS */
+            #signature-section {
+              -webkit-user-select: none !important;
+              -webkit-touch-callout: none !important;
+              -webkit-tap-highlight-color: transparent !important;
             }
           }
         `;
@@ -1183,6 +1214,27 @@ Live City DJ Contract Terms and Conditions:
   const validatePhone = (phone) =>
     /^[0-9]{10}$/.test(phone.replace(/\D/g, ''));
 
+  // Handle signature changes
+  const handleSignatureChange = (data, isSigned, name = '') => {
+    console.log('Signature changed:', isSigned, name);
+    setHasSignature(isSigned);
+    setFormData(prev => ({
+      ...prev,
+      signature: data,
+      signerName: name || prev.signerName
+    }));
+    
+    // Clear signature-related errors when user starts signing
+    if (isSigned && formErrors.signature) {
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.signature;
+        return newErrors;
+      });
+      setSubmitError(null);
+    }
+  };
+
   // Initialize EmailJS
   useEffect(() => {
     // Initialize EmailJS with the newer API format
@@ -1283,6 +1335,17 @@ Live City DJ Contract Terms and Conditions:
     if (!formData.endTime) errors.endTime = 'End time is required';
     if (!formData.paymentMethod) errors.paymentMethod = 'Payment method is required';
     
+    // Validate signature
+    if (!hasSignature || !formData.signature) {
+      errors.signature = 'Signature is required';
+      setSubmitError('Please sign the contract before submitting.');
+    }
+    
+    if (!formData.signerName.trim()) {
+      errors.signerName = 'Please enter your name for the signature';
+      setSubmitError('Please enter your name and sign the contract before submitting.');
+    }
+    
     // Validate email format
     if (formData.email && !validateEmail(formData.email)) {
       errors.email = 'Please enter a valid email address';
@@ -1350,7 +1413,9 @@ Live City DJ Contract Terms and Conditions:
         endTime: formData.endTime,
         totalAmount: calculateTotal(),
         paymentMethod: formData.paymentMethod,
-        bookingId: docRef.id
+        bookingId: docRef.id,
+        signerName: formData.signerName,
+        hasSigned: hasSignature ? 'Yes' : 'No'
       };
 
       // Send confirmation email
@@ -1542,9 +1607,9 @@ Live City DJ Contract Terms and Conditions:
   };
 
   const fieldIcons = {
-    clientName: <FaUser style={{...iconStyle, color: '#4299E1'}} />,
+    clientName: <FaUserAlt style={{...iconStyle, color: '#4299E1'}} />,
     email: <FaEnvelope style={{...iconStyle, color: '#ED8936'}} />,
-    contactPhone: <FaPhone style={{...iconStyle, color: '#48BB78'}} />,
+    contactPhone: <FaPhoneAlt style={{...iconStyle, color: '#48BB78'}} />,
     eventType: <FaCalendarAlt style={{...iconStyle, color: '#9F7AEA'}} />,
     guestCount: <FaUsers style={{...iconStyle, color: '#F56565'}} />,
     venueName: <FaBuilding style={{...iconStyle, color: '#38B2AC'}} />,
@@ -2159,6 +2224,43 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
+  // Handle signature field interactions on mobile devices
+  useEffect(() => {
+    if (isClient) {
+      // Function to prevent scrolling of the page when interacting with the signature field
+      const handleSignatureInteraction = (event) => {
+        const target = event.target;
+        // Check if the target is the signature canvas or inside the signature section
+        if (
+          target.tagName === 'CANVAS' || 
+          target.classList?.contains('signature-pad-canvas') ||
+          target.closest('#signature-section')
+        ) {
+          // Prevent default only for touch events
+          if (event.type.startsWith('touch')) {
+            event.preventDefault();
+          }
+          
+          // For touchmove events on the canvas specifically
+          if (event.type === 'touchmove' && 
+             (target.tagName === 'CANVAS' || target.classList?.contains('signature-pad-canvas'))) {
+            event.preventDefault();
+          }
+        }
+      };
+      
+      // Attach event listeners
+      document.addEventListener('touchstart', handleSignatureInteraction, { passive: false });
+      document.addEventListener('touchmove', handleSignatureInteraction, { passive: false });
+      
+      // Cleanup
+      return () => {
+        document.removeEventListener('touchstart', handleSignatureInteraction);
+        document.removeEventListener('touchmove', handleSignatureInteraction);
+      };
+    }
+  }, [isClient]);
+
   if (!isClient) {
     return null;
   }
@@ -2322,7 +2424,9 @@ Live City DJ Contract Terms and Conditions:
                 musicPreferences: [], // New field for music preferences
                 otherMusicPreference: '', // Field for "other" music preference specification
                 streamingService: '', // Selected streaming service
-                playlistLink: '' // URL to user's playlist
+                playlistLink: '', // URL to user's playlist
+                signature: null, // Signature data
+                signerName: '' // Signer name
               });
               setSubmitted(false);
             }}
@@ -2354,6 +2458,8 @@ Live City DJ Contract Terms and Conditions:
       overflowX: 'hidden',
       paddingBottom: '2rem'
     }}>
+      {/* Signature mobile styles moved to the date picker style tag */}
+      
       {showConfirmation && (
         <PaymentConfirmationBanner 
           paymentMethod={formData.paymentMethod} 
@@ -2803,6 +2909,26 @@ Live City DJ Contract Terms and Conditions:
                       z-index: 1000;
                     }
                   }
+                  
+                  /* Mobile fixes for signature field */
+                  @media (max-width: 767px) {
+                    #signature-section {
+                      position: relative;
+                      z-index: 10;
+                    }
+                    
+                    #signature-section canvas {
+                      touch-action: none !important;
+                    }
+                    
+                    /* Prevent scrolling when signing */
+                    body.is-signing {
+                      overflow: hidden !important;
+                      position: fixed;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  }
                 `}</style>
 
                 {/* Start Time */}
@@ -2887,33 +3013,32 @@ Live City DJ Contract Terms and Conditions:
 
               {/* Additional Services Header */}
               <div style={{
-                marginTop: '2rem',
+                marginTop: '2.5rem',
                 marginBottom: '1.5rem',
-                borderBottom: '2px solid #e0e0e0',
-                position: 'relative'
+                borderBottom: '2px solid #e2e8f0',
+                position: 'relative',
+                paddingBottom: '0.5rem'
               }} className="section-header">
                 <h3 style={{
-                  color: '#333',
-                  fontSize: 'clamp(20px, 3vw, 24px)',
+                  color: '#2d3748',
+                  fontSize: '1.25rem',
                   fontWeight: '600',
-                  backgroundColor: 'rgba(255,255,255,0.92)',
-                  display: 'inline-block',
-                  padding: '0 1rem 0.5rem 0',
-                  position: 'relative',
+                  backgroundColor: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                   marginBottom: '0'
                 }}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaPlus style={{ marginRight: '8px', color: '#0070f3', fontSize: '16px' }} />
-                    Additional Services
-                  </span>
+                  <FaPlus style={{ color: '#0070f3', fontSize: '0.9rem' }} />
+                  Additional Services
                 </h3>
               </div>
 
               {/* Redesigned Card-Style Additional Services */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '16px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '20px',
                 marginBottom: '2rem'
               }} className="service-options">
                 {[
@@ -3671,6 +3796,37 @@ Live City DJ Contract Terms and Conditions:
                 <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
                 {itemizedTotal()}
               </div>
+              
+              {/* Signature Field */}
+              <div style={{
+                backgroundColor: '#f8f9fa',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                border: formErrors.signature ? '1px solid red' : '1px solid #e0e0e0'
+              }}>
+                {/* Removed h3 heading and agreement text as requested */}
+                <SignatureField onSignatureChange={handleSignatureChange} />
+                {formErrors.signature && (
+                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                    {formErrors.signature}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit Error Message */}
+              {submitError && (
+                <div style={{
+                  color: '#e53e3e',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  backgroundColor: '#fee2e2',
+                  borderRadius: '0.25rem',
+                  borderLeft: '4px solid #e53e3e',
+                }}>
+                  {submitError}
+                </div>
+              )}
 
               <button
                 type="submit"
