@@ -2207,68 +2207,161 @@ export default function DJContractForm() {
     return null;
   }
 
+  // Main template rendering
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        opacity: animateIn ? 1 : 0,
-        transition: 'opacity 0.2s ease-in-out',
-        padding: '16px'
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          maxWidth: '90%',
-          width: '400px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          position: 'relative',
-          transform: animateIn ? 'scale(1)' : 'scale(0.95)',
-          transition: 'transform 0.2s ease-in-out'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            border: 'none',
-            background: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            color: '#666',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            transition: 'all 0.2s ease',
-            ':hover': {
-              backgroundColor: '#f5f5f5'
-            }
-          }}
-        >
-          ×
-        </button>
-        
-        {getInstructions()}
+    <div className="main-wrapper">
+      <Header />
+      
+      <div className="main-content" style={{ 
+        maxWidth: '800px', 
+        margin: '0 auto',
+        padding: '20px 10px'
+      }}>
+        {submitted ? (
+          <div className="success-message" style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '30px 20px',
+            marginTop: '30px',
+            textAlign: 'center',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+            border: '2px solid #4CAF50'
+          }}>
+            <div style={{ 
+              backgroundColor: '#4CAF50', 
+              width: '80px', 
+              height: '80px', 
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <FaCheckCircle style={{ fontSize: '40px', color: 'white' }} />
+            </div>
+            <h2 style={{ color: '#333', marginBottom: '15px', fontSize: '28px' }}>Booking Submitted!</h2>
+            <p style={{ fontSize: '18px', color: '#666', marginBottom: '20px', lineHeight: '1.6' }}>
+              Thank you for booking with Live City DJs. We&apos;ve received your contract and will contact you shortly to confirm the details.
+            </p>
+            {formData.paymentMethod === 'Stripe' ? (
+              <p style={{ color: '#0070f3', fontWeight: 'bold', fontSize: '18px' }}>
+                You will be redirected to Stripe for payment shortly.
+              </p>
+            ) : (
+              <p style={{ color: '#0070f3', fontWeight: 'bold', fontSize: '18px' }}>
+                Please complete your payment using {formData.paymentMethod} to secure your booking.
+              </p>
+            )}
+            
+            <button
+              onClick={() => setSubmitted(false)}
+              style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                marginTop: '20px',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s',
+                fontWeight: 'bold'
+              }}
+            >
+              Return to Contract Form
+            </button>
+          </div>
+        ) : (
+          <div className="form-container">
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                backgroundColor: 'white',
+                padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+                borderRadius: '20px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                width: '100%',
+                maxWidth: '800px',
+                margin: '1rem auto',
+                border: '1px solid rgba(240, 240, 240, 0.8)'
+              }}
+            >
+              <div className="form-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h1 style={{
+                  fontSize: 'clamp(24px, 4vw, 32px)',
+                  color: '#333',
+                  lineHeight: '1.2',
+                  marginBottom: '1rem',
+                  fontWeight: '700'
+                }}>
+                  DJ Services Contract
+                </h1>
+                <p style={{
+                  fontSize: 'clamp(16px, 3vw, 20px)',
+                  color: '#666',
+                  fontWeight: '400',
+                  maxWidth: '600px',
+                  margin: '0 auto'
+                }}>
+                  Fill out the form below to book your DJ services for your upcoming event.
+                </p>
+              </div>
+
+              {/* The rest of the form UI code goes here... */}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="submit-button"
+                style={{
+                  width: '100%',
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  marginTop: '1rem',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s',
+                  opacity: isSubmitting ? 0.7 : 1
+                }}
+              >
+                {isSubmitting ? 'Processing...' : 'Submit Contract'}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
+      
+      <PaymentConfirmation 
+        show={showConfirmation} 
+        message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
+      />
+      {/* Render the genre selection modal */}
+      {showGenreModal && (
+        <GenreSelectionModal onClose={() => setShowGenreModal(false)} />
+      )}
+      {/* Other modals */}
+      {modalText && <InfoModal text={modalText} onClose={() => setModalText(null)} />}
+      {showTerms && (
+        <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
+      )}
+      {showPlaylistHelp && (
+        <PlaylistHelpModal
+          streamingService={formData.streamingService}
+          onClose={() => setShowPlaylistHelp(false)}
+        />
+      )}
+      {showSuccessMessage && <SuccessMessage />}
+      {showErrorMessage && <ErrorMessage message={showErrorMessage} />}
+      {submitted && formData.paymentMethod !== 'Stripe' && (
+        <PaymentInstructions 
+          paymentMethod={formData.paymentMethod}
+          bookingId={formData.bookingId}
+        />
+      )}
     </div>
   );
 }
