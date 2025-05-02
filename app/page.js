@@ -3030,7 +3030,7 @@ Live City DJ Contract Terms and Conditions:
                     name: 'lighting',
                     label: 'Event Lighting',
                     price: '$100',
-                    description: 'Requires 2 hour early entry to venue for setup. Includes sound activated strobing lights.',
+                    description: 'Elevate your event with pulsating, sound-activated strobing lights that transform your venue into an electrifying dance floor experience. Requires 2 hour early setup.',
                     icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
                   },
                   {
