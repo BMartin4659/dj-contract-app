@@ -585,39 +585,41 @@ function PlaylistHelpModal({ streamingService, onClose }) {
 export default function DJContractForm() {
   // Terms and conditions text
   const termsAndConditionsText = `
-<h2 style="color: #0070f3; margin-bottom: 16px; text-align: center;">Live City DJ Contract Terms and Conditions</h2>
+<div style="max-width: 800px; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif;">
+  <h2 style="color: #0070f3; margin-bottom: 20px; text-align: center; font-size: 24px;">Live City DJ Contract Terms and Conditions</h2>
 
-<div style="margin-bottom: 16px;">
-  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Booking & Payment</h3>
-  <ul style="padding-left: 20px; line-height: 1.6;">
-    <li><strong>Deposit:</strong> A non-refundable deposit of 50% is required to secure your event date.</li>
-    <li><strong>Final Payment:</strong> Remaining balance is due on the day of the event before services begin.</li>
-    <li><strong>Cancellation Policy:</strong> Cancellations made less than 30 days before the event will forfeit the full deposit amount.</li>
-  </ul>
+  <div style="margin-bottom: 24px; background-color: #f8fafc; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <h3 style="color: #0070f3; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; font-size: 18px;">🔷 Booking & Payment</h3>
+    <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 0;">
+      <li style="margin-bottom: 8px;"><strong>Deposit:</strong> A non-refundable deposit of 50% is required to secure your event date.</li>
+      <li style="margin-bottom: 8px;"><strong>Final Payment:</strong> Remaining balance is due on the day of the event before services begin.</li>
+      <li style="margin-bottom: 0;"><strong>Cancellation Policy:</strong> Cancellations made less than 30 days before the event will forfeit the full deposit amount.</li>
+    </ul>
+  </div>
+
+  <div style="margin-bottom: 24px; background-color: #f8fafc; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <h3 style="color: #0070f3; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; font-size: 18px;">🔷 Services & Equipment</h3>
+    <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 0;">
+      <li style="margin-bottom: 8px;"><strong>Equipment:</strong> DJ provides all necessary sound equipment unless otherwise specified.</li>
+      <li style="margin-bottom: 8px;"><strong>Venue Requirements:</strong> Client is responsible for providing adequate power supply and space for setup.</li>
+      <li style="margin-bottom: 8px;"><strong>Time Extensions:</strong> Additional hours beyond contracted time will be charged at $75/hour.</li>
+      <li style="margin-bottom: 0;"><strong>Breaks:</strong> For events longer than 4 hours, DJ is entitled to a 15-minute break per 2 hours of performance.</li>
+    </ul>
+  </div>
+
+  <div style="margin-bottom: 24px; background-color: #f8fafc; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <h3 style="color: #0070f3; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; font-size: 18px;">🔷 Legal</h3>
+    <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 0;">
+      <li style="margin-bottom: 8px;"><strong>Force Majeure:</strong> Neither party shall be liable for failure to perform due to circumstances beyond reasonable control (natural disasters, emergencies, etc.).</li>
+      <li style="margin-bottom: 8px;"><strong>Liability:</strong> DJ is not responsible for any injuries or property damage caused by guests.</li>
+      <li style="margin-bottom: 0;"><strong>Media Rights:</strong> DJ may use event photos/videos for promotional purposes unless otherwise specified in writing.</li>
+    </ul>
+  </div>
+
+  <p style="font-style: italic; color: #666; font-size: 15px; text-align: center; margin-top: 24px; background-color: #f0f9ff; padding: 12px; border-radius: 8px;">
+    By entering your name in the signature field, you acknowledge that you have read and agree to these terms and conditions.
+  </p>
 </div>
-
-<div style="margin-bottom: 16px;">
-  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Services & Equipment</h3>
-  <ul style="padding-left: 20px; line-height: 1.6;">
-    <li><strong>Equipment:</strong> DJ provides all necessary sound equipment unless otherwise specified.</li>
-    <li><strong>Venue Requirements:</strong> Client is responsible for providing adequate power supply and space for setup.</li>
-    <li><strong>Time Extensions:</strong> Additional hours beyond contracted time will be charged at $75/hour.</li>
-    <li><strong>Breaks:</strong> For events longer than 4 hours, DJ is entitled to a 15-minute break per 2 hours of performance.</li>
-  </ul>
-</div>
-
-<div style="margin-bottom: 16px;">
-  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Legal</h3>
-  <ul style="padding-left: 20px; line-height: 1.6;">
-    <li><strong>Force Majeure:</strong> Neither party shall be liable for failure to perform due to circumstances beyond reasonable control (natural disasters, emergencies, etc.).</li>
-    <li><strong>Liability:</strong> DJ is not responsible for any injuries or property damage caused by guests.</li>
-    <li><strong>Media Rights:</strong> DJ may use event photos/videos for promotional purposes unless otherwise specified in writing.</li>
-  </ul>
-</div>
-
-<p style="font-style: italic; color: #666; font-size: 14px; text-align: center; margin-top: 20px;">
-  By entering your name in the signature field, you acknowledge that you have read and agree to these terms and conditions.
-</p>
 `;
 
   // Fallback EmailJS configuration (used if environment variables are missing)
@@ -1836,6 +1838,46 @@ export default function DJContractForm() {
   }, [isClient]);
   */
 
+  // Create a more direct payment method handler that doesn't rely on async processing
+  const handlePaymentMethodSelect = useCallback((method) => {
+    // Direct assignment for immediate UI feedback
+    document.querySelectorAll('.payment-option').forEach(el => {
+      el.style.border = el.dataset.method === method 
+        ? '2px solid #0070f3' 
+        : '2px solid #ddd';
+      el.style.backgroundColor = el.dataset.method === method 
+        ? 'rgba(0, 112, 243, 0.05)' 
+        : 'white';
+      el.style.boxShadow = el.dataset.method === method 
+        ? '0 4px 12px rgba(0, 112, 243, 0.15)' 
+        : '0 1px 3px rgba(0,0,0,0.05)';
+    });
+    
+    // Update form data in the next tick to avoid blocking the UI
+    setTimeout(() => {
+      setFormData(prev => ({ ...prev, paymentMethod: method }));
+    }, 0);
+  }, []);
+
+  // Memoize the payment method option styles to reduce recalculations
+  const getPaymentOptionStyle = useCallback((method) => {
+    const isSelected = formData.paymentMethod === method;
+    return {
+      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
+      borderRadius: '12px',
+      padding: '15px 10px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: isChangingPayment ? 'wait' : 'pointer',
+      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+      opacity: isChangingPayment ? 0.7 : 1
+    };
+  }, [formData.paymentMethod, isChangingPayment]);
+
   // Create a service card style generator
   const getServiceCardStyle = useCallback((name) => {
     const isSelected = formData[name] === true;
@@ -1856,1543 +1898,377 @@ export default function DJContractForm() {
     };
   }, [formData]);
 
-  if (!isClient) {
-    return null;
-  }
-
-  if (submitted) {
+  // Add the GenreSelectionModal component
+  function GenreSelectionModal({ onClose }) {
+    const [selectedGenres, setSelectedGenres] = useState([...formData.musicPreferences]);
+    const [otherGenre, setOtherGenre] = useState(formData.otherMusicPreference || '');
+    const [animateIn, setAnimateIn] = useState(false);
+    
+    // Set animation on mount
+    useEffect(() => {
+      const timer = setTimeout(() => setAnimateIn(true), 50);
+      return () => clearTimeout(timer);
+    }, []);
+    
+    // Apply changes and close the modal
+    const applyChanges = () => {
+      setFormData(prev => ({
+        ...prev,
+        musicPreferences: selectedGenres,
+        otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
+      }));
+      onClose();
+    };
+    
+    // Handle genre selection
+    const toggleGenre = (genreId) => {
+      if (selectedGenres.includes(genreId)) {
+        setSelectedGenres(prev => prev.filter(id => id !== genreId));
+      } else {
+        setSelectedGenres(prev => [...prev, genreId]);
+      }
+    };
+    
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        padding: '20px',
-        textAlign: 'center',
-        position: 'relative',
-        width: '100%',
-        background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
-        color: 'white'
-      }}>
-        <div style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: '40px',
-          borderRadius: '16px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-          maxWidth: '90%',
-          width: '600px'
-        }}>
-          <div style={{ marginBottom: '20px' }}>
-            <span role="img" aria-label="celebration" style={{ fontSize: '64px' }}>🎉</span>
-          </div>
-          <h1 style={{ 
-            color: '#3b82f6', 
-            marginBottom: '1.5rem', 
-            fontSize: '2.5rem', 
-            fontWeight: 'bold',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1050,
+          opacity: animateIn ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}
+        onClick={onClose}
+      >
+        <div 
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            maxWidth: '800px',
+            width: '90%',
+            maxHeight: '85vh',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+            border: '2px solid #0070f3',
+            overflow: 'hidden',
+            transform: animateIn ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'transform 0.4s ease-out',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{
+            padding: '20px 25px',
+            borderBottom: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'linear-gradient(90deg, #0070f3, #3291ff)'
           }}>
-            Booking Submitted!
-          </h1>
-          <p style={{ 
-            fontSize: '1.25rem', 
-            lineHeight: '1.6',
-            marginBottom: '2rem',
-            color: '#333',
-            fontWeight: '500'
-          }}>
-            Thank you! Your DJ booking request has been submitted successfully. You will receive a confirmation email shortly.
-            We look forward to celebrating with you!
-          </p>
-
-          {/* Payment Method Buttons */}
-          <div style={{ marginTop: '2rem' }}>
-            {formData.paymentMethod === 'Venmo' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.VENMO, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#3D95CE',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Venmo
-              </button>
-            )}
-
-            {formData.paymentMethod === 'CashApp' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.CASHAPP, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#00C244',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Cash App
-              </button>
-            )}
-
-            {formData.paymentMethod === 'PayPal' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.PAYPAL, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#0070BA',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via PayPal
-              </button>
-            )}
-
-            <p style={{ 
-              marginTop: '1.5rem', 
-              fontSize: '0.9rem', 
-              color: '#666',
-              fontStyle: 'italic'
+            <h2 style={{ 
+              margin: 0, 
+              color: 'white',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              Click the button above to complete your deposit payment and secure your event date.
-            </p>
+              <span style={{ marginRight: '12px', fontSize: '1.8rem' }}>🎵</span>
+              Choose Your Music Style
+            </h2>
+            <button 
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                opacity: 0.8,
+                transition: 'all 0.2s ease',
+                ':hover': { opacity: 1 }
+              }}
+            >
+              ×
+            </button>
           </div>
-
-          <button
-            onClick={() => {
-              setFormData({
-                clientName: '',
-                email: '',
-                contactPhone: '',
-                eventType: 'Wedding',
-                guestCount: '100',
-                venueName: '',
-                venueLocation: '',
-                eventDate: '',
-                startTime: '',
-                endTime: '',
-                paymentMethod: 'Stripe',
-                paymentAmount: 'deposit', // New field for deposit or full payment
-                lighting: false,
-                photography: false,
-                videoVisuals: false,
-                additionalHours: 0,
-                agreeToTerms: true, // Changed to true by default
-                musicPreferences: [], // New field for music preferences
-                otherMusicPreference: '', // Field for "other" music preference specification
-                streamingService: '', // Selected streaming service
-                playlistLink: '', // URL to user's playlist
-                signature: null, // Signature data
-                signerName: '' // Signer name
-              });
-              setSubmitted(false);
-            }}
-            style={{
-              backgroundColor: 'transparent',
-              color: '#3b82f6',
-              border: '2px solid #3b82f6',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '1rem',
-              cursor: 'pointer',
-              marginTop: '2rem',
-              fontWeight: '500',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Book Another Event
-          </button>
+          
+          <div style={{
+            padding: '20px 25px',
+            overflowY: 'auto',
+            flexGrow: 1
+          }}>
+            <p style={{ marginBottom: '16px', color: '#666' }}>
+              Select the music genres you prefer for your event. This helps us prepare the perfect playlist!
+            </p>
+            
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: '12px',
+              marginBottom: '20px'
+            }}>
+              {musicGenres.map(genre => (
+                <div 
+                  key={genre.id}
+                  onClick={() => toggleGenre(genre.id)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: selectedGenres.includes(genre.id) ? '2px solid #0070f3' : '1px solid #ddd',
+                    backgroundColor: selectedGenres.includes(genre.id) ? 'rgba(0, 112, 243, 0.1)' : 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span style={{ 
+                    fontWeight: selectedGenres.includes(genre.id) ? '600' : '400',
+                    color: selectedGenres.includes(genre.id) ? '#0070f3' : '#333'
+                  }}>
+                    {genre.label}
+                  </span>
+                  
+                  {selectedGenres.includes(genre.id) && (
+                    <span style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#0070f3',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '0.9rem'
+                    }}>
+                      ✓
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {selectedGenres.includes('other') && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Please specify other genres:
+                </label>
+                <input
+                  type="text"
+                  value={otherGenre}
+                  onChange={(e) => setOtherGenre(e.target.value)}
+                  placeholder="E.g. Classical, Blues, etc."
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+          
+          <div style={{
+            padding: '15px 25px',
+            borderTop: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '12px',
+            backgroundColor: '#f9fafb'
+          }}>
+            <button
+              onClick={onClose}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={applyChanges}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#0070f3',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              Apply
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="main-wrapper" style={{ 
-      width: '100%', 
-      position: 'relative',
-      minHeight: '100vh',
-      overflowX: 'hidden',
-      paddingBottom: '2rem'
-    }}>
-      {/* Signature mobile styles moved to the date picker style tag */}
-      
-      {showConfirmation && (
-        <PaymentConfirmationBanner 
-          paymentMethod={formData.paymentMethod} 
-          onClose={() => setShowConfirmation(false)} 
-        />
-      )}
-      {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
-      {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
-      {modalText && <PaymentModal htmlContent={modalText} onClose={() => setModalText(null)} />}
-      
-      <div className="main-content" style={{ 
-        display: 'flex', 
-        justifyContent: 'center',
-        width: '100%',
-        overflow: 'visible',
-        minHeight: '100vh'
-      }}>
-        {showStripe ? (
-          <div style={{
-            backgroundColor: 'transparent',
-            padding: '0',
-            borderRadius: '0',
-            boxShadow: 'none',
-            maxWidth: '96%',
-            width: '96%',
-            margin: '0 auto'
-          }}>
-            {/* Security Banner */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#f0f8ff',
-              padding: '10px',
-              borderRadius: '8px',
-              marginBottom: '1.5rem',
-              border: '1px solid #dbeafe'
-            }}>
-              <FaShieldAlt size={18} style={{ color: '#2563eb', marginRight: '8px' }} />
-              <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '500' }}>
-                Secure, encrypted payment processing
-              </span>
-            </div>
-            
-            {/* Order Summary Section with headers moved inside */}
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              marginBottom: '1.5rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h2 style={{ 
-                color: '#111', 
-                marginBottom: '0.5rem', 
-                fontSize: '1.75rem', 
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                <FaReceipt style={{ marginRight: '10px', color: '#635BFF' }} />
-                Complete Your Booking
-              </h2>
-              <p style={{ 
-                color: '#555', 
-                marginBottom: '1.5rem', 
-                fontSize: '1.1rem',
-                borderBottom: '2px solid #635BFF',
-                paddingBottom: '1rem'
-              }}>
-                Secure your event date with a deposit payment
-              </p>
-              
-              {/* Debug information - will be removed in production */}
-              <div style={{ 
-                backgroundColor: '#f5f5f5', 
-                padding: '10px', 
-                marginBottom: '15px', 
-                borderRadius: '5px',
-                fontSize: '14px',
-                color: '#333'
-              }}>
-                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Debug Info:</p>
-                <p style={{ margin: '0' }}>Lighting: {String(Boolean(formData.lighting))}</p>
-                <p style={{ margin: '0' }}>Photography: {String(Boolean(formData.photography))}</p>
-                <p style={{ margin: '0' }}>VideoVisuals: {String(Boolean(formData.videoVisuals))}</p>
-                <p style={{ margin: '0' }}>Additional Hours: {formData.additionalHours}</p>
-                <p style={{ margin: '0' }}>Total: ${calculateTotal()}</p>
-              </div>
-              
-              <StripeCheckout
-                amount={getAmountToPay() * 100}
-                contractDetails={{
-                  clientName: formData.clientName,
-                  email: formData.email,
-                  eventType: formData.eventType,
-                  eventDate: formData.eventDate,
-                  venueName: formData.venueName,
-                  venueLocation: formData.venueLocation,
-                  startTime: formData.startTime,
-                  endTime: formData.endTime,
-                  lighting: formData.lighting === true,
-                  photography: formData.photography === true,
-                  videoVisuals: formData.videoVisuals === true,
-                  additionalHours: parseInt(formData.additionalHours || 0),
-                  paymentAmount: formData.paymentAmount, // Pass payment amount type
-                  isDeposit: formData.paymentAmount === 'deposit',
-                  musicPreferences: formData.musicPreferences, // Add music preferences
-                  otherMusicPreference: formData.otherMusicPreference, // Add other music preference if any
-                  streamingService: formData.streamingService || '',
-                  playlistLink: formData.playlistLink || ''
-                }}
-                onSuccess={(paymentId) => {
-                  // Handle successful payment before form submission
-                  console.log("Payment successful with ID:", paymentId);
-                  
-                  // Only hide the Stripe component
-                  setShowStripe(false);
-                  
-                  // Redirect immediately to the success page without showing the intermediate confirmation
-                  router.push(`/payment/success?id=${paymentId}`);
-                }}
-              />
-            </div>
-          </div>
-        ) : submitted ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '2rem',
-            color: '#111',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '20px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '800px',
-            width: '90%',
-            margin: '2rem auto 0 auto'
-          }}>
-            <h2 style={{ color: '#0070f3', marginBottom: '1rem' }}>🎉 Thank You!</h2>
-            <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
-              Your contract has been submitted successfully. We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
-            </p>
-
-            {formData.paymentMethod === 'Venmo' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
-                <h3>Please send your deposit via Venmo:</h3>
-                <p>@Bobby-Martin-64</p>
-              </div>
-            )}
-
-            {formData.paymentMethod === 'CashApp' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
-                <h3>Please send your deposit via Cash App:</h3>
-                <p>$LiveCity</p>
-              </div>
-            )}
-
-            {formData.paymentMethod === 'PayPal' && (
-              <div className="payment-instructions">
-                <h3>Please send your deposit via PayPal:</h3>
-                <p>Bobby Martin (https://paypal.me/bmartin4659)</p>
-              </div>
-            )}
-          </div>
-        ) : (
+  // Simple Payment Modal component
+  function PaymentModal({ htmlContent, onClose }) {
+    const [animateIn, setAnimateIn] = useState(false);
+    
+    useEffect(() => {
+      const timer = setTimeout(() => setAnimateIn(true), 50);
+      return () => clearTimeout(timer);
+    }, []);
+    
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          opacity: animateIn ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out'
+        }}
+        onClick={onClose}
+      >
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '20px',
+            maxWidth: '90%',
+            width: '500px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            transform: animateIn ? 'scale(1)' : 'scale(0.95)',
+            transition: 'transform 0.2s ease-in-out'
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
           <div style={{ 
-            maxWidth: '800px',
-            width: '96%',
-            margin: '2rem auto 3rem auto'
+            display: 'flex', 
+            justifyContent: 'flex-end',
+            marginTop: '20px' 
           }}>
-            <form onSubmit={handleSubmit} style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.85)',
-              padding: '2.5rem',
-              borderRadius: '20px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-              width: '100%',
-              marginBottom: '50px',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
-            }}>
-              {/* Form Header with Logo */}
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '30px',
-                position: 'relative',
-                maxWidth: '100%',
-                padding: '0 10px'
-              }}>
-                <div style={{
-                  width: '150px',
-                  height: '150px',
-                  margin: '0 auto 15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Image
-                    src="/dj-bobby-drake-logo.png"
-                    alt="DJ Bobby Drake Logo"
-                    width={150}
-                    height={150}
-                    priority
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      objectFit: 'contain'
-                    }}
-                  />
-                </div>
-                
-                <h1 style={{
-                  fontSize: 'clamp(28px, 4vw, 36px)',
-                  fontWeight: 'bold',
-                  margin: '10px auto',
-                  color: '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  lineHeight: '1.2',
-                  maxWidth: '100%',
-                  textAlign: 'center',
-                  flexWrap: 'nowrap',
-                  whiteSpace: 'nowrap'
-                }}>
-                  <span style={{ 
-                    fontSize: 'clamp(28px, 4vw, 36px)'
-                  }}>📝</span>
-                  <span>EVENT CONTRACT</span>
-                </h1>
-              </div>
-              
-              {/* Spacer div between email address and client name */}
-              <div style={{ 
-                height: '20px', 
-                marginBottom: '20px', 
-                borderBottom: '1px solid #e0e0e0',
-                opacity: 0.5
-              }} className="section-divider"></div>
-              
-              {/* Client Information Section */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={{
-                    ...labelStyle,
-                    fontSize: 'clamp(16px, 2.5vw, 18px)'
-                  }} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['clientName']} Client Name *
-                    </span>
-                  </label>
-                  <input
-                    name="clientName"
-                    type="text"
-                    required
-                    style={{
-                      ...inputStyle,
-                      fontSize: 'clamp(16px, 2.5vw, 18px)',
-                      padding: 'clamp(12px, 2vw, 16px)'
-                    }}
-                    className="field-input"
-                    value={formData.clientName}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['email']} Email:
-                    </span>
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['contactPhone']} Contact Phone *
-                    </span>
-                  </label>
-                  <input
-                    name="contactPhone"
-                    type="tel"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.contactPhone}
-                    onChange={handleChange}
-                    placeholder="(123) 456-7890"
-                  />
-                  {formErrors.contactPhone && (
-                    <p className="text-red-500 text-xs italic">{formErrors.contactPhone}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Two-column grid for event details - changed to single column */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['eventType']} Event Type:
-                    </span>
-                  </label>
-                  <input
-                    name="eventType"
-                    type="text"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.eventType}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['guestCount']} Guest Count:
-                    </span>
-                  </label>
-                  <input
-                    name="guestCount"
-                    type="number"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.guestCount}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              {/* Two-column grid for venue information - changed to single column */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['venueName']} Venue Name:
-                    </span>
-                  </label>
-                  <input
-                    name="venueName"
-                    type="text"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.venueName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {venueLocationIcon} Venue Location:
-                    </span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      ref={venueLocationRef}
-                      name="venueLocation"
-                      type="text"
-                      value={formData.venueLocation}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter venue address"
-                      style={{ 
-                        backgroundColor: 'white', 
-                        width: '100%', 
-                        padding: 'clamp(12px, 2vw, 16px)', 
-                        marginBottom: '1rem', 
-                        borderRadius: '8px', 
-                        border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
-                        color: 'black',
-                        transition: 'all 0.2s ease',
-                        fontSize: 'clamp(16px, 2.5vw, 18px)'
-                      }}
-                      className="field-input"
-                    />
-                    <div style={{ 
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      color: '#888',
-                      fontSize: '14px'
-                    }}>
-                      <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
-                    </div>
-                    <p style={{ 
-                      fontSize: '0.75rem', 
-                      color: mapsError ? '#e53e3e' : '#666', 
-                      marginTop: '-0.75rem',
-                      marginBottom: '1rem'
-                    }}>
-                      {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Two-column grid for date and time selection - changed to single column */}
-              <div className="form-grid-1col">
-                {/* Event Date */}
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
-                    </span>
-                  </label>
-                  <CustomDatePicker
-                    selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
-                    onChange={(date) => {
-                      handleChange({
-                        target: {
-                          name: 'eventDate',
-                          value: date ? date.toISOString().split('T')[0] : ''
-                        }
-                      });
-                    }}
-                  />
-                  {formErrors.eventDate && (
-                    <p className="text-red-500 text-xs italic">{formErrors.eventDate}</p>
-                  )}
-                </div>
-
-                <style jsx global>{`
-                  .custom-date-input::-webkit-datetime-edit { color: transparent; }
-                  .custom-date-input:focus::-webkit-datetime-edit { color: #000; }
-                  .custom-date-input[value]::-webkit-datetime-edit { color: #000; }
-                  
-                  /* Ensure the date picker renders properly on mobile */
-                  @media (max-width: 640px) {
-                    /* Custom date picker styles for mobile */
-                    .custom-datepicker .calendar-dropdown {
-                      width: 100%;
-                      max-width: 320px;
-                      position: fixed !important;
-                      top: 50% !important;
-                      left: 50% !important;
-                      transform: translate(-50%, -50%) !important;
-                      z-index: 1000;
-                    }
-                  }
-                  
-                  /* Signature field styles - removed touch-action restrictions */
-                  @media (max-width: 767px) {
-                    #signature-section {
-                      position: relative;
-                      z-index: 10;
-                    }
-                  }
-                `}</style>
-
-                {/* Start Time */}
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {timeIcons['startTime']} Start Time:
-                    </span>
-                  </label>
-                  <select
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      
-                      if (formData.endTime) {
-                        // If end time already exists, calculate new additional hours
-                        const additionalHours = calculateAdditionalHours(value, formData.endTime);
-                        setFormData((prev) => ({
-                          ...prev,
-                          startTime: value,
-                          additionalHours
-                        }));
-                      } else {
-                        // If no end time yet, just update start time
-                        setFormData((prev) => ({
-                          ...prev,
-                          startTime: value,
-                          endTime: '' // reset endTime on startTime change
-                        }));
-                      }
-                    }}
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                  >
-                    <option value="">Select start time</option>
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* End Time */}
-              <div>
-                <label style={labelStyle} className="field-label">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['endTime']} End Time:
-                  </span>
-                </label>
-                <select
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={(e) => handleEndTimeChange(e.target.value)}
-                  required
-                  disabled={!formData.startTime}
-                  style={inputStyle}
-                  className="field-input"
-                >
-                  <option value="">Select end time</option>
-                  {formData.startTime &&
-                    timeOptions
-                      .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
-                      .map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                </select>
-                {formData.startTime && formData.endTime && (
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: formData.additionalHours > 0 ? '#0070f3' : '#666',
-                    marginTop: '0.5rem',
-                    fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
-                  }}>
-                    {formData.additionalHours > 0 
-                      ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
-                      : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
-                  </div>
-                )}
-              </div>
-
-              {/* Additional Services Header */}
-              <div style={{
-                marginTop: '2.5rem',
-                marginBottom: '1.5rem',
-                borderBottom: '2px solid #e2e8f0',
-                position: 'relative',
-                paddingBottom: '0.5rem'
-              }} className="section-header">
-                <h3 style={{
-                  color: '#2d3748',
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  backgroundColor: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '0'
-                }}>
-                  <FaPlus style={{ color: '#0070f3', fontSize: '0.9rem' }} />
-                  Additional Services
-                </h3>
-              </div>
-
-              {/* Redesigned Card-Style Additional Services */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '20px',
-                marginBottom: '2rem'
-              }} className="service-options">
-                {[
-                  {
-                    name: 'lighting',
-                    label: 'Event Lighting',
-                    price: '$100',
-                    description: 'Elevate your event with pulsating, sound-activated strobing lights that transform your venue into an electrifying dance floor experience. Requires 2 hour early setup.',
-                    icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
-                  },
-                  {
-                    name: 'photography',
-                    label: 'Event Photography',
-                    price: '$150',
-                    description: 'Capture the magic of your event with 50 stunning, high-quality candid shots that preserve your most precious moments. All images delivered within 48 hours.',
-                    icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
-                  },
-                  {
-                    name: 'videoVisuals',
-                    label: 'Video Visuals',
-                    price: '$100',
-                    description: 'Enhance your guest experience with captivating visual effects, dynamic slideshows, and interactive karaoke displays projected throughout your venue.',
-                    icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
-                  },
-                ].map(({ name, label, price, description, icon }) => {
-                  // Debug the current item's selection status
-                  const isSelected = formData[name] === true;
-                  console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
-                  
-                  return (
-                    <div 
-                      key={name}
-                      onClick={() => {
-                        console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
-                        // Use direct state update with explicit true/false values
-                        setFormData(prev => {
-                          const newValue = prev[name] === true ? false : true;
-                          console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
-                          return {
-                            ...prev,
-                            [name]: newValue
-                          };
-                        });
-                      }}
-                      className="service-card"
-                      style={getServiceCardStyle(name)}
-                    >
-                      {formData[name] === true && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          backgroundColor: '#0070f3',
-                          borderRadius: '50%',
-                          width: '24px',
-                          height: '24px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 2
-                        }}>
-                          <FaCheck color="white" size={12} />
-                        </div>
-                      )}
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                        <div style={{ 
-                          marginRight: '12px',
-                          padding: '10px',
-                          borderRadius: '8px',
-                          backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
-                        }}>
-                          {icon}
-                        </div>
-                        <div>
-                          <h4 style={{ 
-                            margin: '0 0 4px 0',
-                            color: '#333',
-                            fontWeight: formData[name] ? '600' : '500'
-                          }}>
-                            {label}
-                          </h4>
-                          <div style={{ 
-                            fontSize: '1rem', 
-                            fontWeight: 'bold',
-                            color: formData[name] ? '#0070f3' : '#666'
-                          }}>
-                            {price}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <p style={{ 
-                        fontSize: '0.85rem', 
-                        color: '#666', 
-                        margin: '0',
-                        lineHeight: '1.4'
-                      }}>
-                        {description}
-                      </p>
-                      
-                      <input
-                        type="checkbox"
-                        name={name}
-                        checked={formData[name]}
-                        onChange={handleChange}
-                        style={{ position: 'absolute', opacity: 0 }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Music Preferences Section - Revamped with Tick Boxes */}
-              <div style={{
-                marginTop: '2rem',
-                marginBottom: '1.5rem',
-                borderBottom: '2px solid #e0e0e0',
-                position: 'relative'
-              }} className="section-header">
-                <h3 style={{
-                  color: '#333',
-                  fontSize: 'clamp(20px, 3vw, 24px)',
-                  fontWeight: '600',
-                  backgroundColor: 'rgba(255,255,255,0.92)',
-                  display: 'inline-block',
-                  padding: '0 1rem 0.5rem 0',
-                  position: 'relative',
-                  marginBottom: '0',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  <span className="music-icon" style={{ 
-                    color: '#0070f3', 
-                    marginRight: '10px', 
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>🎵</span>
-                  What&apos;s On Your Playlist?
-                </h3>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                {/* Genre selection card that opens the modal */}
-                <div 
-                  onClick={() => setShowGenreModal(true)}
-                  style={{
-                    padding: '15px 20px',
-                    borderRadius: '12px',
-                    border: '2px solid #e0e0e0',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '1.5rem',
-                    ':hover': {
-                      borderColor: '#0070f3',
-                      boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)'
-                    }
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '10px'
-                  }}>
-                    <p style={{ 
-                      fontWeight: '500', 
-                      fontSize: '1.05rem', 
-                      color: '#333',
-                      margin: 0
-                    }}>
-                      Choose your preferred music genres
-                    </p>
-                    
-                    <span style={{ 
-                      backgroundColor: '#0070f3', 
-                      color: 'white',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      padding: '5px 10px',
-                      borderRadius: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minWidth: '70px'
-                    }}>
-                      Select
-                    </span>
-                  </div>
-                  
-                  {formData.musicPreferences.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {musicGenres
-                        .filter(genre => formData.musicPreferences.includes(genre.id))
-                        .map(genre => (
-                          <span key={genre.id} style={{
-                            backgroundColor: 'rgba(0, 112, 243, 0.1)',
-                            color: '#0070f3',
-                            padding: '5px 12px',
-                            borderRadius: '30px',
-                            fontSize: '0.9rem',
-                            fontWeight: '500'
-                          }}>
-                            {genre.label}
-                          </span>
-                        ))
-                      }
-                    </div>
-                  ) : (
-                    <p style={{ 
-                      color: '#666', 
-                      fontStyle: 'italic', 
-                      margin: 0 
-                    }}>
-                      No genres selected yet. Click to choose your preferences
-                    </p>
-                  )}
-                </div>
-                
-                {/* Streaming Service Integration */}
-                <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    marginBottom: '0.75rem',
-                    gap: '8px'
-                  }}>
-                    <p style={{ 
-                      color: '#333', 
-                      fontSize: '1rem', 
-                      fontWeight: '500',
-                      margin: 0,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ marginRight: '8px' }}>📱</span>
-                      Share your playlist (optional)
-                    </p>
-                    <FaInfoCircle
-                      style={{ 
-                        color: '#0070f3',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowPlaylistHelp(true);
-                      }}
-                      title="Click for help sharing your playlist"
-                    />
-                  </div>
-                  
-                  <div style={{ 
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    marginBottom: '1rem'
-                  }}>
-                    {streamingServices.map(service => (
-                      <div 
-                        key={service.id}
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          streamingService: service.id
-                        }))}
-                        style={{
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          border: formData.streamingService === service.id 
-                            ? '2px solid #0070f3' 
-                            : '1px solid #e0e0e0',
-                          backgroundColor: formData.streamingService === service.id 
-                            ? 'rgba(0, 112, 243, 0.05)' 
-                            : 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          flex: '1 0 150px',
-                          maxWidth: '200px'
-                        }}
-                      >
-                        <div 
-                          style={{ 
-                            width: '24px', 
-                            height: '24px', 
-                            backgroundImage: `url(${service.icon})`,
-                            backgroundSize: 'contain',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat',
-                            marginRight: '10px'
-                          }} 
-                        />
-                        <span style={{
-                          fontWeight: formData.streamingService === service.id ? '500' : 'normal',
-                          color: formData.streamingService === service.id ? '#0070f3' : '#333',
-                        }}>
-                          {service.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.streamingService && (
-                    <div style={{ marginBottom: '1rem' }}>
-                      <input
-                        type="text"
-                        name="playlistLink"
-                        value={formData.playlistLink}
-                        onChange={handleChange}
-                        placeholder={streamingServices.find(s => s.id === formData.streamingService)?.placeholder || 'Paste your playlist link'}
-                        style={{
-                          ...inputStyle,
-                          borderColor: '#0070f3',
-                          borderWidth: '1px'
-                        }}
-                      />
-                      <p style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#666', 
-                        marginTop: '0.5rem',
-                        fontStyle: 'italic'
-                      }}>
-                        This helps us prepare the right music for your event. We&apos;ll review your playlist and incorporate your favorites.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Compact Additional Hours Selector */}
-              <div>
-                <label style={labelStyle} className="field-label">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
-                    Additional Hours ($75/hr):
-                  </span>
-                  {formData.additionalHours > 0 && (
-                    <span style={{
-                      fontSize: '0.8rem',
-                      color: '#0070f3',
-                      fontWeight: '500'
-                    }}>
-                      Auto-calculated from your time selection
-                    </span>
-                  )}
-                </label>
-                <div style={{ 
-                  marginTop: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }} className="hours-selector">
-                    {[0, 1, 2, 3, 4].map(num => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => {
-                          console.log(`Setting additionalHours to ${num}`);
-                          // Direct state update for hours
-                          setFormData(prev => {
-                            console.log(`Setting additionalHours from ${prev.additionalHours} to ${num}`);
-                            return {
-                              ...prev,
-                              additionalHours: num
-                            };
-                          });
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: formData.additionalHours === num ? '#0070f3' : '#f5f5f5',
-                          color: formData.additionalHours === num ? 'white' : '#333',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                          fontSize: '16px',
-                          boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
-                        }}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  {formData.additionalHours > 0 && (
-                    <div style={{
-                      backgroundColor: 'rgba(0, 112, 243, 0.05)',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      marginTop: '12px',
-                      border: '1px solid rgba(0, 112, 243, 0.2)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}>
-                        <span style={{
-                          fontSize: '0.9rem',
-                          color: '#333',
-                          fontWeight: '500'
-                        }}>
-                          <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
-                          {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
-                        </span>
-                        <span style={{
-                          fontSize: '0.9rem',
-                          color: '#0070f3',
-                          fontWeight: 'bold'
-                        }}>
-                          +${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}
-                        </span>
-                      </div>
-                      <div style={{
-                        fontSize: '0.8rem',
-                        color: '#666'
-                      }}>
-                        Auto-calculated from {formData.startTime} to {formData.endTime}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment Amount Selection */}
-              <div className="payment-amount-section" style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  ...labelStyle,
-                  fontSize: '1.1rem',
-                  marginBottom: '1rem'
-                }}>
-                  Payment Option:
-                </label>
-                <div className="payment-amount-options" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '15px',
-                  marginBottom: '1rem'
-                }}>
-                  {/* Deposit Option */}
-                  <div 
-                    className="payment-amount-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'deposit' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentAmount === 'deposit' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '20px 15px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentAmount === 'deposit' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentAmount === 'deposit' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div style={{ 
-                      fontSize: '28px', 
-                      color: '#0070f3',
-                      marginBottom: '10px' 
-                    }}>
-                      💵
-                    </div>
-                    <div style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem',
-                      marginBottom: '5px'
-                    }}>
-                      Pay Deposit
-                    </div>
-                    <div style={{
-                      fontSize: '0.9rem',
-                      color: '#666',
-                      textAlign: 'center'
-                    }}>
-                      50% now, 50% on event day
-                    </div>
-                    <div style={{
-                      marginTop: '8px',
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      color: '#0070f3'
-                    }}>
-                      ${calculateDepositAmount()}
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentAmount"
-                      value="deposit"
-                      checked={formData.paymentAmount === 'deposit'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
-                  
-                  {/* Full Payment Option */}
-                  <div 
-                    className="payment-amount-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'full' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentAmount === 'full' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '20px 15px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentAmount === 'full' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentAmount === 'full' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div style={{ 
-                      fontSize: '28px', 
-                      color: '#0070f3',
-                      marginBottom: '10px' 
-                    }}>
-                      💰
-                    </div>
-                    <div style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem',
-                      marginBottom: '5px'
-                    }}>
-                      Pay in Full
-                    </div>
-                    <div style={{
-                      fontSize: '0.9rem',
-                      color: '#666',
-                      textAlign: 'center'
-                    }}>
-                      Pay the full amount now
-                    </div>
-                    <div style={{
-                      marginTop: '8px',
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      color: '#0070f3'
-                    }}>
-                      ${calculateTotal()}
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentAmount"
-                      value="full"
-                      checked={formData.paymentAmount === 'full'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  ...labelStyle,
-                  fontSize: '1.1rem',
-                  marginBottom: '1rem'
-                }}>
-                  Payment Method:
-                </label>
-                <div className="payment-options" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                  gap: '12px',
-                }}>
-                  {/* Stripe Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="Stripe"
-                    onClick={() => handlePaymentMethodSelect('Stripe')}
-                    style={getPaymentOptionStyle('Stripe')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Stripe
-                    }}>
-                      <FaCreditCard />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      Stripe
-                    </div>
-                  </div>
-                  
-                  {/* Venmo Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="Venmo"
-                    onClick={() => handlePaymentMethodSelect('Venmo')}
-                    style={getPaymentOptionStyle('Venmo')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Venmo
-                    }}>
-                      <SiVenmo />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      Venmo
-                    </div>
-                  </div>
-                  
-                  {/* Cash App Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="CashApp"
-                    onClick={() => handlePaymentMethodSelect('CashApp')}
-                    style={getPaymentOptionStyle('CashApp')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.CashApp
-                    }}>
-                      <SiCashapp />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      CashApp
-                    </div>
-                  </div>
-                  
-                  {/* PayPal Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="PayPal"
-                    onClick={() => handlePaymentMethodSelect('PayPal')}
-                    style={getPaymentOptionStyle('PayPal')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.PayPal
-                    }}>
-                      <FaPaypal />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      PayPal
-                    </div>
-                  </div>
-                </div>
-                {formErrors.paymentMethod && (
-                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                    {formErrors.paymentMethod}
-                  </p>
-                )}
-              </div>
-
-              {/* Itemized Total */}
-              <div className="event-summary" style={{
-                backgroundColor: '#f8f9fa',
-                padding: '1rem',
-                borderRadius: '8px',
-                marginBottom: '1.5rem',
-              }}>
-                <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
-                {itemizedTotal()}
-              </div>
-              
-              {/* Signature Field */}
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '1rem',
-                borderRadius: '8px',
-                marginBottom: '1.5rem',
-                border: formErrors.signature ? '1px solid red' : '1px solid #e0e0e0'
-              }}>
-                {/* Removed h3 heading and agreement text as requested */}
-                <SignatureField 
-                  onSignatureChange={handleSignatureChange} 
-                  showTermsModal={() => setShowTerms(true)}
-                />
-                {formErrors.signature && (
-                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                    {formErrors.signature}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit Error Message */}
-              {submitError && (
-                <div style={{
-                  color: '#e53e3e',
-                  padding: '0.75rem',
-                  marginBottom: '1rem',
-                  backgroundColor: '#fee2e2',
-                  borderRadius: '0.25rem',
-                  borderLeft: '4px solid #e53e3e',
-                }}>
-                  {submitError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="submit-button"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem',
-                  fontSize: '1rem',
-                  borderRadius: '8px',
-                  marginTop: '1rem',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s',
-                  opacity: isSubmitting ? 0.7 : 1
-                }}
-              >
-                {isSubmitting ? 'Processing...' : 'Submit Contract'}
-              </button>
-            </form>
+            <button
+              onClick={onClose}
+              style={{
+                backgroundColor: '#0070f3',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
           </div>
-        )}
+        </div>
       </div>
-      
-      <PaymentConfirmation 
-        show={showConfirmation} 
-        message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
-      />
-      {/* Render the genre selection modal */}
-      {showGenreModal && (
-        <GenreSelectionModal onClose={() => setShowGenreModal(false)} />
-      )}
-      {/* Other modals */}
-      {modalText && <InfoModal text={modalText} onClose={() => setModalText(null)} />}
-      {showTerms && (
-        <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
-      )}
-      {showPlaylistHelp && (
-        <PlaylistHelpModal
-          streamingService={formData.streamingService}
-          onClose={() => setShowPlaylistHelp(false)}
-        />
-      )}
-      {showSuccessMessage && <SuccessMessage />}
-      {showErrorMessage && <ErrorMessage message={showErrorMessage} />}
-      {submitted && formData.paymentMethod !== 'Stripe' && (
-        <PaymentInstructions 
-          paymentMethod={formData.paymentMethod}
-          bookingId={formData.bookingId}
-        />
-      )}
+    );
+  }
+
+  if (!isClient) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        opacity: animateIn ? 1 : 0,
+        transition: 'opacity 0.2s ease-in-out',
+        padding: '16px'
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '90%',
+          width: '400px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          position: 'relative',
+          transform: animateIn ? 'scale(1)' : 'scale(0.95)',
+          transition: 'transform 0.2s ease-in-out'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            border: 'none',
+            background: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#666',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            transition: 'all 0.2s ease',
+            ':hover': {
+              backgroundColor: '#f5f5f5'
+            }
+          }}
+        >
+          ×
+        </button>
+        
+        {getInstructions()}
+      </div>
     </div>
   );
 }
