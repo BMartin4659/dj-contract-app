@@ -1836,6 +1836,26 @@ export default function DJContractForm() {
   }, [isClient]);
   */
 
+  // Create a service card style generator
+  const getServiceCardStyle = useCallback((name) => {
+    const isSelected = formData[name] === true;
+    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
+    
+    return {
+      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
+      borderRadius: '12px',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      cursor: 'pointer',
+      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+      position: 'relative',
+      overflow: 'hidden'
+    };
+  }, [formData]);
+
   if (!isClient) {
     return null;
   }
