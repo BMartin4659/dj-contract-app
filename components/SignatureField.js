@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { FaInfoCircle } from 'react-icons/fa';
 
-const SignatureField = ({ onSignatureChange }) => {
+const SignatureField = ({ onSignatureChange, showTermsModal }) => {
   const [signerName, setSignerName] = useState('');
   const [nameError, setNameError] = useState('');
   
@@ -29,8 +30,30 @@ const SignatureField = ({ onSignatureChange }) => {
   return (
     <div id="signature-section" style={{ marginBottom: '2rem' }}>
       <h3 style={{ marginBottom: '1rem' }}>Authorization</h3>
-      <p style={{ marginBottom: '1rem', backgroundColor: '#3b82f6', color: 'white', padding: '8px 12px', borderRadius: '4px' }}>
-        By entering your name below, you agree to the terms and conditions.
+      <p style={{ 
+        marginBottom: '1rem', 
+        backgroundColor: '#3b82f6', 
+        color: 'white', 
+        padding: '8px 12px', 
+        borderRadius: '4px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <span>By entering your name below, you agree to the terms and conditions.</span>
+        <FaInfoCircle 
+          style={{ 
+            marginLeft: '8px', 
+            cursor: 'pointer',
+            fontSize: '1.2rem',
+            color: 'white'
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            if (showTermsModal) showTermsModal();
+          }}
+          title="View Terms and Conditions"
+        />
       </p>
       
       {/* Name input field with signature-like font */}

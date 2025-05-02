@@ -634,6 +634,7 @@ Live City DJ Contract Terms and Conditions:
     { id: 'tidal', label: 'TIDAL', icon: 'https://tidal.com/img/tidal-share-image.jpg', placeholder: 'Paste your TIDAL playlist link' }
   ];
 
+  // Initial form data state with default values
   const [formData, setFormData] = useState({
     clientName: '',
     email: '',
@@ -651,7 +652,7 @@ Live City DJ Contract Terms and Conditions:
     photography: false,
     videoVisuals: false,
     additionalHours: 0,
-    agreeToTerms: false,
+    agreeToTerms: true, // Changed to true by default
     musicPreferences: [], // New field for music preferences
     otherMusicPreference: '', // Field for "other" music preference specification
     streamingService: '', // Selected streaming service
@@ -1331,7 +1332,7 @@ Live City DJ Contract Terms and Conditions:
     
     // Validate signature (now just the name)
     if (!formData.signerName || !formData.signerName.trim()) {
-      errors.signerName = 'Please enter your full name to authorize the contract';
+      errors.signature = 'Please enter your full name to authorize the contract';
       setSubmitError('Please enter your full name to authorize the contract before submitting.');
     }
     
@@ -2401,7 +2402,7 @@ Live City DJ Contract Terms and Conditions:
                 photography: false,
                 videoVisuals: false,
                 additionalHours: 0,
-                agreeToTerms: false,
+                agreeToTerms: true, // Changed to true by default
                 musicPreferences: [], // New field for music preferences
                 otherMusicPreference: '', // Field for "other" music preference specification
                 streamingService: '', // Selected streaming service
@@ -3682,79 +3683,6 @@ Live City DJ Contract Terms and Conditions:
                 )}
               </div>
 
-              {/* Redesigned Terms and Conditions */}
-              <div style={{
-                marginBottom: '1.5rem',
-                backgroundColor: 'rgba(255,255,255,0.8)',
-                padding: '16px',
-                borderRadius: '12px',
-                border: formData.agreeToTerms ? '2px solid #0070f3' : '1px solid #ddd',
-                boxShadow: formData.agreeToTerms ? '0 4px 12px rgba(0, 112, 243, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
-                transition: 'all 0.2s ease'
-              }} className="terms-container">
-                <div 
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setFormData(prev => ({...prev, agreeToTerms: !prev.agreeToTerms}))}
-                >
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '4px',
-                    border: formData.agreeToTerms ? '2px solid #0070f3' : '2px solid #ccc',
-                    backgroundColor: formData.agreeToTerms ? '#0070f3' : 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '12px',
-                    marginTop: '2px',
-                    transition: 'all 0.2s ease'
-                  }}>
-                    {formData.agreeToTerms && <FaCheck color="white" size={14} />}
-                  </div>
-                  <div>
-                    <input
-                      type="checkbox"
-                      name="agreeToTerms"
-                      checked={formData.agreeToTerms}
-                      onChange={handleChange}
-                      required
-                      style={{
-                        position: 'absolute',
-                        opacity: 0,
-                        width: 0,
-                        height: 0
-                      }}
-                    />
-                    <p style={{
-                      fontSize: '1rem',
-                      lineHeight: '1.5',
-                      fontWeight: '500',
-                      color: '#333',
-                      margin: 0
-                    }}>
-                      I agree to the <a 
-                        onClick={(e) => { 
-                          e.stopPropagation();
-                          setShowTerms(true); 
-                        }} 
-                        style={{ 
-                          color: '#0070f3', 
-                          fontWeight: 'bold', 
-                          cursor: 'pointer',
-                          textDecoration: 'underline' 
-                        }}
-                      >
-                        terms and conditions
-                      </a>, including the cancellation policy and payment terms.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Itemized Total */}
               <div className="event-summary" style={{
                 backgroundColor: '#f8f9fa',
@@ -3775,7 +3703,10 @@ Live City DJ Contract Terms and Conditions:
                 border: formErrors.signature ? '1px solid red' : '1px solid #e0e0e0'
               }}>
                 {/* Removed h3 heading and agreement text as requested */}
-                <SignatureField onSignatureChange={handleSignatureChange} />
+                <SignatureField 
+                  onSignatureChange={handleSignatureChange} 
+                  showTermsModal={() => setShowTerms(true)}
+                />
                 {formErrors.signature && (
                   <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
                     {formErrors.signature}
