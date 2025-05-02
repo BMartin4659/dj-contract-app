@@ -585,18 +585,39 @@ function PlaylistHelpModal({ streamingService, onClose }) {
 export default function DJContractForm() {
   // Terms and conditions text
   const termsAndConditionsText = `
-Live City DJ Contract Terms and Conditions:
+<h2 style="color: #0070f3; margin-bottom: 16px; text-align: center;">Live City DJ Contract Terms and Conditions</h2>
 
-1. Booking & Deposit: A non-refundable deposit of 50% is required to secure your date.
-2. Cancellation Policy: Cancellations made less than 30 days before the event forfeit the full deposit.
-3. Final Payment: Remaining balance is due on the day of the event before services begin.
-4. Equipment: DJ provides all necessary sound equipment unless otherwise specified.
-5. Venue Requirements: Client is responsible for providing adequate power supply and space.
-6. Time Extensions: Additional hours beyond contracted time will be charged at $75/hour.
-7. Force Majeure: Neither party shall be liable for failure to perform due to circumstances beyond reasonable control.
-8. Breaks: For events longer than 4 hours, DJ is entitled to a 15-minute break per 2 hours of performance.
-9. Liability: DJ is not responsible for any injuries or property damage caused by guests.
-10. Media Rights: DJ may use event photos/videos for promotional purposes unless otherwise specified.
+<div style="margin-bottom: 16px;">
+  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Booking & Payment</h3>
+  <ul style="padding-left: 20px; line-height: 1.6;">
+    <li><strong>Deposit:</strong> A non-refundable deposit of 50% is required to secure your event date.</li>
+    <li><strong>Final Payment:</strong> Remaining balance is due on the day of the event before services begin.</li>
+    <li><strong>Cancellation Policy:</strong> Cancellations made less than 30 days before the event will forfeit the full deposit amount.</li>
+  </ul>
+</div>
+
+<div style="margin-bottom: 16px;">
+  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Services & Equipment</h3>
+  <ul style="padding-left: 20px; line-height: 1.6;">
+    <li><strong>Equipment:</strong> DJ provides all necessary sound equipment unless otherwise specified.</li>
+    <li><strong>Venue Requirements:</strong> Client is responsible for providing adequate power supply and space for setup.</li>
+    <li><strong>Time Extensions:</strong> Additional hours beyond contracted time will be charged at $75/hour.</li>
+    <li><strong>Breaks:</strong> For events longer than 4 hours, DJ is entitled to a 15-minute break per 2 hours of performance.</li>
+  </ul>
+</div>
+
+<div style="margin-bottom: 16px;">
+  <h3 style="color: #3b82f6; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Legal</h3>
+  <ul style="padding-left: 20px; line-height: 1.6;">
+    <li><strong>Force Majeure:</strong> Neither party shall be liable for failure to perform due to circumstances beyond reasonable control (natural disasters, emergencies, etc.).</li>
+    <li><strong>Liability:</strong> DJ is not responsible for any injuries or property damage caused by guests.</li>
+    <li><strong>Media Rights:</strong> DJ may use event photos/videos for promotional purposes unless otherwise specified in writing.</li>
+  </ul>
+</div>
+
+<p style="font-style: italic; color: #666; font-size: 14px; text-align: center; margin-top: 20px;">
+  By entering your name in the signature field, you acknowledge that you have read and agree to these terms and conditions.
+</p>
 `;
 
   // Fallback EmailJS configuration (used if environment variables are missing)
@@ -1708,463 +1729,35 @@ Live City DJ Contract Terms and Conditions:
           backgroundColor: 'white',
           padding: '25px',
           borderRadius: '12px',
-          maxWidth: '500px',
+          maxWidth: '600px',
+          width: '90%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
           boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
           border: '2px solid #0070f3',
         }}>
-          <h3 style={{ marginBottom: '12px', color: '#0070f3' }}>Additional Information</h3>
-          <p style={{
-            marginBottom: '20px',
-            fontSize: '16px',
-            lineHeight: '1.6',
-            color: '#333',
-            fontWeight: '500'
-          }}>{text}</p>
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: '#0070f3',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            Ok
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // PaymentModal component for displaying payment information with HTML content
-  function PaymentModal({ htmlContent, onClose }) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '25px',
-          borderRadius: '12px',
-          maxWidth: '500px',
-          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
-          border: '2px solid #0070f3',
-        }}>
-          <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: '#0070f3',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginTop: '15px',
-              width: '100%'
-            }}
-          >
-            Ok
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Create a more direct payment method handler that doesn't rely on async processing
-  // Update handlePaymentMethodSelect to be more direct
-  const handlePaymentMethodSelect = useCallback((method) => {
-    // Direct assignment for immediate UI feedback
-    document.querySelectorAll('.payment-option').forEach(el => {
-      el.style.border = el.dataset.method === method 
-        ? '2px solid #0070f3' 
-        : '2px solid #ddd';
-      el.style.backgroundColor = el.dataset.method === method 
-        ? 'rgba(0, 112, 243, 0.05)' 
-        : 'white';
-      el.style.boxShadow = el.dataset.method === method 
-        ? '0 4px 12px rgba(0, 112, 243, 0.15)' 
-        : '0 1px 3px rgba(0,0,0,0.05)';
-    });
-    
-    // Update form data in the next tick to avoid blocking the UI
-    setTimeout(() => {
-      setFormData(prev => ({ ...prev, paymentMethod: method }));
-    }, 0);
-  }, []);
-
-  // Memoize the payment method option styles to reduce recalculations
-  const getPaymentOptionStyle = useCallback((method) => {
-    const isSelected = formData.paymentMethod === method;
-    return {
-      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
-      borderRadius: '12px',
-      padding: '15px 10px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: isChangingPayment ? 'wait' : 'pointer',
-      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
-      transition: 'all 0.2s ease',
-      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-      opacity: isChangingPayment ? 0.7 : 1
-    };
-  }, [formData.paymentMethod, isChangingPayment]);
-
-  // Create a service card style generator
-  const getServiceCardStyle = useCallback((name) => {
-    const isSelected = formData[name] === true;
-    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
-    
-    return {
-      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
-      borderRadius: '12px',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      cursor: 'pointer',
-      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
-      transition: 'all 0.2s ease',
-      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-      position: 'relative',
-      overflow: 'hidden'
-    };
-  }, [formData]);
-
-  // Memoize common styles to avoid recreation on each render
-  const paymentIconStyle = useMemo(() => ({ 
-    fontSize: '28px', 
-    marginBottom: '6px' 
-  }), []);
-
-  // Define icon colors for payment methods
-  const paymentIconColors = useMemo(() => ({
-    Stripe: '#6772E5',
-    Venmo: '#3D95CE',
-    CashApp: '#00C244',
-    PayPal: '#0070BA'
-  }), []);
-
-  const paymentLabelStyle = useMemo(() => ({ 
-    fontWeight: 'bold',
-    fontSize: '1rem'
-  }), []);
-
-  const radioStyle = useMemo(() => ({ 
-    position: 'absolute', 
-    opacity: 0 
-  }), []);
-
-  // Log initial form state
-  useEffect(() => {
-    console.log("Initial form data:", formData);
-    console.log("Service selections:", {
-      lighting: formData.lighting,
-      photography: formData.photography,
-      videoVisuals: formData.videoVisuals
-    });
-  }, []);
-
-  // Add this to manually load Google Maps API if other methods fail
-  useEffect(() => {
-    if (isClient && mapsError) {
-      console.log('Attempting to reload Google Maps API after error...');
-      
-      // Remove any existing Google Maps scripts
-      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
-      existingScripts.forEach(script => script.remove());
-      
-      // Reset Google object
-      if (window.google && window.google.maps) {
-        try {
-          // This is a best-effort attempt to clear the Google object
-          window.google.maps = undefined;
-        } catch (e) {
-          console.error('Error clearing Google maps object:', e);
-        }
-      }
-      
-      // Create and add new script
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`;
-      script.async = true;
-      script.defer = true;
-      
-      // Define callback function
-      window.initGoogleMapsCallback = () => {
-        console.log('Google Maps API reloaded successfully!');
-        setMapsError(null);
-        setMapsLoaded(true);
-        if (venueLocationRef.current) {
-          initializeGooglePlaces();
-        }
-      };
-      
-      script.onerror = (err) => {
-        console.error('Failed to reload Google Maps API:', err);
-        setMapsError('Failed to load Google Maps API. Please try refreshing the page.');
-      };
-      
-      document.head.appendChild(script);
-    }
-  }, [mapsError, isClient]);
-
-  // GenreSelectionModal component for selecting music genres
-  function GenreSelectionModal({ onClose }) {
-    const [selectedGenres, setSelectedGenres] = useState([...formData.musicPreferences]);
-    const [otherGenre, setOtherGenre] = useState(formData.otherMusicPreference || '');
-    const [animateIn, setAnimateIn] = useState(false);
-    
-    // Set animation on mount
-    useEffect(() => {
-      const timer = setTimeout(() => setAnimateIn(true), 50);
-      return () => clearTimeout(timer);
-    }, []);
-    
-    // Apply changes and close the modal
-    const applyChanges = () => {
-      setFormData(prev => ({
-        ...prev,
-        musicPreferences: selectedGenres,
-        otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
-      }));
-      onClose();
-    };
-    
-    // Handle genre selection
-    const toggleGenre = (genreId) => {
-      if (selectedGenres.includes(genreId)) {
-        setSelectedGenres(prev => prev.filter(id => id !== genreId));
-      } else {
-        setSelectedGenres(prev => [...prev, genreId]);
-      }
-    };
-    
-    return (
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1050,
-          opacity: animateIn ? 1 : 0,
-          transition: 'opacity 0.3s ease'
-        }}
-        onClick={onClose}
-      >
-        <div 
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            maxWidth: '800px',
-            width: '90%',
-            maxHeight: '85vh',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
-            border: '2px solid #0070f3',
-            overflow: 'hidden',
-            transform: animateIn ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'transform 0.4s ease-out',
-            display: 'flex',
-            flexDirection: 'column'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{
-            padding: '20px 25px',
-            borderBottom: '1px solid #eaeaea',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'linear-gradient(90deg, #0070f3, #3291ff)'
-          }}>
-            <h2 style={{ 
-              margin: 0, 
-              color: 'white',
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <span style={{ marginRight: '12px', fontSize: '1.8rem' }}>🎵</span>
-              Choose Your Music Style
-            </h2>
-            <button 
-              onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                transition: 'background-color 0.2s',
-                ':hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
-              }}
-            >
-              ×
-            </button>
-          </div>
-          
+          <div dangerouslySetInnerHTML={{ __html: text }} />
           <div style={{ 
-            padding: '20px 25px',
-            overflowY: 'auto',
-            flexGrow: 1
-          }}>
-            <p style={{ 
-              marginBottom: '20px', 
-              fontSize: '1.1rem',
-              color: '#444'
-            }}>
-              Select the music genres you&apos;d like to hear at your event:
-            </p>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: '15px',
-              marginBottom: '25px'
-            }}>
-              {musicGenres.map(genre => (
-                <div key={genre.id} 
-                  onClick={() => toggleGenre(genre.id)}
-                  style={{
-                    padding: '15px',
-                    borderRadius: '8px',
-                    border: `2px solid ${selectedGenres.includes(genre.id) ? '#0070f3' : '#e0e0e0'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: selectedGenres.includes(genre.id) ? 'rgba(0, 112, 243, 0.08)' : 'white',
-                    transition: 'all 0.2s ease',
-                    transform: selectedGenres.includes(genre.id) ? 'scale(1.02)' : 'scale(1)',
-                    boxShadow: selectedGenres.includes(genre.id) 
-                      ? '0 6px 14px rgba(0, 112, 243, 0.15)' 
-                      : '0 2px 5px rgba(0,0,0,0.05)'
-                  }}
-                >
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    border: '2px solid',
-                    borderColor: selectedGenres.includes(genre.id) ? '#0070f3' : '#ddd',
-                    marginRight: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: selectedGenres.includes(genre.id) ? '#0070f3' : 'white',
-                    transition: 'all 0.15s ease',
-                    flexShrink: 0
-                  }}>
-                    {selectedGenres.includes(genre.id) && (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    )}
-                  </div>
-                  <label style={{
-                    margin: 0,
-                    fontSize: '1.05rem',
-                    fontWeight: selectedGenres.includes(genre.id) ? '600' : '500', 
-                    color: selectedGenres.includes(genre.id) ? '#0070f3' : '#444',
-                    cursor: 'pointer',
-                    flexGrow: 1
-                  }}>
-                    {genre.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-            
-            {selectedGenres.includes('other') && (
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                  color: '#555'
-                }}>
-                  Please specify other genres:
-                </label>
-                <input
-                  type="text"
-                  value={otherGenre}
-                  onChange={(e) => setOtherGenre(e.target.value)}
-                  placeholder="Tell us about your other music preferences"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '2px solid #0070f3',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            )}
-          </div>
-          
-          <div style={{
-            padding: '15px 25px',
-            borderTop: '1px solid #eaeaea',
-            display: 'flex',
-            justifyContent: 'space-between',
-            backgroundColor: '#f9f9f9'
+            display: 'flex', 
+            justifyContent: 'center',
+            marginTop: '20px' 
           }}>
             <button
               onClick={onClose}
               style={{
-                padding: '10px 20px',
-                borderRadius: '6px',
-                border: '1px solid #ddd',
-                backgroundColor: 'white',
-                color: '#555',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                ':hover': { backgroundColor: '#f5f5f5' }
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={applyChanges}
-              style={{
-                padding: '10px 24px',
-                borderRadius: '6px',
-                border: 'none',
                 backgroundColor: '#0070f3',
                 color: 'white',
-                fontWeight: '600',
+                border: 'none',
+                padding: '10px 24px',
+                borderRadius: '6px',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                ':hover': { backgroundColor: '#0060df' }
+                fontSize: '16px',
+                fontWeight: '500',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.2s ease'
               }}
             >
-              Apply Selections
+              Close
             </button>
           </div>
         </div>
