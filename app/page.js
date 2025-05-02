@@ -923,14 +923,10 @@ Live City DJ Contract Terms and Conditions:
           .payment-options {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          /* Fix for signature field on mobile */
+          /* Signature field simplified - removed scrolling prevention */
           #signature-section {
-            touch-action: none !important;
-            -ms-touch-action: none !important;
-          }
-          #signature-section canvas {
-            touch-action: none !important;
-            -ms-touch-action: none !important;
+            position: relative;
+            z-index: 10;
           }
         }
       `;
@@ -972,9 +968,7 @@ Live City DJ Contract Terms and Conditions:
             
             /* Fix for signature pad on iOS */
             #signature-section {
-              -webkit-user-select: none !important;
-              -webkit-touch-callout: none !important;
-              -webkit-tap-highlight-color: transparent !important;
+              /* Removed touch restriction properties to allow scrolling */
             }
           }
         `;
@@ -2897,20 +2891,11 @@ Live City DJ Contract Terms and Conditions:
                     }
                   }
                   
-                  /* Mobile fixes for signature field */
+                  /* Signature field styles - removed touch-action restrictions */
                   @media (max-width: 767px) {
                     #signature-section {
                       position: relative;
                       z-index: 10;
-                    }
-                    
-                    #signature-section canvas {
-                      touch-action: none !important;
-                    }
-                    
-                    /* Optimized scrolling during signature without freezing */
-                    .signature-pad-canvas {
-                      touch-action: none !important;
                     }
                   }
                 `}</style>
@@ -3037,14 +3022,14 @@ Live City DJ Contract Terms and Conditions:
                     name: 'photography',
                     label: 'Event Photography',
                     price: '$150',
-                    description: 'Includes 50 high-quality candid shots delivered within 48 hours.',
+                    description: 'Capture the magic of your event with 50 stunning, high-quality candid shots that preserve your most precious moments. All images delivered within 48 hours.',
                     icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
                   },
                   {
                     name: 'videoVisuals',
                     label: 'Video Visuals',
                     price: '$100',
-                    description: 'Slide shows, presentations, karaoke etc.',
+                    description: 'Enhance your guest experience with captivating visual effects, dynamic slideshows, and interactive karaoke displays projected throughout your venue.',
                     icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
                   },
                 ].map(({ name, label, price, description, icon }) => {
