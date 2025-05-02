@@ -2224,39 +2224,28 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
-  // Handle signature field interactions on mobile devices
+  // Handle signature field interactions on mobile devices - optimized version
   useEffect(() => {
     if (isClient) {
-      // Function to prevent scrolling of the page when interacting with the signature field
-      const handleSignatureInteraction = (event) => {
-        const target = event.target;
-        // Check if the target is the signature canvas or inside the signature section
-        if (
-          target.tagName === 'CANVAS' || 
-          target.classList?.contains('signature-pad-canvas') ||
-          target.closest('#signature-section')
-        ) {
-          // Prevent default only for touch events
-          if (event.type.startsWith('touch')) {
-            event.preventDefault();
-          }
+      // More targeted approach to handle signature canvas interactions
+      const handleSignatureCanvas = (event) => {
+        // Only handle events for the actual canvas element to avoid freezing
+        if (event.target.tagName === 'CANVAS' && 
+            (event.target.classList.contains('signature-pad-canvas') || 
+             event.target.closest('#signature-section'))) {
           
-          // For touchmove events on the canvas specifically
-          if (event.type === 'touchmove' && 
-             (target.tagName === 'CANVAS' || target.classList?.contains('signature-pad-canvas'))) {
+          // Only prevent default for touchmove events on the canvas itself
+          if (event.type === 'touchmove') {
             event.preventDefault();
           }
         }
       };
       
-      // Attach event listeners
-      document.addEventListener('touchstart', handleSignatureInteraction, { passive: false });
-      document.addEventListener('touchmove', handleSignatureInteraction, { passive: false });
+      // Only attach to the specific events we need
+      document.addEventListener('touchmove', handleSignatureCanvas, { passive: false });
       
-      // Cleanup
       return () => {
-        document.removeEventListener('touchstart', handleSignatureInteraction);
-        document.removeEventListener('touchmove', handleSignatureInteraction);
+        document.removeEventListener('touchmove', handleSignatureCanvas);
       };
     }
   }, [isClient]);
@@ -2921,12 +2910,9 @@ Live City DJ Contract Terms and Conditions:
                       touch-action: none !important;
                     }
                     
-                    /* Prevent scrolling when signing */
-                    body.is-signing {
-                      overflow: hidden !important;
-                      position: fixed;
-                      width: 100%;
-                      height: 100%;
+                    /* Optimized scrolling during signature without freezing */
+                    .signature-pad-canvas {
+                      touch-action: none !important;
                     }
                   }
                 `}</style>

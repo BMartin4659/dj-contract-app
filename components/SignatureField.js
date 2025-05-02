@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 
 // Import SignatureCanvas dynamically to avoid SSR issues
@@ -14,33 +14,29 @@ const SignatureField = ({ onSignatureChange }) => {
   const [signerName, setSignerName] = useState('');
   const [nameError, setNameError] = useState('');
   const [isSigning, setIsSigning] = useState(false);
+  const signatureContainerRef = useRef(null);
   
-  // Handle scroll prevention during signing
+  // Handle scroll prevention only within the signature area
   useEffect(() => {
-    // Function to prevent default touchmove behavior to stop scrolling
-    const preventScroll = (e) => {
-      if (isSigning) {
-        e.preventDefault();
-      }
-    };
-
-    // Function to prevent default scroll behavior
-    const preventScrolling = (e) => {
-      if (isSigning) {
-        e.preventDefault();
-        return false;
-      }
-      return true;
-    };
-
-    // Add event listeners to prevent scrolling while signing
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('scroll', preventScrolling, { passive: false });
+    const signatureContainer = signatureContainerRef.current;
+    if (!signatureContainer) return;
     
-    // Cleanup function
+    // Function to prevent default touchmove behavior but only within the signature pad
+    const preventScrollOnSignaturePad = (e) => {
+      // Only prevent scroll when actively signing
+      if (isSigning && e.target.tagName === 'CANVAS') {
+        e.preventDefault();
+      }
+    };
+    
+    // Add event listeners only to the signature pad container
+    signatureContainer.addEventListener('touchmove', preventScrollOnSignaturePad, { passive: false });
+    
+    // Cleanup
     return () => {
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('scroll', preventScrolling);
+      if (signatureContainer) {
+        signatureContainer.removeEventListener('touchmove', preventScrollOnSignaturePad);
+      }
     };
   }, [isSigning]);
   
@@ -54,18 +50,10 @@ const SignatureField = ({ onSignatureChange }) => {
   
   const handleSignatureBegin = () => {
     setIsSigning(true);
-    // Add class to body to prevent scrolling
-    if (typeof document !== 'undefined') {
-      document.body.classList.add('is-signing');
-    }
   };
   
   const handleSignatureEnd = () => {
     setIsSigning(false);
-    // Remove class from body to allow scrolling again
-    if (typeof document !== 'undefined') {
-      document.body.classList.remove('is-signing');
-    }
     
     if (sigPad && !sigPad.isEmpty()) {
       if (!signerName.trim()) {
@@ -125,6 +113,7 @@ const SignatureField = ({ onSignatureChange }) => {
       </div>
       
       <div 
+        ref={signatureContainerRef}
         style={{ 
           border: '1px solid #ccc', 
           borderRadius: '8px', 
@@ -132,24 +121,12 @@ const SignatureField = ({ onSignatureChange }) => {
           position: 'relative',
           touchAction: 'none'
         }}
-        onTouchStart={(e) => {
-          if (isSigning) {
-            e.preventDefault();
-          }
-        }}
-        onTouchMove={(e) => {
-          if (isSigning) {
-            e.preventDefault();
-          }
-        }}
       >
         <SignatureCanvas
           ref={(ref) => setSigPad(ref)}
           canvasProps={{
             style: { width: '100%', height: '200px' },
             className: 'signature-pad-canvas',
-            // Add these attributes to prevent scrolling on mobile devices
-            'data-touch-action': 'none',
             'touch-action': 'none'
           }}
           options={{
