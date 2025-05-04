@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaCheckCircle, FaHome, FaEnvelope, FaRedo } from 'react-icons/fa';
+import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft } from 'react-icons/fa';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { FaPaypal, FaCreditCard } from 'react-icons/fa';
 import Link from 'next/link';
@@ -199,7 +199,12 @@ function PaymentSuccessContent() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailError, setEmailError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('');
-
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const sessionId = searchParams.get('session_id');
+  
   useEffect(() => {
     // Get the payment ID from the URL
     const id = searchParams.get('id');
@@ -220,6 +225,33 @@ function PaymentSuccessContent() {
       fetchBookingDetails(id);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const getPaymentDetails = async () => {
+      if (!sessionId) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/get-session-details?session_id=${sessionId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch payment details');
+        }
+        
+        const data = await response.json();
+        setPaymentDetails(data);
+      } catch (err) {
+        console.error('Error fetching payment details:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getPaymentDetails();
+  }, [sessionId]);
 
   // Function to fetch booking details from Firestore
   const fetchBookingDetails = async (paymentId) => {
@@ -342,134 +374,184 @@ function PaymentSuccessContent() {
       
       <div style={{
         backgroundColor: 'white',
-        padding: '40px 50px',
+        padding: '30px',
         borderRadius: '20px',
         boxShadow: '0 15px 40px rgba(0, 0, 0, 0.2)',
         maxWidth: '92%',
-        width: '700px',
+        width: '600px',
         textAlign: 'center',
         position: 'relative',
         zIndex: 2
       }}>
-        {/* Banner with logo */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
+        {/* Logo Header - Simplified */}
+        <div style={{ marginBottom: '10px', position: 'relative' }}>
+          <div style={{ 
+            position: 'relative',
+            width: '120px',
+            height: '120px',
+            margin: '0 auto'
+          }}>
             <Image
               src="/dj-bobby-drake-logo.png" 
               alt="DJ Bobby Drake Logo"
               fill
               priority
-              sizes="(max-width: 768px) 200px, 200px"
-              style={{ 
-                objectFit: 'contain', 
-                objectPosition: 'center'
-              }}
+              sizes="120px"
+              style={{ objectFit: 'contain' }}
             />
           </div>
-          <h2 style={{ 
-            fontSize: '1.875rem', 
-            fontWeight: 'bold',
-            marginTop: '10px',
-            fontFamily: 'Poppins, sans-serif'
-          }}>
-            EVENT CONTRACT
-          </h2>
         </div>
         
-        <h1 style={{ 
-          color: '#3b82f6', 
-          marginTop: '0',
-          marginBottom: '1.5rem',  
-          fontSize: '3rem', 
-          fontWeight: 'bold',
-          textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-          letterSpacing: '-0.5px'
+        {/* Success Message - Simplified and Improved */}
+        <div style={{
+          backgroundColor: '#f0fdf4', 
+          borderRadius: '12px', 
+          padding: '20px', 
+          marginBottom: '25px',
+          border: '1px solid #dcfce7'
         }}>
-          Payment Successful!
-        </h1>
-        
-        <div style={{ 
-          padding: '25px', 
-          background: 'rgba(59, 130, 246, 0.08)', 
-          borderRadius: '12px',
-          marginBottom: '2.5rem',
-          border: '1px solid rgba(59, 130, 246, 0.15)'
-        }}>
-          <p style={{ 
-            fontSize: '1.5rem', 
-            lineHeight: '1.6',
-            color: '#333',
-            fontWeight: '500'
+          <div style={{
+            width: '60px',
+            height: '60px',
+            backgroundColor: '#22c55e',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 15px auto'
           }}>
-            Thank you for your payment. Your booking has been confirmed!
+            <FaCheckCircle size={30} color="white" />
+          </div>
+          
+          <h1 style={{ 
+            color: '#15803d', 
+            fontSize: '2rem', 
+            fontWeight: 'bold',
+            marginBottom: '10px',
+          }}>
+            Payment Successful!
+          </h1>
+          
+          <p style={{ 
+            fontSize: '1.1rem', 
+            color: '#166534',
+            marginBottom: '0'
+          }}>
+            Your booking has been confirmed
           </p>
+        </div>
+        
+        {/* Payment Details - More Organized */}
+        <div style={{ 
+          backgroundColor: '#f9fafb',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '25px',
+          textAlign: 'left'
+        }}>
+          <h2 style={{ 
+            fontSize: '1.2rem',
+            fontWeight: '600',
+            color: '#374151',
+            marginBottom: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <FaReceipt style={{ color: '#3b82f6' }} />
+            Payment Details
+          </h2>
           
-          {paymentMethod && (
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#4b5563',
-              marginTop: '10px',
-              fontWeight: '500'
-            }}>
-              Payment Method: {paymentMethod}
-            </p>
-          )}
-          
-          {paymentId && (
-            <p style={{ 
-              fontSize: '1rem', 
-              color: '#4b5563',
-              marginTop: '15px',
-              fontWeight: '500',
-              padding: '10px',
-              background: 'rgba(59, 130, 246, 0.05)',
-              borderRadius: '8px',
-              display: 'inline-block'
-            }}>
-              Payment ID: {paymentId}
-            </p>
-          )}
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '12px',
+            fontSize: '1rem'
+          }}>
+            {paymentMethod && (
+              <>
+                <div style={{ color: '#6b7280', fontWeight: '500' }}>Payment Method:</div>
+                <div style={{ color: '#111827', fontWeight: '600' }}>{paymentMethod}</div>
+              </>
+            )}
+            
+            {paymentId && (
+              <>
+                <div style={{ color: '#6b7280', fontWeight: '500' }}>Payment ID:</div>
+                <div style={{ 
+                  color: '#111827', 
+                  fontWeight: '500',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>{paymentId}</div>
+              </>
+            )}
+            
+            {booking && booking.amount && (
+              <>
+                <div style={{ color: '#6b7280', fontWeight: '500' }}>Amount:</div>
+                <div style={{ color: '#111827', fontWeight: '600' }}>${booking.amount}</div>
+              </>
+            )}
+            
+            <div style={{ color: '#6b7280', fontWeight: '500' }}>Date:</div>
+            <div style={{ color: '#111827', fontWeight: '500' }}>{new Date().toLocaleDateString()}</div>
+            
+            <div style={{ color: '#6b7280', fontWeight: '500' }}>Status:</div>
+            <div style={{ color: '#16a34a', fontWeight: '600' }}>Paid</div>
+          </div>
           
           {booking && booking.isDeposit && (
             <div style={{
               marginTop: '15px',
               padding: '12px',
-              backgroundColor: 'rgba(246, 197, 59, 0.1)',
-              border: '1px solid rgba(246, 197, 59, 0.3)',
+              backgroundColor: 'rgba(255, 237, 213, 0.6)',
+              border: '1px solid #fed7aa',
               borderRadius: '8px',
               fontSize: '0.95rem',
-              color: '#805f13'
+              color: '#9a3412',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px'
             }}>
-              <p><strong>Note:</strong> You&apos;ve paid the deposit amount (50%). The remaining balance of ${booking.remainingBalance || booking.totalAmount / 2} will be due on the day of the event.</p>
+              <div style={{ marginTop: '3px', flexShrink: 0 }}>ℹ️</div>
+              <p style={{ margin: 0 }}>You&apos;ve paid the deposit (50%). Remaining balance of ${booking.remainingBalance || booking.totalAmount / 2} is due on the event day.</p>
             </div>
           )}
         </div>
-        
-        <p style={{ 
-          fontSize: '1.3rem', 
-          lineHeight: '1.7',
-          marginBottom: '2rem',
-          color: '#4b5563',
-          padding: '0 15px'
-        }}>
-          I look forward to making your event special! A confirmation email has been sent with the details of your booking.
-        </p>
 
-        {/* Email confirmation section */}
+        {/* Email confirmation section - Simplified */}
         {booking && booking.email && (
           <div style={{
-            padding: '15px',
-            borderRadius: '10px',
-            backgroundColor: '#f9fafb',
-            marginBottom: '2.5rem',
-            border: '1px solid #e5e7eb'
+            backgroundColor: '#f0f9ff',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '25px',
+            border: '1px solid #e0f2fe'
           }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '10px',
+              color: '#0369a1'
+            }}>
+              <FaEnvelope />
+              <h3 style={{ 
+                fontSize: '1.1rem',
+                margin: 0,
+                fontWeight: '600'
+              }}>
+                Confirmation Email
+              </h3>
+            </div>
+            
             {!emailSent ? (
               <>
-                <p style={{ fontSize: '1rem', color: '#4b5563', marginBottom: '10px' }}>
+                <p style={{ fontSize: '0.95rem', color: '#334155', margin: '0 0 15px 0' }}>
                   {emailError 
-                    ? "There was an issue sending the confirmation email:" 
-                    : "A confirmation email has been sent to your email address. If you didn't receive it, click on the link below to resend it:"}
+                    ? "We couldn&apos;t send your confirmation email" 
+                    : "A confirmation email has been sent. Didn&apos;t receive it?"}
                 </p>
                 
                 <button
@@ -480,11 +562,11 @@ function PaymentSuccessContent() {
                     alignItems: 'center',
                     backgroundColor: emailSending ? '#93c5fd' : '#3b82f6',
                     color: 'white',
-                    padding: '10px 20px',
+                    padding: '10px 16px',
                     borderRadius: '8px',
                     border: 'none',
                     cursor: emailSending ? 'default' : 'pointer',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     fontSize: '0.95rem',
                     marginBottom: emailError ? '10px' : '0'
                   }}
@@ -492,20 +574,19 @@ function PaymentSuccessContent() {
                   {emailSending ? (
                     <>
                       <div style={{ 
-                        width: '18px', 
-                        height: '18px', 
+                        width: '16px', 
+                        height: '16px', 
                         borderRadius: '50%', 
                         border: '2px solid white',
                         borderTopColor: 'transparent',
-                        marginRight: '10px',
+                        marginRight: '8px',
                         animation: 'spin 1s linear infinite'
                       }} /> 
                       Sending...
                     </>
                   ) : (
                     <>
-                      <FaEnvelope style={{ marginRight: '10px' }} /> 
-                      {emailError ? 'Try Again' : 'Resend Confirmation Email'}
+                      {emailError ? 'Try Again' : 'Resend Email'}
                     </>
                   )}
                 </button>
@@ -519,9 +600,9 @@ function PaymentSuccessContent() {
                     color: '#b91c1c',
                     fontSize: '0.9rem'
                   }}>
-                    {emailError}
-                    <p style={{ marginTop: '8px', color: '#4b5563', fontSize: '0.85rem' }}>
-                      Don&apos;t worry - your booking is confirmed. Our team will send you a manual confirmation soon.
+                    <p style={{ margin: '0 0 5px 0' }}>Error sending email</p>
+                    <p style={{ margin: 0, color: '#4b5563', fontSize: '0.85rem' }}>
+                      Don&apos;t worry - your booking is confirmed.
                     </p>
                   </div>
                 )}
@@ -534,111 +615,70 @@ function PaymentSuccessContent() {
                 backgroundColor: 'rgba(5, 150, 105, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                gap: '8px',
                 fontWeight: '500'
               }}>
-                <FaCheckCircle style={{ marginRight: '10px' }} /> 
-                Email sent successfully to {booking.email}
+                <FaCheckCircle /> 
+                Email sent to {booking.email}
               </div>
             )}
           </div>
         )}
         
-        <div style={{
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '15px',
-          marginBottom: '2rem',
-          width: '100%',
-          maxWidth: '350px',
-          margin: '0 auto'
-        }}>
-          {paymentMethod === 'Venmo' && (
-            <button
-              onClick={(e) => openPaymentApp(PAYMENT_METHODS.VENMO.url, e)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: PAYMENT_METHODS.VENMO.color,
-                color: 'white',
-                padding: '16px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-              Secure Your Event Make A Deposit
-            </button>
-          )}
-          
-          {paymentMethod === 'CashApp' && (
-            <button
-              onClick={(e) => openPaymentApp(PAYMENT_METHODS.CASHAPP.url, e)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: PAYMENT_METHODS.CASHAPP.color,
-                color: 'white',
-                padding: '16px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-              Secure Your Event Make A Deposit
-            </button>
-          )}
-          
-          {paymentMethod === 'PayPal' && (
-            <button
-              onClick={(e) => openPaymentApp(PAYMENT_METHODS.PAYPAL.url, e)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: PAYMENT_METHODS.PAYPAL.color,
-                color: 'white',
-                padding: '16px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-              Secure Your Event Make A Deposit
-            </button>
-          )}
-          
-          {/* Default button if no specific payment method is detected */}
-          {!paymentMethod && (
-            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem', padding: '10px' }}>
-              Select a payment method on the booking form to make a deposit.
-            </div>
-          )}
+        <div style={{ marginBottom: '30px' }}>
+          <p style={{ 
+            fontSize: '1.1rem', 
+            color: '#4b5563',
+            margin: '0 0 20px 0',
+            maxWidth: '90%',
+            marginLeft: 'auto',
+            marginRight: 'auto'
+          }}>
+            Thank you for your booking! I&apos;ll make your event special.
+          </p>
         </div>
+        
+        {/* Return Home - Clear Call to Action */}
+        <Link 
+          href="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            fontWeight: '500',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            textDecoration: 'none',
+            boxShadow: '0 4px 6px rgba(59, 130, 246, 0.25)',
+            fontSize: '1rem'
+          }}
+        >
+          <FaArrowLeft size={14} />
+          Return to Home
+        </Link>
       </div>
+      
+      {/* Animation styles */}
+      <style jsx global>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+          h1 {
+            font-size: 1.75rem !important;
+          }
+          h2 {
+            font-size: 1.1rem !important;
+          }
+          p {
+            font-size: 0.95rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
