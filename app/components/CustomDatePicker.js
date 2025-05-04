@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const MONTHS = [
@@ -44,6 +44,8 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   const [currentDate, setCurrentDate] = useState(selectedDate || new Date());
   const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
   const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
+  const datePickerRef = useRef(null);
+  const [calendarPosition, setCalendarPosition] = useState({ top: 'calc(100% + 5px)', bottom: 'auto' });
   
   // Simple approach - use hardcoded dates for now
   const bookedDates = [
@@ -100,13 +102,37 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
     }
   };
   
-  // Toggle calendar visibility
+  // Toggle calendar visibility and compute position
   const toggleCalendar = (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
+    
+    // If opening the calendar, calculate position
+    if (!isOpen) {
+      calculatePosition();
+    }
+    
     setIsOpen(!isOpen);
+  };
+  
+  // Calculate if the calendar should appear above or below the input
+  const calculatePosition = () => {
+    if (datePickerRef.current) {
+      const rect = datePickerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const calendarHeight = 340; // Approximate height of the calendar
+      
+      if (spaceBelow < calendarHeight && rect.top > calendarHeight) {
+        // Not enough space below, but enough space above
+        setCalendarPosition({ top: 'auto', bottom: 'calc(100% + 5px)' });
+      } else {
+        // Default position (below input)
+        setCalendarPosition({ top: 'calc(100% + 5px)', bottom: 'auto' });
+      }
+    }
   };
   
   // Handle date selection
@@ -124,21 +150,33 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (isOpen && e.target.closest('.custom-datepicker') === null) {
+      if (isOpen && datePickerRef.current && !datePickerRef.current.contains(e.target)) {
         setIsOpen(false);
       }
     };
     
+    // Handle window resize to recalculate position
+    const handleResize = () => {
+      if (isOpen) {
+        calculatePosition();
+      }
+    };
+    
     document.addEventListener('click', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, true);
+    
     return () => {
       document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize, true);
     };
   }, [isOpen]);
   
   const calendarDates = getCalendarDates(currentYear, currentMonth);
   
   return (
-    <div className="custom-datepicker" style={{ width: '100%', position: 'relative' }}>
+    <div className="custom-datepicker" style={{ width: '100%', position: 'relative' }} ref={datePickerRef}>
       <div 
         className="custom-datepicker-input field-input"
         onClick={toggleCalendar}
@@ -167,7 +205,8 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
           className="calendar-dropdown"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 5px)',
+            top: calendarPosition.top,
+            bottom: calendarPosition.bottom,
             left: 0,
             width: '100%',
             maxWidth: '360px',
