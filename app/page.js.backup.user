@@ -6,7 +6,6 @@ import Image from 'next/image';
 import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { loadStripe } from '@stripe/stripe-js';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
 import EnvChecker from '../components/EnvChecker';
@@ -43,8 +42,7 @@ import {
   FaTimes,
   FaList,
   FaRegClock,
-  FaRegMoneyBillAlt,
-  FaLock
+  FaRegMoneyBillAlt
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
@@ -68,9 +66,6 @@ const SERVICES = {
   VIDEO_VISUALS: 100,
   ADDITIONAL_HOUR: 75,
 };
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 // Payment confirmation banner component
 const PaymentConfirmation = ({ show, message }) => {
@@ -1404,23 +1399,6 @@ Live City DJ Contract Terms and Conditions:
 
       // Mark submission as complete
       setSubmitted(true);
-      
-      // Direct handling of payment methods after successful form submission
-      if (formData.paymentMethod === 'Stripe') {
-        console.log('Showing Stripe checkout for successful form submission');
-        setShowStripe(true);
-      } else if (formData.paymentMethod === 'Venmo') {
-        console.log('Opening Venmo payment URL');
-        window.open("https://venmo.com/u/Bobby-Martin-64", "_blank");
-      } else if (formData.paymentMethod === 'CashApp') {
-        console.log('Opening CashApp payment URL');
-        window.open("https://cash.app/$LiveCity", "_blank");
-      } else if (formData.paymentMethod === 'PayPal') {
-        console.log('Opening PayPal payment URL');
-        window.open("https://paypal.me/bmartin4659", "_blank");
-      }
-      
-      // Show confirmation briefly
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 5000);
 
@@ -2344,10 +2322,10 @@ Live City DJ Contract Terms and Conditions:
             height: 150px !important;
           }
           .header-title {
-            fontSize: 32px !important;
+            font-size: 32px !important;
           }
           .header-email {
-            fontSize: 15px !important;
+            font-size: 15px !important;
           }
         }
         
@@ -2357,10 +2335,10 @@ Live City DJ Contract Terms and Conditions:
             height: 120px !important;
           }
           .header-title {
-            fontSize: 28px !important;
+            font-size: 28px !important;
           }
           .header-email {
-            fontSize: 14px !important;
+            font-size: 14px !important;
           }
         }
       `;
@@ -2374,170 +2352,40 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
 
-  // Add this near the top of the DJContractForm component, with other useEffect hooks
+  // Handle signature field interactions on mobile devices - optimized version
+  // Removing this effect as we no longer use a signature canvas
+  /*
   useEffect(() => {
-    const handleShowStripeCheckout = () => {
-      console.log('Stripe checkout event received');
-      setShowStripe(true);
-    };
-    
-    if (typeof window !== 'undefined') {
-      window.addEventListener('showStripeCheckout', handleShowStripeCheckout);
-      console.log('Added showStripeCheckout event listener');
+    if (isClient) {
+      // More targeted approach to handle signature canvas interactions
+      const handleSignatureCanvas = (event) => {
+        // Only handle events for the actual canvas element to avoid freezing
+        if (event.target.tagName === 'CANVAS' && 
+            (event.target.classList.contains('signature-pad-canvas') || 
+             event.target.closest('#signature-section'))) {
+          
+          // Only prevent default for touchmove events on the canvas itself
+          if (event.type === 'touchmove') {
+            event.preventDefault();
+          }
+        }
+      };
+      
+      // Only attach to the specific events we need
+      document.addEventListener('touchmove', handleSignatureCanvas, { passive: false });
+      
+      return () => {
+        document.removeEventListener('touchmove', handleSignatureCanvas);
+      };
     }
-    
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('showStripeCheckout', handleShowStripeCheckout);
-      }
-    };
-  }, []);
-
-  // Add this useEffect after the showStripeCheckout event listener
-  useEffect(() => {
-    // Check for global flag to show Stripe checkout
-    const checkForStripeFlag = () => {
-      if (typeof window !== 'undefined' && window.__showStripeCheckout) {
-        console.log('Detected __showStripeCheckout flag, showing Stripe checkout');
-        setShowStripe(true);
-        window.__showStripeCheckout = false; // Reset the flag
-      }
-    };
-    
-    // Check initially and set up interval
-    checkForStripeFlag();
-    const intervalId = setInterval(checkForStripeFlag, 500);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  // Add an effect to check URL parameters for showStripe query parameter
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Check for URL query parameter
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('showStripe') === 'true') {
-        console.log('Detected showStripe=true in URL, showing Stripe checkout');
-        setShowStripe(true);
-        
-        // Clear the parameter from URL to avoid repeated showing on page refresh
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      }
-      
-      // Also check for hash fragment
-      if (window.location.hash === '#stripe-checkout') {
-        console.log('Detected #stripe-checkout hash, showing Stripe checkout');
-        setShowStripe(true);
-        
-        // No need to clear the hash, it won't cause repeated showing
-      }
-    }
-  }, []);
-
-  // Function to redirect to Stripe checkout
-  const handleStripeRedirect = async () => {
-    try {
-      console.log('Starting Stripe redirect flow');
-      const stripe = await stripePromise;
-      
-      if (!stripe) {
-        console.error('Stripe failed to initialize');
-        alert('Payment system is not available. Please try again later.');
-        return;
-      }
-      
-      // Show loading state
-      setIsSubmitting(true);
-      
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientName: formData.clientName,
-          email: formData.email,
-          eventType: formData.eventType,
-          eventDate: formData.eventDate,
-          venueName: formData.venueName,
-          venueLocation: formData.venueLocation,
-          lighting: formData.lighting === true,
-          photography: formData.photography === true,
-          videoVisuals: formData.videoVisuals === true,
-          additionalHours: parseInt(formData.additionalHours || 0),
-          paymentAmount: formData.paymentAmount
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
-      }
-      
-      const { sessionId } = await response.json();
-      console.log('Received session ID, redirecting to Stripe checkout');
-      
-      // Redirect to Stripe checkout
-      const result = await stripe.redirectToCheckout({ sessionId });
-      
-      if (result.error) {
-        console.error('Stripe redirect error:', result.error);
-        alert('Payment system error: ' + result.error.message);
-      }
-    } catch (error) {
-      console.error('Error in Stripe redirect flow:', error);
-      alert('Payment system error: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }, [isClient]);
+  */
 
   if (!isClient) {
     return null;
   }
 
   if (submitted) {
-    // Extract payment URLs to local variables for direct access
-    const venmoUrl = PAYMENT_URLS.VENMO;
-    const cashAppUrl = PAYMENT_URLS.CASHAPP;
-    const paypalUrl = PAYMENT_URLS.PAYPAL;
-    
-    // Function to open payment URL in a new tab without any React interference
-    const openPaymentUrl = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log('Opening payment URL for', formData.paymentMethod);
-      
-      // Use hardcoded URLs to ensure reliability
-      if (formData.paymentMethod === 'Venmo') {
-        window.open("https://venmo.com/u/Bobby-Martin-64", "_blank");
-      } else if (formData.paymentMethod === 'CashApp') {
-        window.open("https://cash.app/$LiveCity", "_blank");
-      } else if (formData.paymentMethod === 'PayPal') {
-        window.open("https://paypal.me/bmartin4659", "_blank");
-      } else if (formData.paymentMethod === 'Stripe') {
-        setShowStripe(true);
-      }
-      
-      // Return false to prevent any default behavior
-      return false;
-    };
-    
-    // Alternative direct method that completely bypasses React routing
-    const directPaymentLink = () => {
-      // Determine which URL to use based on payment method
-      if (formData.paymentMethod === 'Venmo') {
-        // Force direct navigation with _blank to open in a new tab
-        window.open("https://venmo.com/u/Bobby-Martin-64", '_blank');
-      } else if (formData.paymentMethod === 'CashApp') {
-        window.open("https://cash.app/$LiveCity", '_blank');
-      } else if (formData.paymentMethod === 'PayPal') {
-        window.open("https://paypal.me/bmartin4659", '_blank');
-      }
-    };
-    
     return (
       <div style={{
         display: 'flex',
@@ -2583,32 +2431,11 @@ Live City DJ Contract Terms and Conditions:
             We look forward to celebrating with you!
           </p>
 
-          {/* Payment Method Information */}
-          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <p style={{ 
-              fontSize: '1.1rem', 
-              color: '#333',
-              fontWeight: 'bold'
-            }}>
-              Payment Method: {formData.paymentMethod}
-            </p>
-            <p style={{ 
-              marginTop: '0.5rem', 
-              fontSize: '1rem', 
-              color: '#666',
-              fontStyle: 'italic'
-            }}>
-              Click the button below to complete your deposit or full payment and secure your event date.
-            </p>
-          </div>
-
           {/* Payment Method Buttons */}
           <div style={{ marginTop: '2rem' }}>
             {formData.paymentMethod === 'Venmo' && (
-              <a
-                href="https://venmo.com/u/Bobby-Martin-64"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => window.open(PAYMENT_URLS.VENMO, '_blank')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -2624,20 +2451,17 @@ Live City DJ Contract Terms and Conditions:
                   fontSize: '1.1rem',
                   fontWeight: 'bold',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none'
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Pay with Venmo
-              </a>
+                Secure Your Event - Make A Deposit via Venmo
+              </button>
             )}
 
             {formData.paymentMethod === 'CashApp' && (
-              <a
-                href="https://cash.app/$LiveCity"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => window.open(PAYMENT_URLS.CASHAPP, '_blank')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -2653,20 +2477,17 @@ Live City DJ Contract Terms and Conditions:
                   fontSize: '1.1rem',
                   fontWeight: 'bold',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none'
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Pay with Cash App
-              </a>
+                Secure Your Event - Make A Deposit via Cash App
+              </button>
             )}
 
             {formData.paymentMethod === 'PayPal' && (
-              <a
-                href="https://paypal.me/bmartin4659"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => window.open(PAYMENT_URLS.PAYPAL, '_blank')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -2682,70 +2503,68 @@ Live City DJ Contract Terms and Conditions:
                   fontSize: '1.1rem',
                   fontWeight: 'bold',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none'
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Pay with PayPal
-              </a>
+                Secure Your Event - Make A Deposit via PayPal
+              </button>
             )}
 
-            {formData.paymentMethod === 'Stripe' && (
-              <div>
-                <button
-                  onClick={handleStripeRedirect}
-                  disabled={isSubmitting}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#6772E5',
-                    color: 'white',
-                    padding: '16px 24px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    width: '100%',
-                    marginBottom: '1rem',
-                    cursor: isSubmitting ? 'wait' : 'pointer',
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    transition: 'all 0.2s ease',
-                    opacity: isSubmitting ? 0.7 : 1
-                  }}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div style={{ marginRight: '12px', width: '20px', height: '20px', borderRadius: '50%', border: '2px solid white', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FaCreditCard style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                      Pay with Card
-                    </>
-                  )}
-                </button>
-                <style jsx global>{`
-                  @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                  }
-                `}</style>
-                <p style={{ 
-                  fontSize: '0.8rem', 
-                  color: '#666',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <FaLock style={{ marginRight: '5px', fontSize: '0.9rem' }} />
-                  Secure payment powered by Stripe
-                </p>
-              </div>
-            )}
+            <p style={{ 
+              marginTop: '1.5rem', 
+              fontSize: '0.9rem', 
+              color: '#666',
+              fontStyle: 'italic'
+            }}>
+              Click the button above to complete your deposit payment and secure your event date.
+            </p>
           </div>
+
+          <button
+            onClick={() => {
+              setFormData({
+                clientName: '',
+                email: '',
+                contactPhone: '',
+                eventType: 'Wedding',
+                guestCount: '100',
+                venueName: '',
+                venueLocation: '',
+                eventDate: '',
+                startTime: '',
+                endTime: '',
+                paymentMethod: 'Stripe',
+                paymentAmount: 'deposit', // New field for deposit or full payment
+                lighting: false,
+                photography: false,
+                videoVisuals: false,
+                additionalHours: 0,
+                agreeToTerms: true, // Changed to true by default
+                musicPreferences: [], // New field for music preferences
+                otherMusicPreference: '', // Field for "other" music preference specification
+                streamingService: '', // Selected streaming service
+                playlistLink: '', // URL to user's playlist
+                signature: null, // Signature data
+                signerName: '' // Signer name
+              });
+              setSubmitted(false);
+            }}
+            style={{
+              backgroundColor: 'transparent',
+              color: '#3b82f6',
+              border: '2px solid #3b82f6',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              marginTop: '2rem',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Book Another Event
+          </button>
         </div>
       </div>
     );
@@ -2780,48 +2599,14 @@ Live City DJ Contract Terms and Conditions:
       }}>
         {showStripe ? (
           <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            padding: '2rem',
-            borderRadius: '20px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            maxWidth: '700px',
-            width: '90%',
-            margin: '2rem auto',
-            animation: 'fadeIn 0.5s ease-out'
+            backgroundColor: 'transparent',
+            padding: '0',
+            borderRadius: '0',
+            boxShadow: 'none',
+            maxWidth: '96%',
+            width: '96%',
+            margin: '0 auto'
           }}>
-            {/* Add anchor for direct linking */}
-            <div id="stripe-checkout"></div>
-            
-            {/* Add animation styles */}
-            <style jsx global>{`
-              @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-              }
-            `}</style>
-            
-            {/* Payment Header */}
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '1.5rem',
-            }}>
-              <h2 style={{ 
-                fontSize: '1.8rem', 
-                color: '#6772E5',
-                fontWeight: '600',
-                margin: '0 0 0.5rem 0'
-              }}>
-                Secure Payment
-              </h2>
-              <p style={{
-                fontSize: '1.1rem',
-                color: '#444',
-                margin: '0'
-              }}>
-                Complete your booking with credit card
-              </p>
-            </div>
-            
             {/* Security Banner */}
             <div style={{
               display: 'flex',
@@ -4320,5 +4105,4 @@ Live City DJ Contract Terms and Conditions:
     </div>
   );
 }
-
 

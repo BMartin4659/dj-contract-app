@@ -1,0 +1,148 @@
+HEADING_REPLACEMENT:
+          <h1 style={{ 
+            color: '#3b82f6', 
+            marginBottom: '1.5rem', 
+            fontSize: '2.5rem', 
+            fontWeight: 'bold',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          }}>
+            Booking Submitted!
+          </h1>
+
+HEADING_WITH:
+          <h1 style={{ 
+            color: '#3b82f6', 
+            marginBottom: '1.5rem', 
+            fontSize: '2.5rem', 
+            fontWeight: 'bold',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          }}>
+            Booking Submitted!
+          </h1>
+
+TEXT_REPLACEMENT:
+          <p style={{ 
+            fontSize: '1.25rem', 
+            lineHeight: '1.6',
+            marginBottom: '2rem',
+            color: '#333',
+            fontWeight: '500'
+          }}>
+            Thank you! Your DJ booking request has been submitted successfully. You will receive a confirmation email shortly.
+            We look forward to celebrating with you!
+          </p>
+
+TEXT_WITH:
+          <p style={{ 
+            fontSize: '1.25rem', 
+            lineHeight: '1.6',
+            marginBottom: '2rem',
+            color: '#333',
+            fontWeight: '500'
+          }}>
+            Thank you! Your DJ booking request has been submitted successfully. You will receive a 
+            confirmation email shortly. We look forward to celebrating with you!
+          </p>
+
+BUTTON_REPLACEMENT:
+          <button
+            onClick={() => {
+              setFormData({
+                clientName: '',
+                email: '',
+                contactPhone: '',
+                eventType: 'Wedding',
+                guestCount: '100',
+                venueName: '',
+                venueLocation: '',
+                eventDate: '',
+                startTime: '',
+                endTime: '',
+                paymentMethod: 'Stripe',
+                paymentAmount: 'deposit', // New field for deposit or full payment
+                lighting: false,
+                photography: false,
+                videoVisuals: false,
+                additionalHours: 0,
+                agreeToTerms: true, // Changed to true by default
+                musicPreferences: [], // New field for music preferences
+                otherMusicPreference: '', // Field for "other" music preference specification
+                streamingService: '', // Selected streaming service
+                playlistLink: '', // URL to user's playlist
+                signature: null, // Signature data
+                signerName: '' // Signer name
+              });
+              setSubmitted(false);
+            }}
+            style={{
+              backgroundColor: 'transparent',
+              color: '#3b82f6',
+              border: '2px solid #3b82f6',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              marginTop: '2rem',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Book Another Event
+          </button>
+
+BUTTON_WITH:
+          <button
+            onClick={() => {
+              // Determine which payment URL to open based on the selected payment method
+              if (formData.paymentMethod === 'Venmo') {
+                window.open(PAYMENT_URLS.VENMO, '_blank');
+              } else if (formData.paymentMethod === 'CashApp') {
+                window.open(PAYMENT_URLS.CASHAPP, '_blank');
+              } else if (formData.paymentMethod === 'PayPal') {
+                window.open(PAYMENT_URLS.PAYPAL, '_blank');
+              } else {
+                // Reset the form if no payment method or for Stripe which was handled above
+                setFormData({
+                  clientName: '',
+                  email: '',
+                  contactPhone: '',
+                  eventType: 'Wedding',
+                  guestCount: '100',
+                  venueName: '',
+                  venueLocation: '',
+                  eventDate: '',
+                  startTime: '',
+                  endTime: '',
+                  paymentMethod: 'Stripe',
+                  paymentAmount: 'deposit',
+                  lighting: false,
+                  photography: false,
+                  videoVisuals: false,
+                  additionalHours: 0,
+                  agreeToTerms: true,
+                  musicPreferences: [],
+                  otherMusicPreference: '',
+                  streamingService: '',
+                  playlistLink: '',
+                  signature: null,
+                  signerName: ''
+                });
+                setSubmitted(false);
+              }
+            }}
+            style={{
+              backgroundColor: '#0070f3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              marginTop: '2rem',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 14px rgba(0, 118, 255, 0.39)'
+            }}
+          >
+            Secure Your Event Date
+          </button> 
