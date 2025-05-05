@@ -223,6 +223,16 @@ function PaymentSuccessContent() {
       }
       
       fetchBookingDetails(id);
+    } else {
+      // If no ID, check for session_id (Stripe Checkout redirect)
+      const session = searchParams.get('session_id');
+      if (session) {
+        setPaymentMethod('Stripe');
+        // We'll fetch session details separately
+      } else {
+        setError('No payment information found. Please check your booking email for details.');
+        setLoading(false);
+      }
     }
   }, [searchParams]);
 
@@ -256,21 +266,46 @@ function PaymentSuccessContent() {
   // Function to fetch booking details from Firestore
   const fetchBookingDetails = async (paymentId) => {
     try {
-      // Try to find the payment in the stripePayments collection
+      setLoading(true);
+      
+      // Try to find the payment in the stripePayments collection first (for Stripe payments)
       const paymentsRef = collection(db, 'stripePayments');
       const q = query(paymentsRef, where('paymentIntentId', '==', paymentId));
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        // Payment found
+        // Payment found in stripePayments collection
         const paymentData = querySnapshot.docs[0].data();
-        console.log("Found payment data:", paymentData);
+        console.log("Found payment data in stripePayments:", paymentData);
         setBooking(paymentData);
+        
+        // Ensure payment method is Stripe if found in stripePayments
+        setPaymentMethod('Stripe');
       } else {
-        console.log("Payment not found in database");
+        // Try to find the booking in djContracts collection
+        const contractsRef = collection(db, 'djContracts');
+        const contractQuery = query(contractsRef, where('bookingId', '==', paymentId));
+        const contractSnapshot = await getDocs(contractQuery);
+        
+        if (!contractSnapshot.empty) {
+          const contractData = contractSnapshot.docs[0].data();
+          console.log("Found booking data in djContracts:", contractData);
+          setBooking(contractData);
+          
+          // Set payment method from contract data if available
+          if (contractData.paymentMethod) {
+            setPaymentMethod(contractData.paymentMethod);
+          }
+        } else {
+          console.log("Booking not found in database for ID:", paymentId);
+          setError('Booking details not found. Please contact support.');
+        }
       }
     } catch (error) {
       console.error("Error fetching booking details:", error);
+      setError('Failed to load booking information. Please try refreshing or contact support.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -462,62 +497,38 @@ function PaymentSuccessContent() {
             Payment Details
           </h2>
           
-          <div style={{ 
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-            fontSize: '1rem'
-          }}>
+          <div className="summary-item">
+            <h3>Payment Method</h3>
             {paymentMethod && (
-              <>
-                <div style={{ color: '#6b7280', fontWeight: '500' }}>Payment Method:</div>
+              <div className="payment-method-info">
                 <div style={{ color: '#111827', fontWeight: '600' }}>{paymentMethod}</div>
-              </>
+                {booking && booking.paymentId && (
+                  <div style={{ fontSize: '0.9rem', marginTop: '5px', color: '#6b7280', wordBreak: 'break-all' }}>
+                    ID: {booking.paymentId}
+                  </div>
+                )}
+                {!booking && paymentId && (
+                  <div style={{ fontSize: '0.9rem', marginTop: '5px', color: '#6b7280', wordBreak: 'break-all' }}>
+                    ID: {paymentId}
+                  </div>
+                )}
+              </div>
             )}
-            
-            {paymentId && (
-              <>
-                <div style={{ color: '#6b7280', fontWeight: '500' }}>Payment ID:</div>
-                <div style={{ 
-                  color: '#111827', 
-                  fontWeight: '500',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>{paymentId}</div>
-              </>
-            )}
-            
-            {booking && booking.amount && (
-              <>
-                <div style={{ color: '#6b7280', fontWeight: '500' }}>Amount:</div>
-                <div style={{ color: '#111827', fontWeight: '600' }}>${booking.amount}</div>
-              </>
-            )}
-            
-            <div style={{ color: '#6b7280', fontWeight: '500' }}>Date:</div>
-            <div style={{ color: '#111827', fontWeight: '500' }}>{new Date().toLocaleDateString()}</div>
-            
-            <div style={{ color: '#6b7280', fontWeight: '500' }}>Status:</div>
-            <div style={{ color: '#16a34a', fontWeight: '600' }}>Paid</div>
+            {!paymentMethod && <div style={{ color: '#6b7280' }}>Processing</div>}
           </div>
           
-          {booking && booking.isDeposit && (
-            <div style={{
-              marginTop: '15px',
-              padding: '12px',
-              backgroundColor: 'rgba(255, 237, 213, 0.6)',
-              border: '1px solid #fed7aa',
-              borderRadius: '8px',
-              fontSize: '0.95rem',
-              color: '#9a3412',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px'
-            }}>
-              <div style={{ marginTop: '3px', flexShrink: 0 }}>ℹ️</div>
-              <p style={{ margin: 0 }}>You&apos;ve paid the deposit (50%). Remaining balance of ${booking.remainingBalance || booking.totalAmount / 2} is due on the event day.</p>
-            </div>
+          {booking && booking.amount && (
+            <>
+              <div style={{ color: '#6b7280', fontWeight: '500' }}>Amount:</div>
+              <div style={{ color: '#111827', fontWeight: '600' }}>${booking.amount}</div>
+            </>
           )}
+          
+          <div style={{ color: '#6b7280', fontWeight: '500' }}>Date:</div>
+          <div style={{ color: '#111827', fontWeight: '500' }}>{new Date().toLocaleDateString()}</div>
+          
+          <div style={{ color: '#6b7280', fontWeight: '500' }}>Status:</div>
+          <div style={{ color: '#16a34a', fontWeight: '600' }}>Paid</div>
         </div>
 
         {/* Email confirmation section - Simplified */}

@@ -249,51 +249,40 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
         });
         
         try {
+          // Store payment details in Firestore for reference
           await addDoc(collection(db, 'stripePayments'), {
             paymentIntentId: paymentIntent.id,
-            amount: amountInCents,
-            currency: paymentIntent.currency,
-            clientName: contractDetails?.clientName,
-            email: contractDetails?.email,
-            eventType: contractDetails?.eventType,
-            eventDate: contractDetails?.eventDate,
-            venueName: contractDetails?.venueName,
-            venueLocation: contractDetails?.venueLocation,
+            amount: amountInCents / 100, // Convert back to dollars for storage
+            clientName: contractDetails?.clientName || 'Customer',
+            email: contractDetails?.email || 'customer@example.com',
+            eventType: contractDetails?.eventType || 'Event',
+            eventDate: contractDetails?.eventDate || new Date().toISOString(),
+            venueName: contractDetails?.venueName || 'Venue',
+            venueLocation: contractDetails?.venueLocation || 'Venue Location',
+            startTime: contractDetails?.startTime || '',
+            endTime: contractDetails?.endTime || '',
             lighting: services.lighting,
             photography: services.photography,
             videoVisuals: services.videoVisuals,
             additionalHours: services.additionalHours,
-            timestamp: new Date()
+            createdAt: new Date().toISOString()
           });
           
-          // Send confirmation email - catch errors here but don't let them stop the payment success
-          try {
-            const emailResult = await sendConfirmationEmail(
-              {
-                ...contractDetails,
-                totalAmount: `$${finalAmount}`
-              },
-              paymentIntent.id
-            );
-            
-            console.log("Email send attempt result:", emailResult);
-            
-            // If the result is an error object rather than true/false
-            if (emailResult && typeof emailResult === 'object' && emailResult.success === false) {
-              console.warn("Email sending failed but payment was successful:", emailResult);
-              // Continue with success - don't throw error that breaks payment flow
-            }
-          } catch (emailError) {
-            // Log but don't throw - don't stop the payment success due to email failure
-            console.error("Email sending failed but payment was successful. Error:", emailError);
-          }
+          console.log("Payment record stored successfully");
           
-          // Complete the payment process regardless of email status
-          onSuccess(paymentIntent.id);
+          // Send confirmation email
+          await sendConfirmationEmail(contractDetails, paymentIntent.id);
+          
+          // Call the onSuccess callback
+          if (onSuccess) {
+            onSuccess(paymentIntent.id);
+          }
         } catch (dbError) {
-          console.error("Error saving payment to database:", dbError);
-          // Still consider payment successful even if DB save fails
-          onSuccess(paymentIntent.id);
+          console.error("Error storing payment record:", dbError);
+          // Still consider payment successful even if DB storage fails
+          if (onSuccess) {
+            onSuccess(paymentIntent.id);
+          }
         }
       }
     } catch (err) {
@@ -641,22 +630,25 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
 };
 
 export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetails }) {
-  // Direct debug logging at the wrapper level
   console.log("StripeCheckoutWrapper received contractDetails:", contractDetails);
-  console.log("Selected services:", {
-    lighting: contractDetails?.lighting,
-    photography: contractDetails?.photography,
-    videoVisuals: contractDetails?.videoVisuals,
-    additionalHours: contractDetails?.additionalHours
-  });
   
   return (
-    <Elements stripe={stripePromise}>
-      <CheckoutForm 
-        amount={amount} 
-        onSuccess={onSuccess} 
-        contractDetails={contractDetails} 
-      />
-    </Elements>
+    <div className="stripe-wrapper">
+      <Elements stripe={stripePromise}>
+        <CheckoutForm 
+          amount={amount} 
+          onSuccess={(paymentId) => {
+            console.log("Payment successful, redirecting with ID:", paymentId);
+            if (onSuccess) {
+              onSuccess(paymentId);
+            } else {
+              // Default redirect if no callback provided
+              window.location.href = `/payment/success?id=${paymentId}`;
+            }
+          }} 
+          contractDetails={contractDetails} 
+        />
+      </Elements>
+    </div>
   );
 } 

@@ -614,6 +614,39 @@ function PlaylistHelpModal({ streamingService, onClose }) {
 }
 
 export default function DJContractForm() {
+  const router = useRouter();
+  
+  // Initial form data with blank values
+  const initialFormData = {
+    clientName: '',
+    email: '',
+    contactPhone: '',
+    eventType: 'Wedding',
+    guestCount: '100',
+    venueName: '',
+    venueLocation: '',
+    eventDate: '',
+    startTime: '',
+    endTime: '',
+    lighting: false,
+    photography: false,
+    videoVisuals: false,
+    additionalHours: 0,
+    paymentAmount: 'deposit',
+    paymentMethod: 'Stripe',
+    musicPreferences: [],
+    otherMusicPreference: '',
+    streamingService: '',
+    playlistLink: '',
+    agreeToTerms: false,
+    notes: '',
+    signerName: '',
+    bookingId: '' // To store the booking ID when created
+  };
+
+  // Initialize form data with the initial values
+  const [formData, setFormData] = useState(initialFormData);
+  
   // Terms and conditions text
   const termsAndConditionsText = `
 Live City DJ Contract Terms and Conditions:
@@ -665,32 +698,6 @@ Live City DJ Contract Terms and Conditions:
     { id: 'tidal', label: 'TIDAL', icon: 'https://tidal.com/img/tidal-share-image.jpg', placeholder: 'Paste your TIDAL playlist link' }
   ];
 
-  const [formData, setFormData] = useState({
-    clientName: '',
-    email: '',
-    contactPhone: '',
-    eventType: 'Wedding',
-    guestCount: '100',
-    venueName: '',
-    venueLocation: '',
-    eventDate: '',
-    startTime: '',
-    endTime: '',
-    paymentMethod: 'Stripe',
-    paymentAmount: 'deposit', // New field for deposit or full payment
-    lighting: false,
-    photography: false,
-    videoVisuals: false,
-    additionalHours: 0,
-    agreeToTerms: false,
-    musicPreferences: [], // New field for music preferences
-    otherMusicPreference: '', // Field for "other" music preference specification
-    streamingService: '', // Selected streaming service
-    playlistLink: '', // URL to user's playlist
-    signerName: '' // Just the name for signature, no drawing
-  });
-  
-  const router = useRouter();
   const venueLocationRef = useRef(null);
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1373,7 +1380,42 @@ Live City DJ Contract Terms and Conditions:
         return;
       }
 
-      // Create the document in Firebase
+      // Check payment method selection
+      if (!formData.paymentMethod) {
+        setFormErrors(prev => ({
+          ...prev,
+          paymentMethod: 'Please select a payment method'
+        }));
+        setIsSubmitting(false);
+        
+        // Scroll to payment method section
+        const paymentMethodSection = document.querySelector('.payment-options');
+        if (paymentMethodSection) {
+          paymentMethodSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+      
+      // For Stripe payments, show the Stripe checkout instead of submitting the form
+      if (formData.paymentMethod === 'Stripe') {
+        // Create the document in Firebase first to get the ID
+        const docRef = await addDoc(collection(db, 'djContracts'), {
+          ...formData,
+          createdAt: serverTimestamp(),
+          status: 'payment_pending',
+          totalAmount: calculateTotal(),
+          depositAmount: calculateDepositAmount()
+        });
+        
+        console.log("Document written with ID for Stripe payment: ", docRef.id);
+        
+        // Show Stripe checkout
+        setShowStripe(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // For non-Stripe payment methods, continue with normal form submission
       const docRef = await addDoc(collection(db, 'djContracts'), {
         ...formData,
         createdAt: serverTimestamp(),
@@ -1815,11 +1857,18 @@ Live City DJ Contract Terms and Conditions:
         : '0 1px 3px rgba(0,0,0,0.05)';
     });
     
-    // Update form data in the next tick to avoid blocking the UI
-    setTimeout(() => {
-      setFormData(prev => ({ ...prev, paymentMethod: method }));
-    }, 0);
-  }, []);
+    // Update form data immediately to avoid state update issues
+    setFormData(prev => ({ ...prev, paymentMethod: method }));
+    
+    // Clear any payment method error when a selection is made
+    if (formErrors.paymentMethod) {
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.paymentMethod;
+        return newErrors;
+      });
+    }
+  }, [formErrors]);
 
   // Memoize the payment method option styles to reduce recalculations
   const getPaymentOptionStyle = useCallback((method) => {
@@ -2533,19 +2582,20 @@ Live City DJ Contract Terms and Conditions:
                   additionalHours: parseInt(formData.additionalHours || 0),
                   paymentAmount: formData.paymentAmount, // Pass payment amount type
                   isDeposit: formData.paymentAmount === 'deposit',
+                  totalAmount: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal(),
                   musicPreferences: formData.musicPreferences, // Add music preferences
                   otherMusicPreference: formData.otherMusicPreference, // Add other music preference if any
                   streamingService: formData.streamingService || '',
                   playlistLink: formData.playlistLink || ''
                 }}
                 onSuccess={(paymentId) => {
-                  // Handle successful payment before form submission
+                  // Handle successful payment
                   console.log("Payment successful with ID:", paymentId);
                   
-                  // Only hide the Stripe component
+                  // Hide the Stripe component
                   setShowStripe(false);
                   
-                  // Redirect immediately to the success page without showing the intermediate confirmation
+                  // Redirect to the success page
                   router.push(`/payment/success?id=${paymentId}`);
                 }}
               />
@@ -3765,26 +3815,50 @@ Live City DJ Contract Terms and Conditions:
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="submit-button"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#0070f3',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem',
-                  fontSize: '1rem',
-                  borderRadius: '8px',
-                  marginTop: '1rem',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s',
-                  opacity: isSubmitting ? 0.7 : 1
-                }}
-              >
-                {isSubmitting ? 'Processing...' : 'Submit Contract'}
-              </button>
+              {/* Submit Button with dynamic text based on payment method */}
+              <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+                <button 
+                  type={formData.paymentMethod === 'Stripe' ? 'button' : 'submit'}
+                  onClick={formData.paymentMethod === 'Stripe' ? handleStripeButtonClick : undefined}
+                  style={{
+                    width: '100%',
+                    padding: '15px 20px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '18px',
+                    backgroundColor: '#0070f3',
+                    color: 'white',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: isSubmitting ? 0.7 : 1,
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 14px 0 rgba(0,118,255,0.39)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="spin"></div> Processing...
+                    </>
+                  ) : (
+                    <>
+                      {formData.paymentMethod === 'Stripe' ? (
+                        <>
+                          <FaCreditCard /> Proceed to Payment
+                        </>
+                      ) : (
+                        <>
+                          <FaPaperPlane /> Submit Contract
+                        </>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         )}
@@ -3820,4 +3894,41 @@ Live City DJ Contract Terms and Conditions:
     </div>
   );
 }
+
+// Function to handle Stripe payment initialization
+const handleStripeButtonClick = async () => {
+  // Validate form
+  if (!validateForm()) {
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Create the document in Firebase first to get the ID
+    const docRef = await addDoc(collection(db, 'djContracts'), {
+      ...formData,
+      createdAt: serverTimestamp(),
+      status: 'payment_pending',
+      totalAmount: calculateTotal(),
+      depositAmount: calculateDepositAmount()
+    });
+    
+    console.log("Document written with ID for Stripe payment: ", docRef.id);
+    
+    // Update form data with the booking ID for reference
+    setFormData(prev => ({
+      ...prev,
+      bookingId: docRef.id
+    }));
+    
+    // Show Stripe checkout
+    setShowStripe(true);
+  } catch (error) {
+    console.error("Error creating booking for Stripe payment:", error);
+    setSubmitError("Failed to initialize payment. Please try again or contact support.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
