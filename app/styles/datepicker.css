@@ -44,9 +44,9 @@
 
 /* Input field styling */
 .datepicker-input {
-  width: 100%;
+  width: 100% !important;
   background-color: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ccc;
   border-radius: 8px;
   padding: clamp(12px, 2vw, 16px);
   font-size: clamp(16px, 2.5vw, 18px);
@@ -56,6 +56,13 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* DatePicker wrapper width */
+.react-datepicker-wrapper {
+  width: 100% !important;
+  display: block !important;
 }
 
 /* Mobile responsiveness */

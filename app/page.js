@@ -43,10 +43,33 @@ import {
   FaList,
   FaRegClock,
   FaFileAlt,
-  FaRegMoneyBillAlt
+  FaRegMoneyBillAlt,
+  FaSpinner,
+  FaUserFriends,
+  FaStickyNote,
+  FaPlusCircle,
+  FaMinusCircle,
+  FaMoneyBillWave,
+  FaMoneyCheck,
+  FaInfo,
+  FaQuestionCircle,
+  FaDollarSign,
+  FaExclamationTriangle,
+  FaCaretRight,
+  FaPaperPlane,
+  FaBriefcase,
+  FaExclamationCircle,
+  FaStripe,
+  FaArrowDown,
+  FaDrum,
+  FaPlay,
+  FaExternalLinkAlt,
+  FaClipboard,
+  FaRegClipboard,
+  FaRegCopy
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
-import { SiVenmo, SiCashapp } from 'react-icons/si';
+import { SiVenmo, SiCashapp, SiSpotify, SiApplemusic, SiYoutubemusic } from 'react-icons/si';
 import { v4 as uuidv4 } from 'uuid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -57,72 +80,13 @@ import { handleNavigationClick } from '../lib/eventHandlers';
 import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
 import { getStreamingLogo } from './components/StreamingLogos';
-import CustomDatePicker from './components/CustomDatePicker';
+import { CustomDatePicker } from './components/CustomDatePicker';
 import { loadStripe } from '@stripe/stripe-js';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import Hero from '@/components/Hero';
-import Pricing from '@/components/Pricing';
-import Reviews from '@/components/Reviews';
-import MusicPlayer from '@/components/MusicPlayer';
-import ContactSection from '@/components/ContactSection';
-import Testimonials from '@/components/Testimonials';
-import Terms from '@/components/Terms';
-import { FaSpinner } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@/app/styles/datepicker.css';
-import {
-  FaCalendarAlt,
-  FaClock,
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaBuilding,
-  FaUserFriends,
-  FaStickyNote,
-  FaMusic,
-  FaPlusCircle,
-  FaMinusCircle,
-  FaCheck,
-  FaTimes,
-  FaMoneyBillWave,
-  FaCreditCard,
-  FaPaypal,
-  FaMoneyCheck,
-  FaInfo,
-  FaQuestionCircle,
-  FaDollarSign,
-  FaExclamationTriangle,
-  FaLightbulb,
-  FaCamera,
-  FaVideo,
-  FaCaretRight,
-  FaPaperPlane,
-  FaRegClock,
-  FaBriefcase,
-  FaExclamationCircle,
-  FaStripe,
-  FaArrowRight,
-  FaArrowDown,
-  FaMinus,
-  FaPlus,
-  FaDrum,
-  FaPlay,
-  FaExternalLinkAlt,
-  FaClipboard,
-  FaRegClipboard,
-  FaRegCopy,
-  FaCheck as FaCompact
-} from 'react-icons/fa';
-import {
-  SiSpotify, 
-  SiApplemusic, 
-  SiYoutubemusic, 
-  SiCashapp,
-  SiVenmo
-} from 'react-icons/si';
-import {CustomDatePicker} from '@/components/CustomDatePicker';
+
 // Import the new ReactDatePickerField component
 import ReactDatePickerField from './components/ReactDatePickerField';
 
