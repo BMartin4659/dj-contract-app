@@ -26,7 +26,7 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <span style={{ color: value ? '#000' : '#6b7280' }}>
       {value || placeholder || 'Select a date'}
     </span>
-    <FaCalendarAlt style={{ color: '#6366f1' }} />
+    <FaCalendarAlt style={{ color: '#6366f1', fontSize: '1.2rem' }} />
   </div>
 ));
 
@@ -49,18 +49,29 @@ const ReactDatePickerField = ({
         placeholderText={placeholder}
         minDate={minDate}
         customInput={<CustomInput placeholder={placeholder} />}
-        popperPlacement="bottom-start"
+        popperPlacement="bottom"
         popperModifiers={[
           {
             name: 'preventOverflow',
             options: {
               boundary: 'viewport',
-              padding: 20
+              padding: 16
+            }
+          },
+          {
+            name: 'offset',
+            options: {
+              offset: [0, 8]
             }
           }
         ]}
-        calendarClassName="z-50"
+        calendarClassName="date-picker-calendar"
         wrapperClassName="w-full"
+        showPopperArrow={false}
+        fixedHeight
+        monthsShown={1}
+        shouldCloseOnSelect
+        formatWeekDay={nameOfDay => nameOfDay.substring(0, 2)}
       />
       {errorMessage && (
         <p className="text-red-500 text-xs italic mt-1">{errorMessage}</p>
