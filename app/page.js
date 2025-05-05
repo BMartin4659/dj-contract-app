@@ -4,8 +4,8 @@ import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import emailjs from '@emailjs/browser';
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { collection, addDoc, doc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
 import Header from '../components/Header';
 import EnvChecker from '../components/EnvChecker';
@@ -58,8 +58,73 @@ import { isValidEmail, isValidPhoneNumber } from '../lib/validation';
 import Footer from '../components/Footer';
 import { getStreamingLogo } from './components/StreamingLogos';
 import CustomDatePicker from './components/CustomDatePicker';
-// Signature field replaced with a simple input box
-// import SignatureField from './components/SignatureField';
+import { loadStripe } from '@stripe/stripe-js';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Hero from '@/components/Hero';
+import Pricing from '@/components/Pricing';
+import Reviews from '@/components/Reviews';
+import MusicPlayer from '@/components/MusicPlayer';
+import ContactSection from '@/components/ContactSection';
+import Testimonials from '@/components/Testimonials';
+import Terms from '@/components/Terms';
+import { FaSpinner } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@/app/styles/datepicker.css';
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaBuilding,
+  FaUserFriends,
+  FaStickyNote,
+  FaMusic,
+  FaPlusCircle,
+  FaMinusCircle,
+  FaCheck,
+  FaTimes,
+  FaMoneyBillWave,
+  FaCreditCard,
+  FaPaypal,
+  FaMoneyCheck,
+  FaInfo,
+  FaQuestionCircle,
+  FaDollarSign,
+  FaExclamationTriangle,
+  FaLightbulb,
+  FaCamera,
+  FaVideo,
+  FaCaretRight,
+  FaPaperPlane,
+  FaRegClock,
+  FaBriefcase,
+  FaExclamationCircle,
+  FaStripe,
+  FaArrowRight,
+  FaArrowDown,
+  FaMinus,
+  FaPlus,
+  FaDrum,
+  FaPlay,
+  FaExternalLinkAlt,
+  FaClipboard,
+  FaRegClipboard,
+  FaRegCopy,
+  FaCheck as FaCompact
+} from 'react-icons/fa';
+import {
+  SiSpotify, 
+  SiApplemusic, 
+  SiYoutubemusic, 
+  SiCashapp,
+  SiVenmo
+} from 'react-icons/si';
+import {CustomDatePicker} from '@/components/CustomDatePicker';
+// Import the new ReactDatePickerField component
+import ReactDatePickerField from './components/ReactDatePickerField';
 
 // Constants and Pricing
 const SERVICES = {
@@ -2812,7 +2877,9 @@ Live City DJ Contract Terms and Conditions:
                       <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
                     </span>
                   </label>
-                  <CustomDatePicker
+                  
+                  {/* Replace CustomDatePicker with ReactDatePickerField */}
+                  <ReactDatePickerField
                     selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
                     onChange={(date) => {
                       handleChange({
@@ -2822,31 +2889,10 @@ Live City DJ Contract Terms and Conditions:
                         }
                       });
                     }}
+                    errorMessage={formErrors.eventDate}
+                    minDate={new Date()}
                   />
-                  {formErrors.eventDate && (
-                    <p className="text-red-500 text-xs italic">{formErrors.eventDate}</p>
-                  )}
                 </div>
-
-                <style jsx global>{`
-                  .custom-date-input::-webkit-datetime-edit { color: transparent; }
-                  .custom-date-input:focus::-webkit-datetime-edit { color: #000; }
-                  .custom-date-input[value]::-webkit-datetime-edit { color: #000; }
-                  
-                  /* Ensure the date picker renders properly on mobile */
-                  @media (max-width: 640px) {
-                    /* Custom date picker styles for mobile */
-                    .custom-datepicker .calendar-dropdown {
-                      width: 100%;
-                      max-width: 320px;
-                      position: fixed !important;
-                      top: 50% !important;
-                      left: 50% !important;
-                      transform: translate(-50%, -50%) !important;
-                      z-index: 1000;
-                    }
-                  }
-                `}</style>
 
                 {/* Start Time */}
                 <div>
