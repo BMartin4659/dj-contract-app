@@ -45,7 +45,23 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
   const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
   const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
   const datePickerRef = useRef(null);
+  const calendarRef = useRef(null);
   const [calendarPosition, setCalendarPosition] = useState({ top: 'calc(100% + 5px)', bottom: 'auto' });
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect mobile device on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Simple approach - use hardcoded dates for now
   const bookedDates = [
@@ -102,6 +118,47 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
     }
   };
   
+  // Calculate if the calendar should appear above or below the input
+  const calculatePosition = () => {
+    if (!datePickerRef.current) return;
+    
+    const rect = datePickerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const calendarHeight = isMobile ? 320 : 340; // Slightly smaller on mobile
+    
+    // On mobile, prioritize showing below unless there's really no space
+    if (isMobile) {
+      if (spaceBelow < 200 && rect.top > 250) {
+        // Very limited space below on mobile, position above
+        setCalendarPosition({ top: 'auto', bottom: 'calc(100% + 5px)' });
+      } else {
+        // Default to below on mobile for better UX
+        setCalendarPosition({ top: 'calc(100% + 5px)', bottom: 'auto' });
+        
+        // If we're positioning below and near bottom of screen,
+        // scroll to ensure it's fully visible
+        if (spaceBelow < calendarHeight && isOpen) {
+          setTimeout(() => {
+            if (datePickerRef.current) {
+              datePickerRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+              });
+            }
+          }, 100);
+        }
+      }
+    } else {
+      // Desktop behavior (unchanged)
+      if (spaceBelow < calendarHeight && rect.top > calendarHeight) {
+        setCalendarPosition({ top: 'auto', bottom: 'calc(100% + 5px)' });
+      } else {
+        setCalendarPosition({ top: 'calc(100% + 5px)', bottom: 'auto' });
+      }
+    }
+  };
+  
   // Toggle calendar visibility and compute position
   const toggleCalendar = (e) => {
     if (e) {
@@ -110,29 +167,25 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
     }
     
     // If opening the calendar, calculate position
-    if (!isOpen) {
-      calculatePosition();
-    }
+    const willOpen = !isOpen;
     
-    setIsOpen(!isOpen);
-  };
-  
-  // Calculate if the calendar should appear above or below the input
-  const calculatePosition = () => {
-    if (datePickerRef.current) {
-      const rect = datePickerRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const spaceBelow = viewportHeight - rect.bottom;
-      const calendarHeight = 340; // Approximate height of the calendar
-      
-      if (spaceBelow < calendarHeight && rect.top > calendarHeight) {
-        // Not enough space below, but enough space above
-        setCalendarPosition({ top: 'auto', bottom: 'calc(100% + 5px)' });
-      } else {
-        // Default position (below input)
-        setCalendarPosition({ top: 'calc(100% + 5px)', bottom: 'auto' });
+    if (willOpen) {
+      calculatePosition();
+      // Fix for iOS Safari focus issues
+      if (isMobile) {
+        // Slight delay to allow any keyboard to dismiss
+        setTimeout(() => {
+          if (datePickerRef.current) {
+            datePickerRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+        }, 100);
       }
     }
+    
+    setIsOpen(willOpen);
   };
   
   // Handle date selection
@@ -162,16 +215,41 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
       }
     };
     
+    // Handle scroll to recalculate position
+    const handleScroll = () => {
+      if (isOpen) {
+        calculatePosition();
+      }
+    };
+    
     document.addEventListener('click', handleClickOutside);
+    document.addEventListener('touchend', handleClickOutside);
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, true);
+    window.addEventListener('scroll', handleScroll, true);
+    
+    // On mobile, specifically handle touchmove
+    if (isMobile) {
+      document.addEventListener('touchmove', handleScroll, { passive: false });
+    }
     
     return () => {
       document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('touchend', handleClickOutside);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize, true);
+      window.removeEventListener('scroll', handleScroll, true);
+      
+      if (isMobile) {
+        document.removeEventListener('touchmove', handleScroll);
+      }
     };
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
+  
+  // Calculate position when dependencies change
+  useEffect(() => {
+    if (isOpen) {
+      calculatePosition();
+    }
+  }, [isOpen, isMobile]);
   
   const calendarDates = getCalendarDates(currentYear, currentMonth);
   
@@ -203,19 +281,21 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
       {isOpen && (
         <div 
           className="calendar-dropdown"
+          ref={calendarRef}
           style={{
             position: 'absolute',
             top: calendarPosition.top,
             bottom: calendarPosition.bottom,
             left: 0,
             width: '100%',
-            maxWidth: '360px',
+            maxWidth: isMobile ? '100%' : '360px',
             backgroundColor: 'white',
             borderRadius: '8px',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             zIndex: 1000,
             overflow: 'hidden'
           }}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="calendar-header" style={{ 
             backgroundColor: '#6366f1', 
@@ -308,6 +388,30 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
               ))}
             </div>
           </div>
+          
+          {isMobile && (
+            <div 
+              style={{
+                borderTop: '1px solid #e5e7eb',
+                padding: '12px',
+                textAlign: 'center'
+              }}
+            >
+              <button 
+                onClick={() => setIsOpen(false)} 
+                style={{
+                  backgroundColor: '#e5e7eb',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
