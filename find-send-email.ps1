@@ -1,1 +1,0 @@
-Get-ChildItem -Path . -Recurse -Hidden -Force -Include '*send-email*.js' | Select-Object FullName
