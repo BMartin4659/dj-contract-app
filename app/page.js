@@ -237,13 +237,12 @@ const getCashAppInfo = () => {
   const baseURL = PAYMENT_URLS.CASHAPP;
   const username = baseURL.includes('$') ? baseURL.split('cash.app/').pop() : 'LiveCity';
   
-  // Format the CashApp payment URL properly
-  // Cash App now uses a simpler format
+  // Format the CashApp payment URL properly using a simple format
   const formatPaymentUrl = (amount = 0) => {
     // Remove $ if it exists at the beginning
     const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
     
-    // Use the official format for Cash App
+    // Use the official format for Cash App (simple version)
     return `https://cash.app/$${cleanUsername}`;
   };
   
@@ -259,12 +258,7 @@ const formatCashAppURL = (username, amount = 0) => {
   // Remove $ if it exists at the beginning
   const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
   
-  // Format the URL with amount and note (if amount provided)
-  if (amount && amount > 0) {
-    return `https://cash.app/$${cleanUsername}/pay?amount=${amount}&note=DJ%20Service%20Payment`;
-  }
-  
-  // Return basic URL if no amount
+  // Use the simplest format to avoid 404 errors
   return `https://cash.app/$${cleanUsername}`;
 };
 
@@ -1336,6 +1330,7 @@ Live City DJ Contract Terms and Conditions:
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent any other handlers
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -1381,19 +1376,21 @@ Live City DJ Contract Terms and Conditions:
         return;
       }
 
-      // For non-Stripe payment methods, continue with normal form submission
+      // Save form data first
+      console.log("Saving form data before payment redirection");
       const docRef = await addDoc(collection(db, 'djContracts'), {
         ...formData,
         createdAt: serverTimestamp(),
-        status: 'submitted',
+        status: 'redirecting_to_payment',
         totalAmount: calculateTotal(),
         depositAmount: calculateDepositAmount(),
         paymentMethod: formData.paymentMethod
       });
 
       console.log("Document written with ID: ", docRef.id);
+      const bookingId = docRef.id;
 
-      // Prepare email template parameters
+      // Prepare email template parameters but don't send yet
       const templateParams = {
         clientName: formData.clientName,
         email: formData.email,
@@ -1409,7 +1406,24 @@ Live City DJ Contract Terms and Conditions:
         signerName: formData.signerName,
         hasSigned: hasSignature ? 'Yes' : 'No'
       };
+      
+      // Direct user to payment platform immediately based on selection
+      // Note: we're doing this BEFORE email sending to avoid any delays
+      if (formData.paymentMethod === 'Venmo') {
+        console.log("Redirecting directly to Venmo");
+        window.location.replace(PAYMENT_URLS.VENMO); // Use replace instead of href to avoid history
+        return;
+      } else if (formData.paymentMethod === 'CashApp') {
+        console.log("Redirecting directly to CashApp");
+        window.location.replace(`https://cash.app/$LiveCity`);
+        return;
+      } else if (formData.paymentMethod === 'PayPal') {
+        console.log("Redirecting directly to PayPal");
+        window.location.replace(PAYMENT_URLS.PAYPAL);
+        return;
+      }
 
+      // This code will only run if we're not redirecting to a payment platform
       // Send confirmation email
       const emailResult = await sendConfirmationEmail(templateParams);
 
@@ -1429,39 +1443,13 @@ Live City DJ Contract Terms and Conditions:
         setSubmitError(emailResult.fallbackMessage || "We'll send your confirmation email shortly.");
       }
 
-      // Mark submission as complete
+      // Only show success state for fallback or other payment methods
       setSubmitted(true);
       setShowConfirmation(true);
-      
-      // For non-Stripe payments, redirect to the payment success page
-      const depositAmount = calculateDepositAmount();
-      const paymentURL = createSuccessPageUrl(docRef.id, formData.paymentMethod, depositAmount);
-      
-      // Redirect based on payment type
-      setTimeout(() => {
-        if (formData.paymentMethod === 'Venmo') {
-          // First open Venmo in a new tab, then redirect to success page
-          window.open(PAYMENT_URLS.VENMO, '_blank');
-          window.location.href = paymentURL;
-        } else if (formData.paymentMethod === 'CashApp') {
-          // Open CashApp with amount info
-          const { username } = getCashAppInfo();
-          const cashAppUrl = formatCashAppURL(username, depositAmount);
-          window.open(cashAppUrl, '_blank');
-          window.location.href = paymentURL;
-        } else if (formData.paymentMethod === 'PayPal') {
-          window.open(PAYMENT_URLS.PAYPAL, '_blank');
-          window.location.href = paymentURL;
-        } else {
-          // Default redirect
-          window.location.href = paymentURL;
-        }
-      }, 2000);
 
     } catch (error) {
       console.error("Error in form submission:", error);
       setSubmitError("An error occurred while submitting the form. Please try again or contact support.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -1492,7 +1480,7 @@ Live City DJ Contract Terms and Conditions:
           };
         case 'CashApp':
           return {
-            username: '$BobbyMartin64',
+            username: '$LiveCity',
             color: '#00C244',
             url: PAYMENT_URLS.CASHAPP,
             icon: <SiCashapp className="w-5 h-5" />
@@ -1510,26 +1498,15 @@ Live City DJ Contract Terms and Conditions:
     };
 
     const handlePayment = () => {
-      const amount = calculateDepositAmount();
-      
-      // Create success page URL
-      const paymentURL = createSuccessPageUrl(bookingId, paymentMethod, amount);
-      
-      // Open payment app based on type
+      // Open payment app based on type - direct to payment platform using replace
       if (paymentMethod === 'Venmo') {
-        window.open(PAYMENT_URLS.VENMO, '_blank');
+        window.location.replace(PAYMENT_URLS.VENMO);
       } else if (paymentMethod === 'CashApp') {
-        const { username } = getCashAppInfo();
-        const cashAppUrl = formatCashAppURL(username, amount);
-        window.open(cashAppUrl, '_blank');
+        // Use simple format to avoid 404 errors
+        window.location.replace(`https://cash.app/$LiveCity`);
       } else if (paymentMethod === 'PayPal') {
-        window.open(PAYMENT_URLS.PAYPAL, '_blank');
+        window.location.replace(PAYMENT_URLS.PAYPAL);
       }
-      
-      // Redirect to success page
-      setTimeout(() => {
-        window.location.href = paymentURL;
-      }, 1500);
     };
 
     const paymentDetails = getPaymentDetails();
@@ -2368,25 +2345,13 @@ Live City DJ Contract Terms and Conditions:
               <div className="mb-4 bg-blue-50 p-4 rounded-md">
                 <button
                   onClick={() => {
-                    // Open Venmo app/site in a new tab
-                    window.open(PAYMENT_URLS.VENMO, '_blank');
-                    
-                    // Create success page URL and redirect to it
-                    if (submitted && formData.bookingId) {
-                      const paymentURL = createSuccessPageUrl(
-                        formData.bookingId, 
-                        'Venmo', 
-                        calculateDepositAmount()
-                      );
-                      setTimeout(() => {
-                        window.location.href = paymentURL;
-                      }, 1000);
-                    }
+                    // Open Venmo app/site with replace to avoid history entry
+                    window.location.replace(PAYMENT_URLS.VENMO);
                   }}
                   className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#3D95CE] hover:bg-[#3483b5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-4"
                 >
                   <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                  Secure Your Event - Make A Deposit via Venmo
+                  Complete Payment with Venmo
                 </button>
                 <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with Venmo.</p>
               </div>
@@ -2396,30 +2361,13 @@ Live City DJ Contract Terms and Conditions:
               <div className="mb-4 bg-green-50 p-4 rounded-md">
                 <button
                   onClick={() => {
-                    // Get CashApp payment URL with amount
-                    const { username } = getCashAppInfo();
-                    const amount = calculateDepositAmount();
-                    const cashAppUrl = formatCashAppURL(username, amount);
-                    
-                    // Open CashApp in a new tab
-                    window.open(cashAppUrl, '_blank');
-                    
-                    // Create success page URL and redirect to it
-                    if (submitted && formData.bookingId) {
-                      const paymentURL = createSuccessPageUrl(
-                        formData.bookingId, 
-                        'CashApp', 
-                        amount
-                      );
-                      setTimeout(() => {
-                        window.location.href = paymentURL;
-                      }, 1000);
-                    }
+                    // Redirect to CashApp with replace
+                    window.location.replace(`https://cash.app/$LiveCity`);
                   }}
                   className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#00C244] hover:bg-[#00a237] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mb-4"
                 >
                   <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                  Secure Your Event - Make A Deposit via Cash App
+                  Complete Payment with Cash App
                 </button>
                 <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with Cash App.</p>
               </div>
@@ -2429,25 +2377,13 @@ Live City DJ Contract Terms and Conditions:
               <div className="mb-4 bg-blue-50 p-4 rounded-md">
                 <button
                   onClick={() => {
-                    // Open PayPal in a new tab
-                    window.open(PAYMENT_URLS.PAYPAL, '_blank');
-                    
-                    // Create success page URL and redirect to it
-                    if (submitted && formData.bookingId) {
-                      const paymentURL = createSuccessPageUrl(
-                        formData.bookingId, 
-                        'PayPal', 
-                        calculateDepositAmount()
-                      );
-                      setTimeout(() => {
-                        window.location.href = paymentURL;
-                      }, 1000);
-                    }
+                    // Redirect to PayPal with replace
+                    window.location.replace(PAYMENT_URLS.PAYPAL);
                   }}
                   className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#0070BA] hover:bg-[#005ea6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-4"
                 >
                   <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                  Secure Your Event - Make A Deposit via PayPal
+                  Complete Payment with PayPal
                 </button>
                 <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with PayPal.</p>
               </div>
@@ -2610,7 +2546,7 @@ Live City DJ Contract Terms and Conditions:
         overflow: 'visible',
         minHeight: '100vh'
       }}>
-        {submitted ? (
+        {submitted && (
           <div style={{
             textAlign: 'center',
             padding: '2rem',
@@ -2626,29 +2562,9 @@ Live City DJ Contract Terms and Conditions:
             <p style={{ marginBottom: '1rem', fontSize: '1rem' }}>
               Your contract has been submitted successfully. We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
             </p>
-
-            {formData.paymentMethod === 'Venmo' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
-                <h3>Please send your deposit via Venmo:</h3>
-                <p>@Bobby-Martin-64</p>
-              </div>
-            )}
-
-            {formData.paymentMethod === 'CashApp' && (
-              <div style={{ marginTop: '1rem', fontSize: '1rem' }}>
-                <h3>Please send your deposit via Cash App:</h3>
-                <p>$LiveCity</p>
-              </div>
-            )}
-
-            {formData.paymentMethod === 'PayPal' && (
-              <div className="payment-instructions">
-                <h3>Please send your deposit via PayPal:</h3>
-                <p>Bobby Martin (https://paypal.me/bmartin4659)</p>
-              </div>
-            )}
           </div>
-        ) : (
+        )}
+        {!submitted && (
           <div style={{ 
             maxWidth: '800px',
             width: '96%',
