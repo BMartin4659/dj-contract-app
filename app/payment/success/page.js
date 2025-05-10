@@ -183,6 +183,16 @@ if (typeof window !== 'undefined') {
   console.log('CashApp URL:', url);
 }
 
+const PAYMENT_COLORS = {
+  card:    { main: '#6366f1', dark: '#4338ca' }, // Stripe/credit card indigo
+  stripe:  { main: '#6366f1', dark: '#4338ca' },
+  venmo:   { main: '#3D95CE', dark: '#276fa1' },
+  cashapp: { main: '#00C244', dark: '#00913a' },
+  paypal:  { main: '#003087', dark: '#001f4c' },
+};
+
+// --- Redesigned Payment Success Page ---
+
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -190,32 +200,18 @@ function PaymentSuccessContent() {
   const paymentMethod = searchParams ? searchParams.get('payment_method') : null;
   const bookingId = searchParams ? searchParams.get('booking_id') : null;
   const amount = searchParams ? searchParams.get('amount') : null;
-  
+
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
-  
-  // Log payment information for debugging
+
   useEffect(() => {
     if (sessionId) {
-      console.log('Payment success page loaded with session ID:', sessionId);
-    } else if (paymentMethod && bookingId) {
-      console.log('Payment success page loaded with:', { paymentMethod, bookingId, amount });
-    } else {
-      console.error('Payment success page loaded without payment information');
-    }
-  }, [sessionId, paymentMethod, bookingId]);
-  
-  // Get payment details based on available information
-  useEffect(() => {
-    if (sessionId) {
-      // Stripe payment flow
       getPaymentDetails();
     } else if (paymentMethod && bookingId) {
-      // Alternative payment flow (Venmo, CashApp, PayPal)
       handleNonStripePayment();
     } else {
       setLoading(false);
@@ -454,193 +450,236 @@ function PaymentSuccessContent() {
           <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Payment Details</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button 
-              onClick={() => sessionId ? getPaymentDetails() : handleNonStripePayment()} 
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
-            >
-              <FaRedo className="mr-2" /> Retry
-            </button>
-            <Link 
-              href="/"
-              className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md flex items-center justify-center"
-            >
-              <FaHome className="mr-2" /> Return Home
-            </Link>
-          </div>
+          <button 
+            onClick={() => sessionId ? getPaymentDetails() : handleNonStripePayment()} 
+            className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
+          >
+            <FaRedo className="mr-2" /> Retry
+          </button>
         </div>
       </div>
     );
   }
-  
-  // Determine payment method display info
-  const getPaymentMethodDisplay = () => {
-    // First try to get from bookingDetails, then paymentDetails, then URL params
-    const method = (bookingDetails?.paymentMethod || 
-                   paymentDetails?.payment_method_types?.[0] || 
-                   paymentMethod || 
-                   'card').toLowerCase();
-                   
-    if (method === 'card' || method === 'stripe') {
-      return {
-        icon: <FaCreditCard className="mr-2 text-indigo-600" />,
-        text: 'Credit Card'
-      };
-    } else if (method.includes('venmo')) {
-      return {
-        icon: <SiVenmo className="mr-2 text-[#3D95CE]" />,
-        text: 'Venmo'
-      };
-    } else if (method.includes('cashapp')) {
-      return {
-        icon: <SiCashapp className="mr-2 text-[#00C244]" />,
-        text: 'CashApp'
-      };
-    } else if (method.includes('paypal')) {
-      return {
-        icon: <FaPaypal className="mr-2 text-[#003087]" />,
-        text: 'PayPal'
-      };
-    } else {
-      return {
-        icon: <FaCreditCard className="mr-2 text-indigo-600" />,
-        text: 'Online Payment'
-      };
-    }
+
+  // --- SIMPLIFIED SUCCESS PAGE WITH ORANGE & TEAL PALETTE ---
+  const details = {
+    amount: ((paymentDetails?.amount_total || 0) / 100) || amount || 0,
+    method: (bookingDetails?.paymentMethod || paymentDetails?.payment_method_types?.[0] || paymentMethod || 'card'),
+    date: bookingDetails?.eventDate || paymentDetails?.metadata?.eventDate,
+    client: bookingDetails?.clientName || paymentDetails?.metadata?.clientName,
+    venue: bookingDetails?.venueName || paymentDetails?.metadata?.venueName,
+    email: bookingDetails?.email || paymentDetails?.customer_details?.email,
   };
-  
-  const paymentMethodDisplay = getPaymentMethodDisplay();
-  
+  const methodKey = (details.method || '').toLowerCase();
+  const color = PAYMENT_COLORS[methodKey] || PAYMENT_COLORS.card;
+
+  const methodDisplay = {
+    card: 'Credit Card',
+    stripe: 'Credit Card',
+    venmo: 'Venmo',
+    cashapp: 'CashApp',
+    paypal: 'PayPal',
+  };
+  const methodIcon = {
+    card: <FaCreditCard className="icon-method" />,
+    stripe: <FaCreditCard className="icon-method" />,
+    venmo: <SiVenmo className="icon-method" />,
+    cashapp: <SiCashapp className="icon-method" />,
+    paypal: <FaPaypal className="icon-method" />,
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <Header />
-      
-      <div className="max-w-4xl mx-auto pt-10 pb-20 px-4">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          {/* Success Header */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 py-8 px-6 text-center">
-            <FaCheckCircle className="text-white w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-white text-3xl font-bold">Payment Successful!</h1>
-            <p className="text-green-100 mt-2">
-              Your payment has been processed and your booking is confirmed.
-            </p>
-          </div>
-          
-          {/* Content */}
-          <div className="p-6">
-            {/* Payment Details */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Details</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Amount Paid</p>
-                    <p className="text-lg font-bold text-gray-800">
-                      ${(((paymentDetails?.amount_total || 0) / 100) || amount || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Payment Method</p>
-                    <p className="text-lg font-medium text-gray-800">
-                      <span className="inline-flex items-center">
-                        {paymentMethodDisplay.icon}
-                        {paymentMethodDisplay.text}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Payment ID</p>
-                    <p className="text-md font-medium text-gray-700 break-all">
-                      {paymentDetails?.payment_intent || sessionId || bookingId || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Date</p>
-                    <p className="text-lg font-medium text-gray-800">
-                      {new Date().toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Event Details */}
-            {(bookingDetails || paymentDetails?.metadata) && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Client Name</p>
-                      <p className="text-lg font-medium text-gray-800">
-                        {bookingDetails?.clientName || paymentDetails?.metadata?.clientName || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Event Type</p>
-                      <p className="text-lg font-medium text-gray-800">
-                        {bookingDetails?.eventType || paymentDetails?.metadata?.eventType || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Event Date</p>
-                      <p className="text-lg font-medium text-gray-800">
-                        {bookingDetails?.eventDate || paymentDetails?.metadata?.eventDate || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Venue</p>
-                      <p className="text-lg font-medium text-gray-800">
-                        {bookingDetails?.venueName || paymentDetails?.metadata?.venueName || 'Not specified'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Email Status */}
-            <div className="mb-8">
-              <div className={`rounded-lg p-4 ${emailSent ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'}`}>
-                <div className="flex items-start">
-                  {emailSent ? (
-                    <FaCheckCircle className="text-green-500 mt-1 mr-3 flex-shrink-0" />
-                  ) : (
-                    <FaEnvelope className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
-                  )}
-                  <div>
-                    <h3 className={`font-medium ${emailSent ? 'text-green-800' : 'text-blue-800'}`}>
-                      {emailSent ? 'Confirmation Email Sent' : 'Confirmation Email'}
-                    </h3>
-                    <p className={`text-sm mt-1 ${emailSent ? 'text-green-700' : 'text-blue-700'}`}>
-                      {emailSent 
-                        ? `A confirmation email has been sent to ${bookingDetails?.email || paymentDetails?.customer_details?.email || 'your email address'}.` 
-                        : emailError || 'A confirmation email will be sent shortly with all the details of your booking.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-              <Link 
-                href="/"
-                className="bg-indigo-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-indigo-700 transition-colors"
-              >
-                <FaHome className="mr-2" /> Return to Home
-              </Link>
-              
-              <button 
-                onClick={() => window.print()}
-                className="bg-gray-200 text-gray-800 px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-gray-300 transition-colors"
-              >
-                <FaReceipt className="mr-2" /> Print Receipt
-              </button>
-            </div>
+    <div className="success-bg">
+      <div className="success-card">
+        <div className="success-icon-outer" style={{ background: `linear-gradient(135deg, ${color.main} 0%, #fff 100%)` }}>
+          <div className="success-icon-inner" style={{ background: color.main, padding: 0 }}>
+            <Image src="/dj-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" width={70} height={70} className="logo-img-circle" style={{ borderRadius: '50%', width: '70px', height: '70px', objectFit: 'cover' }} />
           </div>
         </div>
+        <h1 className="success-title" style={{ color: color.main }}>Payment Successful!</h1>
+        <p className="success-subtitle" style={{ color: '#00C244' }}>
+          Your payment has been processed and your booking is confirmed.
+        </p>
+        <div className="success-details">
+          <div>
+            <span>Amount Paid</span>
+            <span className="success-amount" style={{ color: color.main }}>${Number(details.amount).toFixed(2)}</span>
+          </div>
+          <div>
+            <span>Payment Method</span>
+            <span className="success-method">
+              {methodIcon[methodKey] || null}
+              {methodDisplay[methodKey] || details.method}
+            </span>
+          </div>
+          {details.date && (
+            <div>
+              <span>Event Date</span>
+              <span>{details.date}</span>
+            </div>
+          )}
+          {details.client && (
+            <div>
+              <span>Client Name</span>
+              <span>{details.client}</span>
+            </div>
+          )}
+          {details.venue && (
+            <div>
+              <span>Venue</span>
+              <span>{details.venue}</span>
+            </div>
+          )}
+        </div>
+        <div className="success-email" style={{ background: `${color.main}22`, color: color.dark }}>
+          <FaEnvelope className="icon-email" />
+          <span>
+            A confirmation email will be sent to <b>{details.email || 'your email address'}</b> shortly.
+          </span>
+        </div>
+        <div className="success-actions">
+          <Link href="/" className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', minWidth: '140px' }}>
+            <FaHome /> <span style={{marginLeft: '0.5em', fontWeight: 600}}>Return Home</span>
+          </Link>
+          <button onClick={() => window.print()} className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none' }}>
+            <FaReceipt /> Print Receipt
+          </button>
+        </div>
       </div>
+      <style jsx>{`
+        .success-bg {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .success-card {
+          background: #fff;
+          border-radius: 22px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+          padding: 2.5rem 2rem 2rem 2rem;
+          max-width: 410px;
+          width: 100%;
+          text-align: center;
+          position: relative;
+        }
+        .success-icon-outer {
+          border-radius: 50%;
+          width: 86px;
+          height: 86px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.2rem auto;
+          box-shadow: 0 2px 12px rgba(32,191,169,0.13);
+        }
+        .success-icon-inner {
+          border-radius: 50%;
+          width: 70px;
+          height: 70px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+        }
+        .success-title {
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+        }
+        .success-subtitle {
+          color: #ff7e29;
+          font-size: 1.1rem;
+          margin-bottom: 2rem;
+        }
+        .success-details {
+          background: #f3f4f6;
+          border-radius: 12px;
+          padding: 1.2rem 1rem;
+          margin-bottom: 1.5rem;
+          font-size: 1rem;
+        }
+        .success-details > div {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.7rem;
+        }
+        .success-details > div:last-child {
+          margin-bottom: 0;
+        }
+        .success-amount {
+          font-weight: 700;
+        }
+        .success-method {
+          display: flex;
+          align-items: center;
+          gap: 0.4em;
+          font-weight: 500;
+        }
+        .icon-method {
+          font-size: 1.2em;
+        }
+        .success-email {
+          border-radius: 8px;
+          padding: 0.7rem 1rem;
+          margin-bottom: 1.7rem;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5em;
+          font-weight: 500;
+        }
+        .icon-email {
+          font-size: 1.1em;
+        }
+        .success-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          margin-top: 0.5rem;
+        }
+        .success-btn {
+          border-radius: 8px;
+          padding: 0.7em 1.2em;
+          font-size: 1rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5em;
+          cursor: pointer;
+          transition: background 0.18s, color 0.18s, border 0.18s;
+          border: 2px solid transparent;
+        }
+        .success-btn-main {
+          background: #fff;
+        }
+        .success-btn-main:hover {
+          background: #f3f4f6;
+        }
+        .success-btn-alt {
+          background: #6366f1;
+        }
+        .success-btn-alt:hover {
+          filter: brightness(0.92);
+        }
+        @media (max-width: 500px) {
+          .success-card {
+            padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+          }
+          .success-title {
+            font-size: 1.3rem;
+          }
+        }
+        .logo-img-circle {
+          border-radius: 50%;
+          width: 70px;
+          height: 70px;
+          object-fit: cover;
+          display: block;
+        }
+      `}</style>
     </div>
   );
 }
