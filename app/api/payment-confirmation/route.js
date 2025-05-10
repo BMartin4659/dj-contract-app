@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export async function POST(request) {
@@ -8,16 +8,50 @@ export async function POST(request) {
     const { bookingId, paymentMethod, amount } = body;
 
     // Validate required fields
-    if (!bookingId || !paymentMethod) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!bookingId) {
+      return NextResponse.json({ error: 'Missing required fields: bookingId is required' }, { status: 400 });
     }
 
-    // Get booking details from Firebase
-    const bookingRef = doc(db, 'djContracts', bookingId);
-    const bookingDoc = await getDoc(bookingRef);
+    let bookingDoc;
+    let bookingRef;
+    let collectionName;
 
+    // First try to find the booking in 'djContracts'
+    bookingRef = doc(db, 'djContracts', bookingId);
+    bookingDoc = await getDoc(bookingRef);
+
+    // If not found by ID, try to query by paymentId
     if (!bookingDoc.exists()) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+      collectionName = 'djContracts';
+      const bookingsRef = collection(db, collectionName);
+      const q = query(bookingsRef, where('paymentId', '==', bookingId));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        // Booking found by paymentId
+        bookingDoc = querySnapshot.docs[0];
+        bookingRef = doc(db, collectionName, bookingDoc.id);
+      } else {
+        // If not found in djContracts, try 'bookings' collection
+        collectionName = 'bookings';
+        bookingRef = doc(db, collectionName, bookingId);
+        bookingDoc = await getDoc(bookingRef);
+        
+        // If not found by ID, try to query by paymentId in 'bookings'
+        if (!bookingDoc.exists()) {
+          const bookingsRef = collection(db, collectionName);
+          const q = query(bookingsRef, where('paymentId', '==', bookingId));
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            // Booking found by paymentId
+            bookingDoc = querySnapshot.docs[0];
+            bookingRef = doc(db, collectionName, bookingDoc.id);
+          } else {
+            return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+          }
+        }
+      }
     }
 
     const bookingData = bookingDoc.data();
@@ -30,32 +64,46 @@ export async function POST(request) {
       event_type: bookingData.eventType,
       venue_name: bookingData.venueName,
       venue_location: bookingData.venueLocation,
-      payment_method: paymentMethod,
-      amount_paid: amount || bookingData.depositAmount || 'N/A',
+      payment_method: paymentMethod || bookingData.paymentMethod || 'External Payment',
+      amount_paid: amount || bookingData.depositAmount || bookingData.totalAmount || 'N/A',
       booking_ref: bookingId,
       payment_status: 'Confirmed'
     };
 
-    // Send confirmation email
-    // Replace emailjs.send with a placeholder
-
     // Update booking status in Firebase
-    await updateDoc(bookingRef, {
+    const updateData = {
       paymentConfirmed: true,
       paymentDate: new Date().toISOString(),
-      paymentMethod: paymentMethod,
-      amountPaid: amount || bookingData.depositAmount
-    });
+      status: 'payment_confirmed'
+    };
+    
+    // Only update paymentMethod if provided
+    if (paymentMethod) {
+      updateData.paymentMethod = paymentMethod;
+    }
+    
+    // Only update amount if provided
+    if (amount) {
+      updateData.amountPaid = amount;
+    }
+    
+    await updateDoc(bookingRef, updateData);
+
+    // Log the confirmation
+    console.log(`Payment confirmed for booking ${bookingId} with ${paymentMethod || 'external payment'}`);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Payment confirmation email sent successfully' 
+      message: 'Payment confirmation processed successfully',
+      bookingId,
+      paymentMethod: paymentMethod || bookingData.paymentMethod || 'External Payment'
     });
 
   } catch (error) {
-    console.error('Error sending payment confirmation:', error);
+    console.error('Error processing payment confirmation:', error);
     return NextResponse.json({ 
-      error: 'Failed to send payment confirmation' 
+      error: 'Failed to process payment confirmation',
+      details: error.message
     }, { 
       status: 500 
     });

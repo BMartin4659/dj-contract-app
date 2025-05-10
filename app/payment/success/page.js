@@ -161,6 +161,21 @@ const PAYMENT_METHODS = {
   }
 };
 
+// Get payment method icon component based on method name
+const getPaymentMethodIcon = (methodName) => {
+  const method = methodName ? methodName.toUpperCase() : 'STRIPE';
+  switch (method) {
+    case 'VENMO':
+      return <SiVenmo className="mr-2 text-[#3D95CE]" />;
+    case 'CASHAPP':
+      return <SiCashapp className="mr-2 text-[#00C244]" />;
+    case 'PAYPAL':
+      return <FaPaypal className="mr-2 text-[#003087]" />;
+    default:
+      return <FaCreditCard className="mr-2 text-indigo-600" />;
+  }
+};
+
 // Log CashApp info for debugging
 if (typeof window !== 'undefined') {
   const { handle, url } = getCashAppInfo(PAYMENT_METHODS.CASHAPP.url);
@@ -172,6 +187,9 @@ function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams ? searchParams.get('session_id') : null;
+  const paymentMethod = searchParams ? searchParams.get('payment_method') : null;
+  const bookingId = searchParams ? searchParams.get('booking_id') : null;
+  const amount = searchParams ? searchParams.get('amount') : null;
   
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
@@ -180,24 +198,75 @@ function PaymentSuccessContent() {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
   
-  // Log session ID for debugging
+  // Log payment information for debugging
   useEffect(() => {
     if (sessionId) {
       console.log('Payment success page loaded with session ID:', sessionId);
+    } else if (paymentMethod && bookingId) {
+      console.log('Payment success page loaded with:', { paymentMethod, bookingId, amount });
     } else {
-      console.error('Payment success page loaded without session ID');
+      console.error('Payment success page loaded without payment information');
     }
-  }, [sessionId]);
+  }, [sessionId, paymentMethod, bookingId]);
   
-  // Get session details from Stripe
+  // Get payment details based on available information
   useEffect(() => {
     if (sessionId) {
+      // Stripe payment flow
       getPaymentDetails();
+    } else if (paymentMethod && bookingId) {
+      // Alternative payment flow (Venmo, CashApp, PayPal)
+      handleNonStripePayment();
     } else {
       setLoading(false);
-      setError('No session ID provided');
+      setError('No payment information provided');
     }
-  }, [sessionId]);
+  }, [sessionId, paymentMethod, bookingId]);
+  
+  // Handle non-Stripe payments (Venmo, CashApp, PayPal)
+  const handleNonStripePayment = async () => {
+    try {
+      setLoading(true);
+      
+      // Create a payment details object
+      const alternativePaymentDetails = {
+        payment_method: paymentMethod,
+        amount_total: amount ? parseFloat(amount) * 100 : 0, // Convert to cents for consistency
+        payment_intent: bookingId,
+        metadata: {
+          bookingId
+        }
+      };
+      
+      setPaymentDetails(alternativePaymentDetails);
+      
+      // Fetch booking details from Firestore
+      await fetchBookingDetails(bookingId);
+      
+      // Update the booking to mark payment as confirmed
+      try {
+        await fetch('/api/payment-confirmation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bookingId,
+            paymentMethod,
+            amount: amount || 0
+          })
+        });
+      } catch (updateError) {
+        console.error('Error updating payment status:', updateError);
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error processing alternative payment:', error);
+      setError(error.message || 'Failed to process payment');
+      setLoading(false);
+    }
+  };
   
   const getPaymentDetails = async () => {
     try {
@@ -248,12 +317,51 @@ function PaymentSuccessContent() {
   };
   
   // Get booking details from Firestore
-  const fetchBookingDetails = async (paymentId) => {
+  const fetchBookingDetails = async (paymentIdOrBookingId) => {
     try {
-      // Try to find the booking by payment ID
-      const bookingsRef = collection(db, 'bookings');
-      const q = query(bookingsRef, where('paymentId', '==', paymentId));
-      const querySnapshot = await getDocs(q);
+      console.log('Fetching booking details for ID:', paymentIdOrBookingId);
+      
+      // First try to find by paymentId in 'bookings' collection
+      let bookingsRef = collection(db, 'bookings');
+      let q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
+      let querySnapshot = await getDocs(q);
+      
+      // If not found, try document ID in 'bookings'
+      if (querySnapshot.empty) {
+        try {
+          const bookingDoc = await getDoc(doc(db, 'bookings', paymentIdOrBookingId));
+          if (bookingDoc.exists()) {
+            querySnapshot = {
+              empty: false,
+              docs: [{ id: bookingDoc.id, data: () => bookingDoc.data() }]
+            };
+          }
+        } catch (docError) {
+          console.log('Error fetching by document ID:', docError);
+        }
+      }
+      
+      // If still not found, try 'djContracts' collection
+      if (querySnapshot.empty) {
+        bookingsRef = collection(db, 'djContracts');
+        q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
+        querySnapshot = await getDocs(q);
+        
+        // If not found by payment ID, try document ID in 'djContracts'
+        if (querySnapshot.empty) {
+          try {
+            const contractDoc = await getDoc(doc(db, 'djContracts', paymentIdOrBookingId));
+            if (contractDoc.exists()) {
+              querySnapshot = {
+                empty: false,
+                docs: [{ id: contractDoc.id, data: () => contractDoc.data() }]
+              };
+            }
+          } catch (docError) {
+            console.log('Error fetching from djContracts by ID:', docError);
+          }
+        }
+      }
       
       if (!querySnapshot.empty) {
         // Booking found
@@ -266,15 +374,20 @@ function PaymentSuccessContent() {
           await sendConfirmationEmail(bookingData);
           
           // Update booking to mark email as sent
-          const bookingRef = doc(db, 'bookings', bookingDoc.id);
-          await updateDoc(bookingRef, { 
-            emailSent: true,
-            status: 'confirmed',
-            paymentStatus: 'paid'
-          });
+          try {
+            const collectionName = bookingData.id === paymentIdOrBookingId ? 'djContracts' : 'bookings';
+            const bookingRef = doc(db, collectionName, bookingDoc.id);
+            await updateDoc(bookingRef, { 
+              emailSent: true,
+              status: 'confirmed',
+              paymentStatus: 'paid'
+            });
+          } catch (updateError) {
+            console.error('Error updating booking after email sent:', updateError);
+          }
         }
       } else {
-        console.log('No booking found with payment ID:', paymentId);
+        console.log('No booking found with ID:', paymentIdOrBookingId);
         
         // If no booking found, see if we can create one from payment details
         if (paymentDetails && paymentDetails.metadata) {
@@ -285,9 +398,9 @@ function PaymentSuccessContent() {
             eventType: metadata.eventType,
             eventDate: metadata.eventDate,
             venueName: metadata.venueName,
-            paymentId,
+            paymentId: paymentIdOrBookingId,
             amount: amount_total / 100, // Convert from cents to dollars
-            paymentMethod: 'Stripe',
+            paymentMethod: paymentMethod || 'Stripe',
             paymentStatus: 'paid',
             status: 'confirmed',
             createdAt: new Date()
@@ -343,7 +456,7 @@ function PaymentSuccessContent() {
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button 
-              onClick={() => getPaymentDetails()} 
+              onClick={() => sessionId ? getPaymentDetails() : handleNonStripePayment()} 
               className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
             >
               <FaRedo className="mr-2" /> Retry
@@ -359,6 +472,44 @@ function PaymentSuccessContent() {
       </div>
     );
   }
+  
+  // Determine payment method display info
+  const getPaymentMethodDisplay = () => {
+    // First try to get from bookingDetails, then paymentDetails, then URL params
+    const method = (bookingDetails?.paymentMethod || 
+                   paymentDetails?.payment_method_types?.[0] || 
+                   paymentMethod || 
+                   'card').toLowerCase();
+                   
+    if (method === 'card' || method === 'stripe') {
+      return {
+        icon: <FaCreditCard className="mr-2 text-indigo-600" />,
+        text: 'Credit Card'
+      };
+    } else if (method.includes('venmo')) {
+      return {
+        icon: <SiVenmo className="mr-2 text-[#3D95CE]" />,
+        text: 'Venmo'
+      };
+    } else if (method.includes('cashapp')) {
+      return {
+        icon: <SiCashapp className="mr-2 text-[#00C244]" />,
+        text: 'CashApp'
+      };
+    } else if (method.includes('paypal')) {
+      return {
+        icon: <FaPaypal className="mr-2 text-[#003087]" />,
+        text: 'PayPal'
+      };
+    } else {
+      return {
+        icon: <FaCreditCard className="mr-2 text-indigo-600" />,
+        text: 'Online Payment'
+      };
+    }
+  };
+  
+  const paymentMethodDisplay = getPaymentMethodDisplay();
   
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -385,22 +536,22 @@ function PaymentSuccessContent() {
                   <div>
                     <p className="text-sm text-gray-500">Amount Paid</p>
                     <p className="text-lg font-bold text-gray-800">
-                      ${((paymentDetails?.amount_total || 0) / 100).toFixed(2)}
+                      ${(((paymentDetails?.amount_total || 0) / 100) || amount || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Payment Method</p>
                     <p className="text-lg font-medium text-gray-800">
                       <span className="inline-flex items-center">
-                        <FaCreditCard className="mr-2 text-indigo-600" /> 
-                        {paymentDetails?.payment_method_types?.[0] === 'card' ? 'Credit Card' : 'Online Payment'}
+                        {paymentMethodDisplay.icon}
+                        {paymentMethodDisplay.text}
                       </span>
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Payment ID</p>
                     <p className="text-md font-medium text-gray-700 break-all">
-                      {paymentDetails?.payment_intent || sessionId}
+                      {paymentDetails?.payment_intent || sessionId || bookingId || 'N/A'}
                     </p>
                   </div>
                   <div>

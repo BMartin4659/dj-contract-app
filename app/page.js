@@ -254,6 +254,20 @@ const getCashAppInfo = () => {
   };
 };
 
+// Format CashApp URL with amount
+const formatCashAppURL = (username, amount = 0) => {
+  // Remove $ if it exists at the beginning
+  const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
+  
+  // Format the URL with amount and note (if amount provided)
+  if (amount && amount > 0) {
+    return `https://cash.app/$${cleanUsername}/pay?amount=${amount}&note=DJ%20Service%20Payment`;
+  }
+  
+  // Return basic URL if no amount
+  return `https://cash.app/$${cleanUsername}`;
+};
+
 // Add this component before the main DJContractForm component
 function PlaylistHelpModal({ streamingService, onClose }) {
   const [animateIn, setAnimateIn] = useState(false);
@@ -1310,6 +1324,16 @@ Live City DJ Contract Terms and Conditions:
     return true;
   };
 
+  // Create a success page URL for non-Stripe payment methods
+  const createSuccessPageUrl = (bookingId, paymentMethod, amount) => {
+    const baseUrl = window.location.origin + '/payment/success';
+    const params = new URLSearchParams();
+    params.append('booking_id', bookingId);
+    params.append('payment_method', paymentMethod);
+    if (amount) params.append('amount', amount);
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -1363,7 +1387,8 @@ Live City DJ Contract Terms and Conditions:
         createdAt: serverTimestamp(),
         status: 'submitted',
         totalAmount: calculateTotal(),
-        depositAmount: calculateDepositAmount()
+        depositAmount: calculateDepositAmount(),
+        paymentMethod: formData.paymentMethod
       });
 
       console.log("Document written with ID: ", docRef.id);
@@ -1407,7 +1432,31 @@ Live City DJ Contract Terms and Conditions:
       // Mark submission as complete
       setSubmitted(true);
       setShowConfirmation(true);
-      setTimeout(() => setShowConfirmation(false), 5000);
+      
+      // For non-Stripe payments, redirect to the payment success page
+      const depositAmount = calculateDepositAmount();
+      const paymentURL = createSuccessPageUrl(docRef.id, formData.paymentMethod, depositAmount);
+      
+      // Redirect based on payment type
+      setTimeout(() => {
+        if (formData.paymentMethod === 'Venmo') {
+          // First open Venmo in a new tab, then redirect to success page
+          window.open(PAYMENT_URLS.VENMO, '_blank');
+          window.location.href = paymentURL;
+        } else if (formData.paymentMethod === 'CashApp') {
+          // Open CashApp with amount info
+          const { username } = getCashAppInfo();
+          const cashAppUrl = formatCashAppURL(username, depositAmount);
+          window.open(cashAppUrl, '_blank');
+          window.location.href = paymentURL;
+        } else if (formData.paymentMethod === 'PayPal') {
+          window.open(PAYMENT_URLS.PAYPAL, '_blank');
+          window.location.href = paymentURL;
+        } else {
+          // Default redirect
+          window.location.href = paymentURL;
+        }
+      }, 2000);
 
     } catch (error) {
       console.error("Error in form submission:", error);
@@ -1437,21 +1486,50 @@ Live City DJ Contract Terms and Conditions:
         case 'Venmo':
           return {
             username: '@Bobby-Martin-64',
-            color: '#3D95CE'
+            color: '#3D95CE',
+            url: PAYMENT_URLS.VENMO,
+            icon: <SiVenmo className="w-5 h-5" />
           };
         case 'CashApp':
           return {
             username: '$BobbyMartin64',
-            color: '#00C244'
+            color: '#00C244',
+            url: PAYMENT_URLS.CASHAPP,
+            icon: <SiCashapp className="w-5 h-5" />
           };
         case 'PayPal':
           return {
             username: 'paypal.me/bmartin4659',
-            color: '#0070BA'
+            color: '#0070BA',
+            url: PAYMENT_URLS.PAYPAL,
+            icon: <FaPaypal className="w-5 h-5" />
           };
         default:
           return null;
       }
+    };
+
+    const handlePayment = () => {
+      const amount = calculateDepositAmount();
+      
+      // Create success page URL
+      const paymentURL = createSuccessPageUrl(bookingId, paymentMethod, amount);
+      
+      // Open payment app based on type
+      if (paymentMethod === 'Venmo') {
+        window.open(PAYMENT_URLS.VENMO, '_blank');
+      } else if (paymentMethod === 'CashApp') {
+        const { username } = getCashAppInfo();
+        const cashAppUrl = formatCashAppURL(username, amount);
+        window.open(cashAppUrl, '_blank');
+      } else if (paymentMethod === 'PayPal') {
+        window.open(PAYMENT_URLS.PAYPAL, '_blank');
+      }
+      
+      // Redirect to success page
+      setTimeout(() => {
+        window.location.href = paymentURL;
+      }, 1500);
     };
 
     const paymentDetails = getPaymentDetails();
@@ -1476,23 +1554,35 @@ Live City DJ Contract Terms and Conditions:
             <p className="text-lg">
               Please send payment to: <strong>{paymentDetails.username}</strong>
             </p>
-            <button
-              onClick={() => copyToClipboard(paymentDetails.username)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-all"
-              style={{ backgroundColor: paymentDetails.color }}
-            >
-              {copySuccess ? (
-                <>
-                  <FaCheckCircle className="w-5 h-5" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <FaMobileAlt className="w-5 h-5" />
-                  <span>Copy Username</span>
-                </>
-              )}
-            </button>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => copyToClipboard(paymentDetails.username)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-all"
+                style={{ backgroundColor: paymentDetails.color }}
+              >
+                {copySuccess ? (
+                  <>
+                    <FaCheckCircle className="w-5 h-5" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <FaMobileAlt className="w-5 h-5" />
+                    <span>Copy Username</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={handlePayment}
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-white transition-all"
+                style={{ backgroundColor: paymentDetails.color }}
+              >
+                {paymentDetails.icon}
+                <span>Pay Now &amp; Continue</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -2275,81 +2365,92 @@ Live City DJ Contract Terms and Conditions:
           {/* Payment Method Buttons */}
           <div style={{ marginTop: '2rem' }}>
             {formData.paymentMethod === 'Venmo' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.VENMO, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#3D95CE',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Venmo
-              </button>
+              <div className="mb-4 bg-blue-50 p-4 rounded-md">
+                <button
+                  onClick={() => {
+                    // Open Venmo app/site in a new tab
+                    window.open(PAYMENT_URLS.VENMO, '_blank');
+                    
+                    // Create success page URL and redirect to it
+                    if (submitted && formData.bookingId) {
+                      const paymentURL = createSuccessPageUrl(
+                        formData.bookingId, 
+                        'Venmo', 
+                        calculateDepositAmount()
+                      );
+                      setTimeout(() => {
+                        window.location.href = paymentURL;
+                      }, 1000);
+                    }
+                  }}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#3D95CE] hover:bg-[#3483b5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-4"
+                >
+                  <SiVenmo style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+                  Secure Your Event - Make A Deposit via Venmo
+                </button>
+                <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with Venmo.</p>
+              </div>
             )}
 
             {formData.paymentMethod === 'CashApp' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.CASHAPP, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#00C244',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via Cash App
-              </button>
+              <div className="mb-4 bg-green-50 p-4 rounded-md">
+                <button
+                  onClick={() => {
+                    // Get CashApp payment URL with amount
+                    const { username } = getCashAppInfo();
+                    const amount = calculateDepositAmount();
+                    const cashAppUrl = formatCashAppURL(username, amount);
+                    
+                    // Open CashApp in a new tab
+                    window.open(cashAppUrl, '_blank');
+                    
+                    // Create success page URL and redirect to it
+                    if (submitted && formData.bookingId) {
+                      const paymentURL = createSuccessPageUrl(
+                        formData.bookingId, 
+                        'CashApp', 
+                        amount
+                      );
+                      setTimeout(() => {
+                        window.location.href = paymentURL;
+                      }, 1000);
+                    }
+                  }}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#00C244] hover:bg-[#00a237] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mb-4"
+                >
+                  <SiCashapp style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+                  Secure Your Event - Make A Deposit via Cash App
+                </button>
+                <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with Cash App.</p>
+              </div>
             )}
 
             {formData.paymentMethod === 'PayPal' && (
-              <button
-                onClick={() => window.open(PAYMENT_URLS.PAYPAL, '_blank')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#0070BA',
-                  color: 'white',
-                  padding: '16px 24px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  width: '100%',
-                  marginBottom: '1rem',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
-                Secure Your Event - Make A Deposit via PayPal
-              </button>
+              <div className="mb-4 bg-blue-50 p-4 rounded-md">
+                <button
+                  onClick={() => {
+                    // Open PayPal in a new tab
+                    window.open(PAYMENT_URLS.PAYPAL, '_blank');
+                    
+                    // Create success page URL and redirect to it
+                    if (submitted && formData.bookingId) {
+                      const paymentURL = createSuccessPageUrl(
+                        formData.bookingId, 
+                        'PayPal', 
+                        calculateDepositAmount()
+                      );
+                      setTimeout(() => {
+                        window.location.href = paymentURL;
+                      }, 1000);
+                    }
+                  }}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#0070BA] hover:bg-[#005ea6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-4"
+                >
+                  <FaPaypal style={{ marginRight: '12px', fontSize: '1.3rem' }} />
+                  Secure Your Event - Make A Deposit via PayPal
+                </button>
+                <p className="text-gray-600 text-sm">You&apos;ll be redirected to complete your payment with PayPal.</p>
+              </div>
             )}
 
             <p style={{ 
