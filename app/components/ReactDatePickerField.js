@@ -49,22 +49,10 @@ const ReactDatePickerField = ({
         placeholderText={placeholder}
         minDate={minDate}
         customInput={<CustomInput placeholder={placeholder} />}
-        popperPlacement="bottom"
-        popperModifiers={[
-          {
-            name: 'preventOverflow',
-            options: {
-              boundary: 'viewport',
-              padding: 16
-            }
-          },
-          {
-            name: 'offset',
-            options: {
-              offset: [0, 8]
-            }
-          }
-        ]}
+        popperPlacement="bottom-start"
+        popperProps={{
+          strategy: "fixed"
+        }}
         calendarClassName="date-picker-calendar"
         wrapperClassName="w-full"
         showPopperArrow={false}

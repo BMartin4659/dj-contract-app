@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';

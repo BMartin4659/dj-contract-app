@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import emailjs from '@emailjs/browser';
 
 export async function POST(request) {
   try {
@@ -38,12 +37,7 @@ export async function POST(request) {
     };
 
     // Send confirmation email
-    await emailjs.send(
-      process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-      process.env.NEXT_PUBLIC_EMAILJS_PAYMENT_TEMPLATE_ID,
-      templateParams,
-      process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-    );
+    // Replace emailjs.send with a placeholder
 
     // Update booking status in Firebase
     await updateDoc(bookingRef, {

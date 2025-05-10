@@ -197,4 +197,31 @@ console.log('Next steps:');
 console.log('1. Ensure all environment variables are correctly set in .env.local');
 console.log('2. Test sending emails in development');
 console.log('3. Check for CORS errors in your browser console');
-console.log('4. If problems persist, verify your EmailJS service settings and whitelist your domain'); 
+console.log('4. If problems persist, verify your EmailJS service settings and whitelist your domain');
+
+// Read the file
+fs.readFile('app/page.js', 'utf8', (err, data) => {
+  if (err) {
+    console.error('Error reading file:', err);
+    return;
+  }
+
+  // Split into lines
+  const lines = data.split('\n');
+  
+  // Remove the EmailJS block (lines 1228-1249)
+  const result = [
+    ...lines.slice(0, 1227),
+    '  // EmailJS initialization removed',
+    ...lines.slice(1249)
+  ];
+  
+  // Write the file back
+  fs.writeFile('app/page.js', result.join('\n'), err => {
+    if (err) {
+      console.error('Error writing file:', err);
+    } else {
+      console.log('EmailJS block removed successfully.');
+    }
+  });
+}); 

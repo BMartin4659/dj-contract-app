@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import emailjs from '@emailjs/browser';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
@@ -663,15 +662,6 @@ Live City DJ Contract Terms and Conditions:
 10. Media Rights: DJ may use event photos/videos for promotional purposes unless otherwise specified.
 `;
 
-  // Fallback EmailJS configuration (used if environment variables are missing)
-  const EMAILJS_CONFIG = {
-    SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'default_service_id',
-    TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'default_template_id',
-    PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'default_public_key',
-    // USER_ID is deprecated but kept for backward compatibility
-    USER_ID: process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'default_user_id'
-  };
-
   // Music genre options for playlist preferences
   const musicGenres = [
     { id: 'hiphop', label: 'Hip Hop' },
@@ -1235,70 +1225,22 @@ Live City DJ Contract Terms and Conditions:
   const validatePhone = (phone) =>
     /^[0-9]{10}$/.test(phone.replace(/\D/g, ''));
 
-  // Initialize EmailJS
-  useEffect(() => {
-    // Initialize EmailJS with the newer API format
-    if (typeof window !== 'undefined' && isClient) {
-      try {
-        // Get the public key
-        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || EMAILJS_CONFIG.PUBLIC_KEY;
-        
-        if (publicKey && publicKey !== 'default_public_key') {
-          // Use the newer init method with object parameter
-          emailjs.init({
-            publicKey: publicKey
-          });
-          console.log("EmailJS initialized successfully with key:", publicKey.substring(0, 4) + "...");
-        } else {
-          console.warn("EmailJS initialization skipped - no valid public key");
-        }
-      } catch (initError) {
-        console.error("Error initializing EmailJS:", initError);
-      }
-    }
-  }, [isClient]);
-
-  // Function to send confirmation email with retry logic
+  // Replacement for EmailJS functionality with Firebase API call
   const sendConfirmationEmail = async (templateParams) => {
     try {
-      console.log("Preparing to send confirmation email with params:", templateParams);
-      
-      // Get project ID from environment
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dj-contract-app';
-      
-      // Create email payload with all required fields
-      const emailPayload = {
-        clientName: templateParams.name || templateParams.clientName,
-        email: templateParams.email,
-        eventType: templateParams.eventType || 'Event',
-        eventDate: templateParams.eventDate,
-        venueName: templateParams.venueName || 'N/A',
-        venueLocation: templateParams.venueLocation || 'N/A',
-        startTime: templateParams.startTime || 'N/A',
-        endTime: templateParams.endTime || 'N/A',
-        paymentId: templateParams.paymentId || 'N/A',
-        totalAmount: templateParams.total || templateParams.totalAmount || 'N/A'
-      };
-
-      // Call the Firebase function HTTP endpoint
-      const functionUrl = `https://us-central1-${projectId}.cloudfunctions.net/sendConfirmationEmailHttp`;
-      
-      console.log('Sending email request to:', functionUrl);
-      
-      const response = await fetch(functionUrl, {
+      // Make API call to our own backend to handle email sending
+      const response = await fetch('/api/payment-confirmation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(emailPayload),
+        body: JSON.stringify(templateParams),
       });
-
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Email API error response:', errorText);
-        throw new Error(`HTTP error ${response.status}`);
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
-
+      
       const result = await response.json();
       console.log('📧 Email sent successfully:', result);
       
@@ -2467,6 +2409,81 @@ Live City DJ Contract Terms and Conditions:
     );
   }
 
+  // Function to handle Stripe payment initialization - placed inside the component
+  const handleStripeButtonClick = async () => {
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Create the document in Firebase first to get the ID
+      const docRef = await addDoc(collection(db, 'djContracts'), {
+        ...formData,
+        createdAt: serverTimestamp(),
+        status: 'payment_pending',
+        totalAmount: calculateTotal(),
+        depositAmount: calculateDepositAmount()
+      });
+      
+      console.log("Document written with ID for Stripe payment: ", docRef.id);
+      
+      // Update form data with booking ID
+      setFormData(prev => ({
+        ...prev,
+        bookingId: docRef.id
+      }));
+      
+      // Instead of showing the Stripe component, directly call the API and redirect
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: getAmountToPay() * 100,
+          contractDetails: {
+            clientName: formData.clientName,
+            email: formData.email,
+            eventType: formData.eventType,
+            eventDate: formData.eventDate,
+            venueName: formData.venueName,
+            venueLocation: formData.venueLocation,
+            startTime: formData.startTime,
+            endTime: formData.endTime,
+            lighting: formData.lighting === true,
+            photography: formData.photography === true,
+            videoVisuals: formData.videoVisuals === true,
+            additionalHours: parseInt(formData.additionalHours || 0),
+            paymentAmount: formData.paymentAmount,
+            isDeposit: formData.paymentAmount === 'deposit'
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect to Stripe Checkout page
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+      
+    } catch (error) {
+      console.error("Error preparing Stripe payment:", error);
+      setSubmitError("Error initializing payment. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="main-wrapper" style={{ 
       width: '100%', 
@@ -2485,123 +2502,14 @@ Live City DJ Contract Terms and Conditions:
       {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
       {modalText && <PaymentModal htmlContent={modalText} onClose={() => setModalText(null)} />}
       
-      <div className="main-content" style={{ 
+      <div style={{ 
         display: 'flex', 
         justifyContent: 'center',
         width: '100%',
         overflow: 'visible',
         minHeight: '100vh'
       }}>
-        {showStripe ? (
-          <div style={{
-            backgroundColor: 'transparent',
-            padding: '0',
-            borderRadius: '0',
-            boxShadow: 'none',
-            maxWidth: '96%',
-            width: '96%',
-            margin: '0 auto'
-          }}>
-            {/* Security Banner */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#f0f8ff',
-              padding: '10px',
-              borderRadius: '8px',
-              marginBottom: '1.5rem',
-              border: '1px solid #dbeafe'
-            }}>
-              <FaShieldAlt size={18} style={{ color: '#2563eb', marginRight: '8px' }} />
-              <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '500' }}>
-                Secure, encrypted payment processing
-              </span>
-            </div>
-            
-            {/* Order Summary Section with headers moved inside */}
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              marginBottom: '1.5rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h2 style={{ 
-                color: '#111', 
-                marginBottom: '0.5rem', 
-                fontSize: '1.75rem', 
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                <FaReceipt style={{ marginRight: '10px', color: '#635BFF' }} />
-                Complete Your Booking
-              </h2>
-              <p style={{ 
-                color: '#555', 
-                marginBottom: '1.5rem', 
-                fontSize: '1.1rem',
-                borderBottom: '2px solid #635BFF',
-                paddingBottom: '1rem'
-              }}>
-                Secure your event date with a deposit payment
-              </p>
-              
-              {/* Debug information - will be removed in production */}
-              <div style={{ 
-                backgroundColor: '#f5f5f5', 
-                padding: '10px', 
-                marginBottom: '15px', 
-                borderRadius: '5px',
-                fontSize: '14px',
-                color: '#333'
-              }}>
-                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Debug Info:</p>
-                <p style={{ margin: '0' }}>Lighting: {String(Boolean(formData.lighting))}</p>
-                <p style={{ margin: '0' }}>Photography: {String(Boolean(formData.photography))}</p>
-                <p style={{ margin: '0' }}>VideoVisuals: {String(Boolean(formData.videoVisuals))}</p>
-                <p style={{ margin: '0' }}>Additional Hours: {formData.additionalHours}</p>
-                <p style={{ margin: '0' }}>Total: ${calculateTotal()}</p>
-              </div>
-              
-              <StripeCheckout
-                amount={getAmountToPay() * 100}
-                contractDetails={{
-                  clientName: formData.clientName,
-                  email: formData.email,
-                  eventType: formData.eventType,
-                  eventDate: formData.eventDate,
-                  venueName: formData.venueName,
-                  venueLocation: formData.venueLocation,
-                  startTime: formData.startTime,
-                  endTime: formData.endTime,
-                  lighting: formData.lighting === true,
-                  photography: formData.photography === true,
-                  videoVisuals: formData.videoVisuals === true,
-                  additionalHours: parseInt(formData.additionalHours || 0),
-                  paymentAmount: formData.paymentAmount, // Pass payment amount type
-                  isDeposit: formData.paymentAmount === 'deposit',
-                  totalAmount: formData.paymentAmount === 'deposit' ? calculateDepositAmount() : calculateTotal(),
-                  musicPreferences: formData.musicPreferences, // Add music preferences
-                  otherMusicPreference: formData.otherMusicPreference, // Add other music preference if any
-                  streamingService: formData.streamingService || '',
-                  playlistLink: formData.playlistLink || ''
-                }}
-                onSuccess={(paymentId) => {
-                  // Handle successful payment
-                  console.log("Payment successful with ID:", paymentId);
-                  
-                  // Hide the Stripe component
-                  setShowStripe(false);
-                  
-                  // Redirect to the success page
-                  router.push(`/payment/success?id=${paymentId}`);
-                }}
-              />
-            </div>
-          </div>
-        ) : submitted ? (
+        {submitted ? (
           <div style={{
             textAlign: 'center',
             padding: '2rem',
@@ -3894,41 +3802,4 @@ Live City DJ Contract Terms and Conditions:
     </div>
   );
 }
-
-// Function to handle Stripe payment initialization
-const handleStripeButtonClick = async () => {
-  // Validate form
-  if (!validateForm()) {
-    return;
-  }
-  
-  setIsSubmitting(true);
-  
-  try {
-    // Create the document in Firebase first to get the ID
-    const docRef = await addDoc(collection(db, 'djContracts'), {
-      ...formData,
-      createdAt: serverTimestamp(),
-      status: 'payment_pending',
-      totalAmount: calculateTotal(),
-      depositAmount: calculateDepositAmount()
-    });
-    
-    console.log("Document written with ID for Stripe payment: ", docRef.id);
-    
-    // Update form data with the booking ID for reference
-    setFormData(prev => ({
-      ...prev,
-      bookingId: docRef.id
-    }));
-    
-    // Show Stripe checkout
-    setShowStripe(true);
-  } catch (error) {
-    console.error("Error creating booking for Stripe payment:", error);
-    setSubmitError("Failed to initialize payment. Please try again or contact support.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 

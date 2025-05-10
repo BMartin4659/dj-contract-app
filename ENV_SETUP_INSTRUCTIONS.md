@@ -10,11 +10,6 @@ Create a new file named `.env.local` in the root directory of your project (C:\U
 ```
 # DJ Contract App Environment Configuration
 
-# EmailJS Configuration (REQUIRED)
-NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_9z9konq
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_booking_confirmation
-NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=YOUR_PUBLIC_KEY_HERE
-
 # Firebase Configuration (REQUIRED)
 NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
@@ -33,15 +28,11 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc
 
 ## Step 3: Replace the Placeholder Values
 
-1. **EmailJS Configuration**: 
-   - Replace `YOUR_PUBLIC_KEY_HERE` with your actual EmailJS public key
-   - You can find this in your EmailJS dashboard under Account > API Keys
-
-2. **Firebase Configuration**:
+1. **Firebase Configuration**:
    - Replace all Firebase placeholder values with your actual Firebase configuration
    - These can be found in your Firebase console under Project Settings > General > Your apps > SDK setup and configuration
 
-3. **Stripe Configuration**:
+2. **Stripe Configuration**:
    - Replace the Stripe placeholder values with your actual Stripe API keys
    - These can be found in your Stripe Dashboard under Developers > API keys
 
@@ -57,11 +48,4 @@ After creating and configuring your `.env.local` file, restart your development 
 
 ## Vercel Deployment
 
-For Vercel deployment instructions, please refer to the VERCEL_DEPLOYMENT_GUIDE.md file.
-
-## Troubleshooting
-
-If you're experiencing 422 errors with EmailJS, make sure:
-1. The `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` is correctly set
-2. Your EmailJS service is active
-3. Your template parameters match those expected by your EmailJS template 
+For Vercel deployment instructions, please refer to the VERCEL_DEPLOYMENT_GUIDE.md file. 

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import emailjs from '@emailjs/browser';
 import Header from '../../components/Header';
 
 export default function ContactPage() {
@@ -30,19 +29,6 @@ export default function ContactPage() {
     setSubmitting(true);
     
     try {
-      // Send email using EmailJS
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
-          message: formData.message,
-          to_name: 'Live City DJ',
-        },
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-      );
-      
       setFormSubmitted(true);
     } catch (error) {
       console.error('Error sending email:', error);

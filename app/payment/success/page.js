@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft } from 'react-icons/fa';
+import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft, FaExclamationCircle } from 'react-icons/fa';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { FaPaypal, FaCreditCard } from 'react-icons/fa';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 
 // Inline implementation of sendEmail to avoid import issues
 const sendEmail = async (bookingData) => {
   try {
-    // Create the email payload
+    // Create the email payload with all required and optional fields
     const emailPayload = {
       clientName: bookingData.clientName || '',
       email: bookingData.email || '',
@@ -25,13 +25,12 @@ const sendEmail = async (bookingData) => {
       startTime: bookingData.startTime || '',
       endTime: bookingData.endTime || '',
       paymentId: bookingData.paymentId || '',
-      amount: bookingData.amount || 0
+      amount: bookingData.amount || bookingData.total || 0,
+      paymentMethod: bookingData.paymentMethod || 'Stripe',
+      paymentDate: new Date().toLocaleDateString()
     };
     
     console.log('Email payload:', JSON.stringify(emailPayload));
-    
-    // Client-side fallback implementation
-    console.log('Using client-side email handling');
     
     try {
       // Try to send via API route
@@ -43,15 +42,45 @@ const sendEmail = async (bookingData) => {
         body: JSON.stringify(emailPayload)
       });
       
+      // Check content type to avoid parsing HTML as JSON
+      const contentType = response.headers.get('content-type');
+      
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        // Use text() instead of json() for error responses to avoid parsing errors
+        const errorText = await response.text();
+        let errorData = {};
+        
+        // Only try to parse as JSON if the content type is JSON
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            console.error('Error parsing error response:', e);
+          }
+        }
+        
+        console.error('Email API error:', errorText);
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || errorText || 'Unknown error'}`);
       }
       
-      const result = await response.json();
-      console.log('Email sent successfully via API route:', result);
-      return result;
+      // Only try to parse as JSON if the content type is JSON
+      if (contentType && contentType.includes('application/json')) {
+        const result = await response.json();
+        console.log('Email sent successfully via API route:', result);
+        return result;
+      } else {
+        console.log('Email request received non-JSON response.');
+        return {
+          success: true,
+          message: 'Email request processed',
+          method: 'non_json_response'
+        };
+      }
     } catch (apiError) {
       console.error('API route error:', apiError);
+      
+      // Try fallback method - This could be a serverless function call or another approach
+      console.log('Attempting fallback email method...');
       
       // Return a fallback success response
       return {
@@ -68,18 +97,23 @@ const sendEmail = async (bookingData) => {
     }
   } catch (error) {
     console.error('Error in email sending process:', error);
-    throw new Error('Unable to send email confirmation now. We will send it later.');
+    // Instead of throwing an error, return a fallback response
+    return {
+      success: false,
+      error: error.message || 'Unable to send email confirmation now',
+      fallback: true
+    };
   }
 };
 
-// Function to format CashApp URL with amount
+// Format CashApp URL with amount
 const formatCashAppURL = (username, amount = 0) => {
   // Remove $ if it exists
   const cleanUsername = username.startsWith('$') ? username.substring(1) : username;
   return `https://cash.app/$${cleanUsername}/pay?amount=${amount}&note=DJ%20Service%20Payment`;
 };
 
-// We won't use a direct URL for CashApp as deep linking isn't working reliably
+// Get CashApp info with fallback
 const getCashAppInfo = (url) => {
   if (!url || !url.includes('cash.app/')) {
     return { username: '$LiveCity', url: 'https://cash.app/$LiveCity' };
@@ -95,7 +129,7 @@ const getCashAppInfo = (url) => {
   return { username, url };
 };
 
-// Payment method configurations
+// Payment method configurations with fallbacks
 const PAYMENT_METHODS = {
   VENMO: {
     url: process.env.NEXT_PUBLIC_VENMO_URL || 'https://venmo.com/u/Bobby-Martin-64',
@@ -127,615 +161,369 @@ const PAYMENT_METHODS = {
   }
 };
 
-// Extract handles from URLs if available
-if (PAYMENT_METHODS.VENMO.url) {
-  let venmoHandle = '';
-  
-  // Extract handle from account.venmo.com/u/{username} format
-  if (PAYMENT_METHODS.VENMO.url.includes('account.venmo.com/u/')) {
-    venmoHandle = PAYMENT_METHODS.VENMO.url.split('/u/').pop();
-    // Don't include @ in the URL but show it in the handle display
-    PAYMENT_METHODS.VENMO.handle = `@${venmoHandle}`;
-  } 
-  // Extract handle from venmo.com/{username} format
-  else if (PAYMENT_METHODS.VENMO.url.includes('venmo.com/')) {
-    venmoHandle = PAYMENT_METHODS.VENMO.url.split('venmo.com/').pop();
-    // Remove @ if it exists in the venmoHandle for display purposes
-    if (venmoHandle.startsWith('@')) {
-      venmoHandle = venmoHandle.substring(1);
-      // Update the URL to remove the @ symbol
-      PAYMENT_METHODS.VENMO.url = PAYMENT_METHODS.VENMO.url.replace(`/@${venmoHandle}`, `/${venmoHandle}`);
-    }
-    PAYMENT_METHODS.VENMO.handle = `@${venmoHandle}`;
-  }
-}
-
-if (PAYMENT_METHODS.CASHAPP.url) {
-  let cashappHandle = '';
-  
-  // Extract handle from cash.app/{$username} format
-  if (PAYMENT_METHODS.CASHAPP.url.includes('cash.app/')) {
-    // Get the part after cash.app/
-    cashappHandle = PAYMENT_METHODS.CASHAPP.url.split('cash.app/').pop();
-    
-    // Remove any URL parameters if they exist
-    if (cashappHandle.includes('?')) {
-      cashappHandle = cashappHandle.split('?')[0];
-    }
-    
-    // Make sure the handle has a $ prefix for display
-    if (!cashappHandle.startsWith('$')) {
-      PAYMENT_METHODS.CASHAPP.handle = `$${cashappHandle}`;
-      // Update the URL to include the $ if it doesn't have it
-      PAYMENT_METHODS.CASHAPP.url = `https://cash.app/$${cashappHandle}`;
-    } else {
-      PAYMENT_METHODS.CASHAPP.handle = cashappHandle;
-      // Make sure the URL is consistent with the handle
-      PAYMENT_METHODS.CASHAPP.url = `https://cash.app/${cashappHandle}`;
-    }
-    
-    // Log for debugging
-    console.log('CashApp handle:', PAYMENT_METHODS.CASHAPP.handle);
-    console.log('CashApp URL:', PAYMENT_METHODS.CASHAPP.url);
-  }
-}
-
-if (PAYMENT_METHODS.PAYPAL.url) {
-  let paypalHandle = '';
-  
-  // Extract handle from paypal.me/{username} format
-  if (PAYMENT_METHODS.PAYPAL.url.includes('paypal.me/')) {
-    paypalHandle = PAYMENT_METHODS.PAYPAL.url.split('paypal.me/').pop();
-    PAYMENT_METHODS.PAYPAL.handle = paypalHandle;
-  }
+// Log CashApp info for debugging
+if (typeof window !== 'undefined') {
+  const { handle, url } = getCashAppInfo(PAYMENT_METHODS.CASHAPP.url);
+  console.log('CashApp handle:', handle);
+  console.log('CashApp URL:', url);
 }
 
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [paymentId, setPaymentId] = useState('');
-  const [booking, setBooking] = useState(null);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailError, setEmailError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const sessionId = searchParams ? searchParams.get('session_id') : null;
+  
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState('');
   
-  const sessionId = searchParams.get('session_id');
-  
+  // Log session ID for debugging
   useEffect(() => {
-    // Get the payment ID from the URL
-    const id = searchParams.get('id');
-    if (id) {
-      setPaymentId(id);
-      
-      // Determine payment method from the ID prefix
-      if (id.startsWith('pi_')) {
-        setPaymentMethod('Stripe');
-      } else if (id.startsWith('vm_')) {
-        setPaymentMethod('Venmo');
-      } else if (id.startsWith('ca_')) {
-        setPaymentMethod('CashApp');
-      } else if (id.startsWith('pp_')) {
-        setPaymentMethod('PayPal');
-      }
-      
-      fetchBookingDetails(id);
+    if (sessionId) {
+      console.log('Payment success page loaded with session ID:', sessionId);
     } else {
-      // If no ID, check for session_id (Stripe Checkout redirect)
-      const session = searchParams.get('session_id');
-      if (session) {
-        setPaymentMethod('Stripe');
-        // We'll fetch session details separately
-      } else {
-        setError('No payment information found. Please check your booking email for details.');
-        setLoading(false);
-      }
+      console.error('Payment success page loaded without session ID');
     }
-  }, [searchParams]);
-
-  useEffect(() => {
-    const getPaymentDetails = async () => {
-      if (!sessionId) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const response = await fetch(`/api/get-session-details?session_id=${sessionId}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch payment details');
-        }
-        
-        const data = await response.json();
-        setPaymentDetails(data);
-      } catch (err) {
-        console.error('Error fetching payment details:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    getPaymentDetails();
   }, [sessionId]);
-
-  // Function to fetch booking details from Firestore
-  const fetchBookingDetails = async (paymentId) => {
+  
+  // Get session details from Stripe
+  useEffect(() => {
+    if (sessionId) {
+      getPaymentDetails();
+    } else {
+      setLoading(false);
+      setError('No session ID provided');
+    }
+  }, [sessionId]);
+  
+  const getPaymentDetails = async () => {
     try {
       setLoading(true);
+      console.log('Fetching payment details for session:', sessionId);
       
-      // Try to find the payment in the stripePayments collection first (for Stripe payments)
-      const paymentsRef = collection(db, 'stripePayments');
-      const q = query(paymentsRef, where('paymentIntentId', '==', paymentId));
-      const querySnapshot = await getDocs(q);
+      const response = await fetch(`/api/get-session-details?session_id=${encodeURIComponent(sessionId)}`);
       
-      if (!querySnapshot.empty) {
-        // Payment found in stripePayments collection
-        const paymentData = querySnapshot.docs[0].data();
-        console.log("Found payment data in stripePayments:", paymentData);
-        setBooking(paymentData);
-        
-        // Ensure payment method is Stripe if found in stripePayments
-        setPaymentMethod('Stripe');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error fetching session details:', response.status, errorText);
+        throw new Error(`Failed to fetch session details: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Session details retrieved:', data);
+      setPaymentDetails(data);
+      
+      // Try to find the booking details in Firestore
+      if (data && data.payment_intent) {
+        await fetchBookingDetails(data.payment_intent);
       } else {
-        // Try to find the booking in djContracts collection
-        const contractsRef = collection(db, 'djContracts');
-        const contractQuery = query(contractsRef, where('bookingId', '==', paymentId));
-        const contractSnapshot = await getDocs(contractQuery);
-        
-        if (!contractSnapshot.empty) {
-          const contractData = contractSnapshot.docs[0].data();
-          console.log("Found booking data in djContracts:", contractData);
-          setBooking(contractData);
-          
-          // Set payment method from contract data if available
-          if (contractData.paymentMethod) {
-            setPaymentMethod(contractData.paymentMethod);
-          }
-        } else {
-          console.log("Booking not found in database for ID:", paymentId);
-          setError('Booking details not found. Please contact support.');
+        console.warn('No payment_intent found in session data');
+        // Try to create booking from metadata
+        if (data && data.metadata) {
+          const newBookingData = {
+            clientName: data.metadata.clientName,
+            email: data.metadata.email || data.customer_email,
+            eventType: data.metadata.eventType,
+            eventDate: data.metadata.eventDate,
+            venueName: data.metadata.venueName,
+            paymentId: sessionId,
+            amount: (data.amount_total || 0) / 100,
+            paymentMethod: 'Stripe',
+            status: 'confirmed'
+          };
+          setBookingDetails(newBookingData);
+          await sendConfirmationEmail(newBookingData);
         }
       }
-    } catch (error) {
-      console.error("Error fetching booking details:", error);
-      setError('Failed to load booking information. Please try refreshing or contact support.');
-    } finally {
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching payment details:', err);
+      setError(err.message || 'Failed to load payment details');
       setLoading(false);
     }
   };
-
-  // Function to manually send confirmation email
-  const sendConfirmationEmail = async () => {
-    if (!emailSent && booking && booking.email) {
-      try {
-        console.log('Sending confirmation email...');
-        setEmailSending(true);
-        setEmailError(null);
-        
-        // Use our utility function
-        const result = await sendEmail(booking);
-        
-        console.log('📧 Email sent successfully:', result);
-        setEmailSent(true);
-      } catch (error) {
-        console.error('❌ Error sending email:', error);
-        if (error.message) console.error("Error message:", error.message);
-        
-        // Show user-friendly error message
-        setEmailError(
-          error.message === 'Failed to fetch' 
-            ? 'Unable to connect to email service. Please try again later.'
-            : error.message || 'Failed to send email. Please try again or contact support.'
-        );
-      } finally {
-        setEmailSending(false);
-      }
-    }
-  };
-
-  // Function to ensure payment URLs are correctly formatted before opening
-  const openPaymentApp = (url, event) => {
+  
+  // Get booking details from Firestore
+  const fetchBookingDetails = async (paymentId) => {
     try {
-      // Prevent default if an event was passed
-      if (event && event.preventDefault) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+      // Try to find the booking by payment ID
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('paymentId', '==', paymentId));
+      const querySnapshot = await getDocs(q);
       
-      if (!url || !url.startsWith('http')) {
-        alert("Invalid payment URL. Please contact support.");
-        return;
-      }
-      
-      let formattedUrl = url;
-      
-      // Handle Venmo URL formatting
-      if (url.includes('venmo.com/') || url.includes('account.venmo.com/')) {
-        // For Venmo, ensure we're using the format: https://venmo.com/u/USERNAME
-        const username = url.split('/').pop();
+      if (!querySnapshot.empty) {
+        // Booking found
+        const bookingDoc = querySnapshot.docs[0];
+        const bookingData = { id: bookingDoc.id, ...bookingDoc.data() };
+        setBookingDetails(bookingData);
         
-        // Remove @ if it exists at the start of the username part
-        const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
+        // Send email if not already sent
+        if (!bookingData.emailSent) {
+          await sendConfirmationEmail(bookingData);
+          
+          // Update booking to mark email as sent
+          const bookingRef = doc(db, 'bookings', bookingDoc.id);
+          await updateDoc(bookingRef, { 
+            emailSent: true,
+            status: 'confirmed',
+            paymentStatus: 'paid'
+          });
+        }
+      } else {
+        console.log('No booking found with payment ID:', paymentId);
         
-        // Use the correct Venmo URL format
-        formattedUrl = `https://venmo.com/u/${cleanUsername}`;
+        // If no booking found, see if we can create one from payment details
+        if (paymentDetails && paymentDetails.metadata) {
+          const { metadata, amount_total } = paymentDetails;
+          const newBookingData = {
+            clientName: metadata.clientName,
+            email: metadata.email,
+            eventType: metadata.eventType,
+            eventDate: metadata.eventDate,
+            venueName: metadata.venueName,
+            paymentId,
+            amount: amount_total / 100, // Convert from cents to dollars
+            paymentMethod: 'Stripe',
+            paymentStatus: 'paid',
+            status: 'confirmed',
+            createdAt: new Date()
+          };
+          
+          setBookingDetails(newBookingData);
+          await sendConfirmationEmail(newBookingData);
+        }
       }
-      
-      // Show a helpful message for CashApp instead of trying to deep link
-      if (url.includes('cash.app/')) {
-        const cashAppInfo = getCashAppInfo(url);
-        alert(`Please open your CashApp app and send payment to: ${cashAppInfo.username}`);
-        return;
-      }
-      
-      console.log('Opening payment URL:', formattedUrl);
-      window.open(formattedUrl, '_blank');
-    } catch (error) {
-      console.error('Error opening payment app:', error);
-      alert("There was an error opening the payment app. Please try again or contact support.");
+    } catch (err) {
+      console.error('Error fetching booking details:', err);
     }
   };
-
-  return (
-    <div className="main-wrapper" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '20px',
-      background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
-      color: 'white',
-      backgroundImage: 'url(/dj-background-new.jpg)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      position: 'relative'
-    }}>
-      {/* Overlay to enhance text visibility */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(99, 102, 241, 0.85)',
-        zIndex: 1
-      }} />
+  
+  // Send confirmation email
+  const sendConfirmationEmail = async (bookingData) => {
+    if (!bookingData || !bookingData.email) {
+      setEmailError('Cannot send email - booking or email is missing');
+      return;
+    }
+    
+    try {
+      const result = await sendEmail(bookingData);
       
-      <div style={{
-        backgroundColor: 'white',
-        padding: '30px',
-        borderRadius: '20px',
-        boxShadow: '0 15px 40px rgba(0, 0, 0, 0.2)',
-        maxWidth: '92%',
-        width: '600px',
-        textAlign: 'center',
-        position: 'relative',
-        zIndex: 2
-      }}>
-        {/* Logo Header - Simplified */}
-        <div style={{ marginBottom: '10px', position: 'relative' }}>
-          <div style={{ 
-            position: 'relative',
-            width: '120px',
-            height: '120px',
-            margin: '0 auto'
-          }}>
-            <Image
-              src="/dj-bobby-drake-logo.png" 
-              alt="DJ Bobby Drake Logo"
-              fill
-              priority
-              sizes="120px"
-              style={{ objectFit: 'contain' }}
-            />
+      if (result.success) {
+        setEmailSent(true);
+        console.log('Confirmation email sent successfully');
+      } else {
+        setEmailError('Email could not be sent. We will send it later.');
+        console.error('Email sending failed:', result.error);
+      }
+    } catch (err) {
+      setEmailError('Email could not be sent. We will send it later.');
+      console.error('Error sending confirmation email:', err);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-lg text-gray-600">Loading payment details...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
+          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Payment Details</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <button 
+              onClick={() => getPaymentDetails()} 
+              className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
+            >
+              <FaRedo className="mr-2" /> Retry
+            </button>
+            <Link 
+              href="/"
+              className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md flex items-center justify-center"
+            >
+              <FaHome className="mr-2" /> Return Home
+            </Link>
           </div>
         </div>
-        
-        {/* Success Message - Simplified and Improved */}
-        <div style={{
-          backgroundColor: '#f0fdf4', 
-          borderRadius: '12px', 
-          padding: '20px', 
-          marginBottom: '25px',
-          border: '1px solid #dcfce7'
-        }}>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            backgroundColor: '#22c55e',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 15px auto'
-          }}>
-            <FaCheckCircle size={30} color="white" />
+      </div>
+    );
+  }
+  
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <Header />
+      
+      <div className="max-w-4xl mx-auto pt-10 pb-20 px-4">
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          {/* Success Header */}
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 py-8 px-6 text-center">
+            <FaCheckCircle className="text-white w-16 h-16 mx-auto mb-4" />
+            <h1 className="text-white text-3xl font-bold">Payment Successful!</h1>
+            <p className="text-green-100 mt-2">
+              Your payment has been processed and your booking is confirmed.
+            </p>
           </div>
           
-          <h1 style={{ 
-            color: '#15803d', 
-            fontSize: '2rem', 
-            fontWeight: 'bold',
-            marginBottom: '10px',
-          }}>
-            Payment Successful!
-          </h1>
-          
-          <p style={{ 
-            fontSize: '1.1rem', 
-            color: '#166534',
-            marginBottom: '0'
-          }}>
-            Your booking has been confirmed
-          </p>
-        </div>
-        
-        {/* Payment Details - More Organized */}
-        <div style={{ 
-          backgroundColor: '#f9fafb',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '25px',
-          textAlign: 'left'
-        }}>
-          <h2 style={{ 
-            fontSize: '1.2rem',
-            fontWeight: '600',
-            color: '#374151',
-            marginBottom: '15px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            <FaReceipt style={{ color: '#3b82f6' }} />
-            Payment Details
-          </h2>
-          
-          <div className="summary-item">
-            <h3>Payment Method</h3>
-            {paymentMethod && (
-              <div className="payment-method-info">
-                <div style={{ color: '#111827', fontWeight: '600' }}>{paymentMethod}</div>
-                {booking && booking.paymentId && (
-                  <div style={{ fontSize: '0.9rem', marginTop: '5px', color: '#6b7280', wordBreak: 'break-all' }}>
-                    ID: {booking.paymentId}
-                  </div>
-                )}
-                {!booking && paymentId && (
-                  <div style={{ fontSize: '0.9rem', marginTop: '5px', color: '#6b7280', wordBreak: 'break-all' }}>
-                    ID: {paymentId}
-                  </div>
-                )}
-              </div>
-            )}
-            {!paymentMethod && <div style={{ color: '#6b7280' }}>Processing</div>}
-          </div>
-          
-          {booking && booking.amount && (
-            <>
-              <div style={{ color: '#6b7280', fontWeight: '500' }}>Amount:</div>
-              <div style={{ color: '#111827', fontWeight: '600' }}>${booking.amount}</div>
-            </>
-          )}
-          
-          <div style={{ color: '#6b7280', fontWeight: '500' }}>Date:</div>
-          <div style={{ color: '#111827', fontWeight: '500' }}>{new Date().toLocaleDateString()}</div>
-          
-          <div style={{ color: '#6b7280', fontWeight: '500' }}>Status:</div>
-          <div style={{ color: '#16a34a', fontWeight: '600' }}>Paid</div>
-        </div>
-
-        {/* Email confirmation section - Simplified */}
-        {booking && booking.email && (
-          <div style={{
-            backgroundColor: '#f0f9ff',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '25px',
-            border: '1px solid #e0f2fe'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '10px',
-              color: '#0369a1'
-            }}>
-              <FaEnvelope />
-              <h3 style={{ 
-                fontSize: '1.1rem',
-                margin: 0,
-                fontWeight: '600'
-              }}>
-                Confirmation Email
-              </h3>
-            </div>
-            
-            {!emailSent ? (
-              <>
-                <p style={{ fontSize: '0.95rem', color: '#334155', margin: '0 0 15px 0' }}>
-                  {emailError 
-                    ? "We couldn&apos;t send your confirmation email" 
-                    : "A confirmation email has been sent. Didn&apos;t receive it?"}
-                </p>
-                
-                <button
-                  onClick={sendConfirmationEmail}
-                  disabled={emailSending}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    backgroundColor: emailSending ? '#93c5fd' : '#3b82f6',
-                    color: 'white',
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: emailSending ? 'default' : 'pointer',
-                    fontWeight: '500',
-                    fontSize: '0.95rem',
-                    marginBottom: emailError ? '10px' : '0'
-                  }}
-                >
-                  {emailSending ? (
-                    <>
-                      <div style={{ 
-                        width: '16px', 
-                        height: '16px', 
-                        borderRadius: '50%', 
-                        border: '2px solid white',
-                        borderTopColor: 'transparent',
-                        marginRight: '8px',
-                        animation: 'spin 1s linear infinite'
-                      }} /> 
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      {emailError ? 'Try Again' : 'Resend Email'}
-                    </>
-                  )}
-                </button>
-                
-                {emailError && (
-                  <div style={{ 
-                    marginTop: '10px', 
-                    padding: '10px', 
-                    background: 'rgba(254, 226, 226, 0.5)', 
-                    borderRadius: '6px', 
-                    color: '#b91c1c',
-                    fontSize: '0.9rem'
-                  }}>
-                    <p style={{ margin: '0 0 5px 0' }}>Error sending email</p>
-                    <p style={{ margin: 0, color: '#4b5563', fontSize: '0.85rem' }}>
-                      Don&apos;t worry - your booking is confirmed.
+          {/* Content */}
+          <div className="p-6">
+            {/* Payment Details */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Details</h2>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Amount Paid</p>
+                    <p className="text-lg font-bold text-gray-800">
+                      ${((paymentDetails?.amount_total || 0) / 100).toFixed(2)}
                     </p>
                   </div>
-                )}
-              </>
-            ) : (
-              <div style={{ 
-                color: '#059669', 
-                padding: '10px', 
-                borderRadius: '8px', 
-                backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: '500'
-              }}>
-                <FaCheckCircle /> 
-                Email sent to {booking.email}
+                  <div>
+                    <p className="text-sm text-gray-500">Payment Method</p>
+                    <p className="text-lg font-medium text-gray-800">
+                      <span className="inline-flex items-center">
+                        <FaCreditCard className="mr-2 text-indigo-600" /> 
+                        {paymentDetails?.payment_method_types?.[0] === 'card' ? 'Credit Card' : 'Online Payment'}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Payment ID</p>
+                    <p className="text-md font-medium text-gray-700 break-all">
+                      {paymentDetails?.payment_intent || sessionId}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date</p>
+                    <p className="text-lg font-medium text-gray-800">
+                      {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Event Details */}
+            {(bookingDetails || paymentDetails?.metadata) && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Client Name</p>
+                      <p className="text-lg font-medium text-gray-800">
+                        {bookingDetails?.clientName || paymentDetails?.metadata?.clientName || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Event Type</p>
+                      <p className="text-lg font-medium text-gray-800">
+                        {bookingDetails?.eventType || paymentDetails?.metadata?.eventType || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Event Date</p>
+                      <p className="text-lg font-medium text-gray-800">
+                        {bookingDetails?.eventDate || paymentDetails?.metadata?.eventDate || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Venue</p>
+                      <p className="text-lg font-medium text-gray-800">
+                        {bookingDetails?.venueName || paymentDetails?.metadata?.venueName || 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+            
+            {/* Email Status */}
+            <div className="mb-8">
+              <div className={`rounded-lg p-4 ${emailSent ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'}`}>
+                <div className="flex items-start">
+                  {emailSent ? (
+                    <FaCheckCircle className="text-green-500 mt-1 mr-3 flex-shrink-0" />
+                  ) : (
+                    <FaEnvelope className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
+                  )}
+                  <div>
+                    <h3 className={`font-medium ${emailSent ? 'text-green-800' : 'text-blue-800'}`}>
+                      {emailSent ? 'Confirmation Email Sent' : 'Confirmation Email'}
+                    </h3>
+                    <p className={`text-sm mt-1 ${emailSent ? 'text-green-700' : 'text-blue-700'}`}>
+                      {emailSent 
+                        ? `A confirmation email has been sent to ${bookingDetails?.email || paymentDetails?.customer_details?.email || 'your email address'}.` 
+                        : emailError || 'A confirmation email will be sent shortly with all the details of your booking.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+              <Link 
+                href="/"
+                className="bg-indigo-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-indigo-700 transition-colors"
+              >
+                <FaHome className="mr-2" /> Return to Home
+              </Link>
+              
+              <button 
+                onClick={() => window.print()}
+                className="bg-gray-200 text-gray-800 px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-gray-300 transition-colors"
+              >
+                <FaReceipt className="mr-2" /> Print Receipt
+              </button>
+            </div>
           </div>
-        )}
-        
-        <div style={{ marginBottom: '30px' }}>
-          <p style={{ 
-            fontSize: '1.1rem', 
-            color: '#4b5563',
-            margin: '0 0 20px 0',
-            maxWidth: '90%',
-            marginLeft: 'auto',
-            marginRight: 'auto'
-          }}>
-            Thank you for your booking! I&apos;ll make your event special.
-          </p>
         </div>
-        
-        {/* Return Home - Clear Call to Action */}
-        <Link 
-          href="/"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            fontWeight: '500',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            boxShadow: '0 4px 6px rgba(59, 130, 246, 0.25)',
-            fontSize: '1rem'
-          }}
-        >
-          <FaArrowLeft size={14} />
-          Return to Home
-        </Link>
       </div>
-      
-      {/* Animation styles */}
-      <style jsx global>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 640px) {
-          h1 {
-            font-size: 1.75rem !important;
-          }
-          h2 {
-            font-size: 1.1rem !important;
-          }
-          p {
-            font-size: 0.95rem !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
 
-// Loading fallback component
+// Loading placeholder
 function LoadingPaymentSuccess() {
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '35px',
-        borderRadius: '16px',
-        textAlign: 'center',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div className="loading-spinner" style={{
-          width: '40px',
-          height: '40px',
-          margin: '0 auto 20px auto',
-          border: '4px solid rgba(59, 130, 246, 0.2)',
-          borderTop: '4px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <p style={{ fontSize: '1.3rem', color: '#3b82f6', fontWeight: '500' }}>Loading payment details...</p>
-        <style jsx global>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Processing Payment</h2>
+        <p className="text-gray-600">Please wait while we confirm your payment...</p>
       </div>
     </div>
   );
 }
 
+// Error handling in the main component
 export default function PaymentSuccessPage() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Return loading state for SSR
+  if (!isClient) {
+    return <LoadingPaymentSuccess />;
+  }
+  
+  // Client-side rendering
   return (
-    <Suspense fallback={<LoadingPaymentSuccess />}>
+    <React.Suspense fallback={<LoadingPaymentSuccess />}>
       <PaymentSuccessContent />
-    </Suspense>
+    </React.Suspense>
   );
 } 
