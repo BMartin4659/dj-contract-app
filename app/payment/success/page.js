@@ -493,7 +493,7 @@ function PaymentSuccessContent() {
       <div className="success-card">
         <div className="success-icon-outer" style={{ background: `linear-gradient(135deg, ${color.main} 0%, #fff 100%)` }}>
           <div className="success-icon-inner" style={{ background: color.main, padding: 0 }}>
-            <Image src="/dj-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" width={70} height={70} className="logo-img-circle" style={{ borderRadius: '50%', width: '70px', height: '70px', objectFit: 'cover' }} />
+            <Image src="/dj-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" width={70} height={70} className="logo-img-circle" unoptimized priority style={{ borderRadius: '50%', width: '70px', height: '70px', objectFit: 'cover' }} />
           </div>
         </div>
         <h1 className="success-title" style={{ color: color.main }}>Payment Successful!</h1>

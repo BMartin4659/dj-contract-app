@@ -148,6 +148,8 @@ export default function ContractPage() {
                       width={150}
                       height={60}
                       className="h-15"
+                      unoptimized
+                      priority
                     />
                   </div>
                   <div className="text-right">

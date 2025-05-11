@@ -1303,3 +1303,246 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Payment Confirmation Page Styles */
+.payment-confirmation-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 2rem 1rem;
+}
+
+.confirmation-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.confirmation-header {
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  color: white;
+}
+
+.confirmation-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.confirmation-body {
+  padding: 2rem;
+}
+
+.info-card {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.info-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: #3b82f6;
+}
+
+.info-label {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.payment-method-card {
+  display: flex;
+  align-items: center;
+}
+
+.payment-method-icon {
+  font-size: 2rem;
+  margin-right: 0.75rem;
+}
+
+.payment-method-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.payment-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.payment-button-venmo {
+  background-color: #3D95CE;
+}
+
+.payment-button-cashapp {
+  background-color: #00C244;
+}
+
+.payment-button-paypal {
+  background-color: #003087;
+}
+
+.order-details-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border: none;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.order-details-content {
+  padding: 1.5rem;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.order-item-row:last-child {
+  border-bottom: none;
+}
+
+.order-item-name {
+  color: #64748b;
+}
+
+.order-item-price {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.order-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.help-card {
+  background-color: #eff6ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.help-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.help-content h3 {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.help-content p {
+  color: #475569;
+  margin-bottom: 1rem;
+}
+
+.help-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.help-link {
+  color: #3b82f6;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.help-link:hover {
+  color: #2563eb;
+}
+
+.confirmation-footer {
+  background-color: #f8fafc;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .confirmation-header {
+    padding: 2rem 1rem;
+  }
+  
+  .confirmation-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .info-card {
+    margin-bottom: 1rem;
+  }
+  
+  .help-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .help-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .help-links {
+    justify-content: center;
+  }
+}
+

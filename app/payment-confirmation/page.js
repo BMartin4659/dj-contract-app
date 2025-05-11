@@ -133,6 +133,7 @@ function PaymentConfirmationContent() {
                   height={60}
                   className="rounded-full object-cover"
                   priority
+                  unoptimized
                 />
               </div>
             </div>

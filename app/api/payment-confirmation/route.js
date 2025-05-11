@@ -1,111 +1,101 @@
 import { NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { bookingId, paymentMethod, amount } = body;
+    const { bookingId, paymentMethod } = await request.json();
 
-    // Validate required fields
-    if (!bookingId) {
-      return NextResponse.json({ error: 'Missing required fields: bookingId is required' }, { status: 400 });
+    if (!bookingId || !paymentMethod) {
+      return NextResponse.json(
+        { error: 'Missing required parameters' },
+        { status: 400 }
+      );
     }
 
-    let bookingDoc;
-    let bookingRef;
-    let collectionName;
-
-    // First try to find the booking in 'djContracts'
-    bookingRef = doc(db, 'djContracts', bookingId);
-    bookingDoc = await getDoc(bookingRef);
-
-    // If not found by ID, try to query by paymentId
-    if (!bookingDoc.exists()) {
-      collectionName = 'djContracts';
-      const bookingsRef = collection(db, collectionName);
-      const q = query(bookingsRef, where('paymentId', '==', bookingId));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        // Booking found by paymentId
-        bookingDoc = querySnapshot.docs[0];
-        bookingRef = doc(db, collectionName, bookingDoc.id);
-      } else {
-        // If not found in djContracts, try 'bookings' collection
-        collectionName = 'bookings';
-        bookingRef = doc(db, collectionName, bookingId);
-        bookingDoc = await getDoc(bookingRef);
-        
-        // If not found by ID, try to query by paymentId in 'bookings'
-        if (!bookingDoc.exists()) {
-          const bookingsRef = collection(db, collectionName);
-          const q = query(bookingsRef, where('paymentId', '==', bookingId));
-          const querySnapshot = await getDocs(q);
-          
-          if (!querySnapshot.empty) {
-            // Booking found by paymentId
-            bookingDoc = querySnapshot.docs[0];
-            bookingRef = doc(db, collectionName, bookingDoc.id);
-          } else {
-            return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-          }
-        }
-      }
-    }
-
-    const bookingData = bookingDoc.data();
-
-    // Prepare email template parameters
-    const templateParams = {
-      to_email: bookingData.email,
-      to_name: bookingData.clientName,
-      event_date: bookingData.eventDate,
-      event_type: bookingData.eventType,
-      venue_name: bookingData.venueName,
-      venue_location: bookingData.venueLocation,
-      payment_method: paymentMethod || bookingData.paymentMethod || 'External Payment',
-      amount_paid: amount || bookingData.depositAmount || bookingData.totalAmount || 'N/A',
-      booking_ref: bookingId,
-      payment_status: 'Confirmed'
-    };
-
-    // Update booking status in Firebase
-    const updateData = {
-      paymentConfirmed: true,
-      paymentDate: new Date().toISOString(),
-      status: 'payment_confirmed'
-    };
+    // Get the booking document
+    const bookingRef = doc(db, "djContracts", bookingId);
+    const bookingSnap = await getDoc(bookingRef);
     
-    // Only update paymentMethod if provided
-    if (paymentMethod) {
-      updateData.paymentMethod = paymentMethod;
+    if (!bookingSnap.exists()) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      );
     }
-    
-    // Only update amount if provided
-    if (amount) {
-      updateData.amountPaid = amount;
-    }
-    
-    await updateDoc(bookingRef, updateData);
 
-    // Log the confirmation
-    console.log(`Payment confirmed for booking ${bookingId} with ${paymentMethod || 'external payment'}`);
+    const bookingData = bookingSnap.data();
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Payment confirmation processed successfully',
-      bookingId,
-      paymentMethod: paymentMethod || bookingData.paymentMethod || 'External Payment'
+    // Update the booking document with payment information
+    await updateDoc(bookingRef, {
+      paymentMethod,
+      paymentStatus: 'pending',
+      paymentInitiated: true,
+      paymentInitiatedAt: serverTimestamp(),
+      paymentInitiatedMethod: paymentMethod,
+      lastUpdated: serverTimestamp(),
     });
 
+    // Calculate all pricing details
+    const basePrice = bookingData.basePrice || bookingData.price || 0;
+    const equipmentFee = bookingData.equipmentFee || 0;
+    const travelFee = bookingData.travelFee || 0;
+    const additionalFees = bookingData.additionalFees || 0;
+    const bookingFee = bookingData.bookingFee || 0;
+    const taxRate = bookingData.taxRate || 0;
+    
+    const subtotal = basePrice + equipmentFee + travelFee + additionalFees;
+    const taxAmount = subtotal * (taxRate / 100);
+    const totalAmount = subtotal + taxAmount + bookingFee;
+
+    // Create order items array based on booking data
+    const orderItems = [
+      { name: 'DJ Services', price: basePrice },
+    ];
+    
+    if (equipmentFee > 0) {
+      orderItems.push({ name: 'Equipment', price: equipmentFee });
+    }
+    
+    if (travelFee > 0) {
+      orderItems.push({ name: 'Travel', price: travelFee });
+    }
+    
+    if (additionalFees > 0) {
+      orderItems.push({ name: 'Additional Services', price: additionalFees });
+    }
+
+    // Extract relevant booking details to send back
+    const bookingDetails = {
+      bookingId,
+      paymentMethod,
+      amount: totalAmount || bookingData.totalPrice || bookingData.price || 0,
+      eventDate: bookingData.eventDate || '',
+      clientName: bookingData.clientName || '',
+      venueName: bookingData.venueName || '',
+      email: bookingData.email || '',
+      eventType: bookingData.eventType || '',
+      startTime: bookingData.startTime || '',
+      endTime: bookingData.endTime || '',
+      phoneNumber: bookingData.phoneNumber || '',
+      orderItems,
+      taxAmount,
+      fees: bookingFee,
+      subtotal
+    };
+
+    // Send success response with booking details
+    return NextResponse.json({
+      success: true,
+      message: 'Payment confirmation recorded successfully',
+      bookingDetails
+    });
   } catch (error) {
     console.error('Error processing payment confirmation:', error);
-    return NextResponse.json({ 
-      error: 'Failed to process payment confirmation',
-      details: error.message
-    }, { 
-      status: 500 
-    });
+    
+    return NextResponse.json(
+      { error: 'Server error processing payment confirmation' },
+      { status: 500 }
+    );
   }
 } 

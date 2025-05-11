@@ -1407,19 +1407,10 @@ Live City DJ Contract Terms and Conditions:
         hasSigned: hasSignature ? 'Yes' : 'No'
       };
       
-      // Direct user to payment platform immediately based on selection
-      // Note: we're doing this BEFORE email sending to avoid any delays
-      if (formData.paymentMethod === 'Venmo') {
-        console.log("Redirecting directly to Venmo");
-        window.location.replace(PAYMENT_URLS.VENMO); // Use replace instead of href to avoid history
-        return;
-      } else if (formData.paymentMethod === 'CashApp') {
-        console.log("Redirecting directly to CashApp");
-        window.location.replace(`https://cash.app/$LiveCity`);
-        return;
-      } else if (formData.paymentMethod === 'PayPal') {
-        console.log("Redirecting directly to PayPal");
-        window.location.replace(PAYMENT_URLS.PAYPAL);
+      // Redirect to alternative payment confirmation page for Venmo, CashApp, and PayPal
+      if (formData.paymentMethod === 'Venmo' || formData.paymentMethod === 'CashApp' || formData.paymentMethod === 'PayPal') {
+        console.log(`Redirecting to confirmation page for ${formData.paymentMethod}`);
+        window.location.href = `/payment-confirmation/alternative?bookingId=${bookingId}&paymentMethod=${formData.paymentMethod}`;
         return;
       }
 
@@ -2602,6 +2593,7 @@ Live City DJ Contract Terms and Conditions:
                     width={150}
                     height={150}
                     priority
+                    unoptimized
                     style={{
                       width: '100%',
                       height: 'auto',
