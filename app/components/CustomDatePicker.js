@@ -173,15 +173,26 @@ const CustomDatePicker = ({ selectedDate, onChange }) => {
       calculatePosition();
       // Fix for iOS Safari focus issues
       if (isMobile) {
-        // Slight delay to allow any keyboard to dismiss
+        // Ensure any virtual keyboard is dismissed
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        // Slight delay to allow any keyboard to dismiss and properly position
         setTimeout(() => {
           if (datePickerRef.current) {
+            // First make sure we're visible
             datePickerRef.current.scrollIntoView({ 
               behavior: 'smooth', 
               block: 'center' 
             });
+            
+            // Force mobile browsers to recognize this as a tap event
+            if (calendarRef.current) {
+              calendarRef.current.style.display = 'block';
+              calendarRef.current.style.opacity = '1';
+            }
           }
-        }, 100);
+        }, 150);
       }
     }
     
