@@ -14,6 +14,7 @@ import { HiCalendar, HiClock, HiUser, HiEnvelope, HiPhone, HiBuildingOffice2, Hi
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import CustomDatePicker from '@/app/components/CustomDatePicker';
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -342,16 +343,11 @@ export default function BookingPage() {
                         <div className="space-y-2 relative">
                           <Label htmlFor="eventDate">Event Date*</Label>
                           <div className="relative md:static">
-                            <Input
-                              id="eventDate"
-                              name="eventDate"
-                              type="date"
-                              value={formData.eventDate}
-                              onChange={handleChange}
-                              className="bg-gray-700 border-gray-600 fixed-position-input"
-                              style={{
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none'
+                            <CustomDatePicker
+                              selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
+                              onChange={(date: Date) => {
+                                const dateStr = date.toISOString().split('T')[0];
+                                handleDateSelect(dateStr);
                               }}
                             />
                           </div>
