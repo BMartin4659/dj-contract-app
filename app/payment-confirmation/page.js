@@ -1,140 +1,198 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { 
+  FaCheckCircle, 
+  FaExclamationTriangle, 
+  FaTimes, 
+  FaUsers, 
+  FaClock, 
+  FaCalendarAlt,
+  FaShare,
+  FaExclamationCircle
+} from 'react-icons/fa';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import Link from 'next/link';
 
 function PaymentConfirmationContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
+  const [bookingData, setBookingData] = useState(null);
 
   useEffect(() => {
-    const confirmPayment = async () => {
+    const loadBookingData = async () => {
       try {
         const bookingId = searchParams.get('bookingId');
-        const paymentMethod = searchParams.get('paymentMethod');
-
-        if (!bookingId || !paymentMethod) {
-          setError('Missing required parameters');
+        if (!bookingId) {
+          setError('Missing booking ID');
           setStatus('error');
           return;
         }
 
-        const response = await fetch('/api/payment-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            bookingId,
-            paymentMethod,
-          }),
-        });
+        const bookingRef = doc(db, 'djContracts', bookingId);
+        const bookingSnap = await getDoc(bookingRef);
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to confirm payment');
+        if (!bookingSnap.exists()) {
+          setError('Booking not found');
+          setStatus('error');
+          return;
         }
 
+        setBookingData({ id: bookingId, ...bookingSnap.data() });
         setStatus('success');
       } catch (err) {
-        console.error('Error confirming payment:', err);
-        setError(err.message);
+        console.error('Error loading booking data:', err);
+        setError(err.message || 'An unexpected error occurred');
         setStatus('error');
       }
     };
 
-    confirmPayment();
+    loadBookingData();
   }, [searchParams]);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [hr, min] = timeStr.split(':');
+    const h = parseInt(hr, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${min} ${ampm}`;
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Loading booking details...</h2>
+          <p className="text-gray-600 mt-2">Please wait a moment</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FaExclamationTriangle className="text-3xl text-red-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-red-600">Booking Failed</h2>
+          <p className="text-gray-600 mt-2 mb-4">{error}</p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      backgroundColor: '#f5f5f5'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        textAlign: 'center',
-        maxWidth: '500px',
-        width: '100%'
-      }}>
-        {status === 'loading' && (
-          <>
-            <FaSpinner style={{
-              fontSize: '3rem',
-              color: '#0070f3',
-              animation: 'spin 1s linear infinite',
-              marginBottom: '1rem'
-            }} />
-            <h2>Confirming Your Payment...</h2>
-            <p>Please wait while we process your confirmation.</p>
-          </>
-        )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Green Header */}
+      <div className="bg-green-500 text-white px-4 pb-10 pt-6 relative shadow-md">
+        <div className="max-w-2xl mx-auto relative">
+          <button
+            className="absolute top-0 left-0 text-white md:left-4"
+            onClick={() => router.push('/')}
+          >
+            <FaTimes size={22} />
+          </button>
 
-        {status === 'success' && (
-          <>
-            <FaCheckCircle style={{
-              fontSize: '3rem',
-              color: '#00C244',
-              marginBottom: '1rem'
-            }} />
-            <h2>Payment Confirmed!</h2>
-            <p>Thank you for your payment. A confirmation email has been sent to your inbox.</p>
-            <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
-              You can now close this window.
+          <div className="text-center mt-6">
+            <h2 className="text-xl font-bold">
+              {bookingData?.venueName || 'The Banquet Hall'}
+            </h2>
+            <p className="text-sm opacity-90">
+              {bookingData?.venueLocation || '8A Oakland Court'}
             </p>
-          </>
-        )}
 
-        {status === 'error' && (
-          <>
-            <div style={{
-              fontSize: '3rem',
-              color: '#dc2626',
-              marginBottom: '1rem'
-            }}>❌</div>
-            <h2>Error Confirming Payment</h2>
-            <p>{error || 'An unexpected error occurred. Please try again or contact support.'}</p>
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                marginTop: '1rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#0070f3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-            >
-              Try Again
-            </button>
-          </>
-        )}
+            <div className="mt-6 mb-4 flex justify-center">
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
+                <FaCheckCircle className="text-green-500 text-2xl" />
+              </div>
+            </div>
+
+            <h1 className="text-2xl font-bold">Booking confirmed</h1>
+          </div>
+        </div>
       </div>
 
-      <style jsx global>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <div className="max-w-2xl mx-auto pb-10">
+        {/* Alert Card */}
+        <div className="bg-yellow-100 mx-4 p-4 rounded-lg -mt-5 border border-yellow-200 shadow-sm">
+          <div className="flex items-start">
+            <FaExclamationCircle className="text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+            <p className="text-gray-700">
+              DJ will arrive 30 mins before your event start time.
+            </p>
+          </div>
+        </div>
+
+        {/* Reservation Details */}
+        <div className="mt-6 mx-4">
+          <h3 className="text-xs uppercase text-gray-500 font-semibold tracking-wider mb-3">
+            RESERVATION DETAILS
+          </h3>
+
+          <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+            <div className="flex items-center">
+              <FaUsers className="text-blue-500 mr-3" />
+              <span>Guests: {bookingData?.guestCount || 100}</span>
+            </div>
+
+            <div className="flex items-center">
+              <FaClock className="text-blue-500 mr-3" />
+              <span>Time: {formatTime(bookingData?.startTime) || '4:00 PM'} - {formatTime(bookingData?.endTime) || '9:00 PM'}</span>
+            </div>
+
+            <div className="flex items-center">
+              <FaCalendarAlt className="text-blue-500 mr-3" />
+              <span>{formatDate(bookingData?.eventDate) || 'Fri, May 16'}</span>
+            </div>
+
+            <div className="flex justify-between pt-2 mt-2 border-t">
+              <button className="text-red-500 font-medium text-sm">
+                Cancel booking
+              </button>
+              <button className="text-blue-500 font-medium text-sm flex items-center">
+                <FaShare className="mr-1" /> Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function PaymentConfirmation() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Loading...</h2>
+        </div>
+      </div>
+    }>
       <PaymentConfirmationContent />
     </Suspense>
   );
