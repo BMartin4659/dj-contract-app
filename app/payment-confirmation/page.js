@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { 
-  FaCheckCircle, 
   FaExclamationTriangle, 
   FaTimes, 
   FaUsers, 
@@ -125,8 +125,15 @@ function PaymentConfirmationContent() {
             </p>
 
             <div className="mt-6 mb-4 flex justify-center">
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-                <FaCheckCircle className="text-green-500 text-2xl" />
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                <Image 
+                  src="/dj-bobby-drake-logo.png" 
+                  alt="DJ Bobby Drake" 
+                  width={60} 
+                  height={60}
+                  className="rounded-full object-cover"
+                  priority
+                />
               </div>
             </div>
 
