@@ -77,7 +77,7 @@ html, body {
   font-family: 'Montserrat', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background.jpg');
+  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background-new.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -94,7 +94,7 @@ body {
   height: 100%;
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background.jpg');
+  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background-new.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed !important;
@@ -1543,6 +1543,60 @@ h1, h2, h3, h4, h5, h6 {
   
   .help-links {
     justify-content: center;
+  }
+}
+
+.background-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.mobile-background {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/dj-background-new.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .mobile-background {
+    display: block;
+  }
+  
+  body {
+    background-attachment: scroll !important;
+  }
+}
+
+/* Fix for iOS devices */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-attachment: scroll !important;
+  }
+  
+  .ios-background-fix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/dj-background-new.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
   }
 }
 
