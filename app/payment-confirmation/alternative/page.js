@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -15,7 +15,8 @@ import {
   FaExclamationCircle
 } from 'react-icons/fa';
 
-export default function PaymentConfirmationContent() {
+// Client component that uses searchParams
+function PaymentConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('loading');
@@ -180,5 +181,18 @@ export default function PaymentConfirmationContent() {
         </div>
       </div>
     </div>
+  );
+}
+
+// The main page component with Suspense boundary
+export default function PaymentConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+      </div>
+    }>
+      <PaymentConfirmationContent />
+    </Suspense>
   );
 } 
