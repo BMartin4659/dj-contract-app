@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next",
+      "config": {
+        "installCommand": "npm install && node fix-vercel-build.js"
+      }
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=600, s-maxage=1200, stale-while-revalidate=600"
+        },
+        {
+          "key": "Viewport",
+          "value": "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+        }
+      ]
+    }
+  ]
+} 

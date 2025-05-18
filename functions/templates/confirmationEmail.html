@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DJ Bobby Drake - Booking Confirmation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #111;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .content {
+      padding: 40px 30px;
+    }
+    
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 25px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      color: #000;
+      position: relative;
+      padding-bottom: 15px;
+      text-align: left;
+    }
+    
+    h1:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background-color: #000;
+    }
+    
+    .logo-container {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+    
+    .brand-name {
+      display: none;
+    }
+    
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #000;
+      margin: 30px 0 20px 0;
+    }
+    
+    p {
+      margin: 0 0 20px;
+      color: #444;
+    }
+    
+    .booking-highlight {
+      background-color: #f8f8f8;
+      border-left: 4px solid #000;
+      padding: 20px 25px;
+      margin: 25px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .details {
+      background-color: #f8f8f8;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 30px 0;
+      border: 1px solid #eaeaea;
+    }
+    
+    .details-row {
+      display: flex;
+      margin-bottom: 16px;
+      align-items: baseline;
+    }
+    
+    .details-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .details-label {
+      width: 140px;
+      font-weight: 600;
+      color: #222;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .details-value {
+      flex: 1;
+      color: #444;
+      font-size: 16px;
+    }
+    
+    .payment-amount {
+      font-weight: 700;
+      font-size: 18px;
+      color: #000;
+    }
+    
+    .quick-tips {
+      background-color: #f4f9ff;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 30px 0;
+      border: 1px solid #e0e9f5;
+    }
+    
+    .quick-tips h3 {
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #1a73e8;
+    }
+    
+    .quick-tips ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .quick-tips li {
+      margin-bottom: 10px;
+      color: #444;
+      font-size: 15px;
+    }
+    
+    .quick-tips li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .footer {
+      background-color: #f8f8f8;
+      border-top: 1px solid #eaeaea;
+      padding: 30px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .footer-logo-container {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 15px;
+      background-color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+    }
+    
+    .footer-logo {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        width: 100%;
+        border-radius: 0;
+      }
+      
+      .content {
+        padding: 30px 20px;
+      }
+      
+      .header-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .logo-container {
+        margin-top: 20px;
+        align-self: center;
+      }
+      
+      .details-row {
+        flex-direction: column;
+      }
+      
+      .details-label {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+      
+      .details-value {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="header-container">
+        <h1>Booking Confirmation</h1>
+        <div class="logo-container">
+          <img 
+            src="https://dj-contract-app.web.app/dj-bobby-drake-logo.png" 
+            alt="DJ Bobby Drake Logo" 
+            class="logo-img"
+            onerror="this.onerror=null; this.src='/dj-bobby-drake-logo.png';"
+          >
+        </div>
+      </div>
+      
+      <div class="booking-highlight">
+        <p>Hi <strong>{{clientName}}</strong>,</p>
+        <p>Your booking with <strong>DJ Bobby Drake</strong> has been confirmed! We're excited to provide the soundtrack for your upcoming {{eventType}}.</p>
+      </div>
+      
+      <h2>Event Details</h2>
+      <div class="details">
+        <div class="details-row">
+          <div class="details-label">Date</div>
+          <div class="details-value">{{eventDate}}</div>
+        </div>
+        <div class="details-row">
+          <div class="details-label">Time</div>
+          <div class="details-value">{{startTime}} - {{endTime}}</div>
+        </div>
+        <div class="details-row">
+          <div class="details-label">Venue</div>
+          <div class="details-value">{{venueName}}</div>
+        </div>
+        <div class="details-row">
+          <div class="details-label">Location</div>
+          <div class="details-value">{{venueLocation}}</div>
+        </div>
+        <div class="details-row">
+          <div class="details-label">Payment ID</div>
+          <div class="details-value">{{paymentId}}</div>
+        </div>
+        <div class="details-row">
+          <div class="details-label">Total</div>
+          <div class="details-value payment-amount">{{totalAmount}}</div>
+        </div>
+      </div>
+      
+      <p>A 50% deposit has been paid to secure your booking. The remaining balance will be due on the event day.</p>
+      
+      <div class="quick-tips">
+        <h3>Pre-Event Checklist</h3>
+        <ul>
+          <li><strong>Venue Access:</strong> Please confirm venue access details at least one week before the event</li>
+          <li><strong>Music Preferences:</strong> Share your must-play songs with us at least 3 days in advance</li>
+          <li><strong>Power Requirements:</strong> Ensure there are at least two dedicated power outlets near the DJ setup area</li>
+          <li><strong>Special Announcements:</strong> Let us know about any special announcements or timeline details</li>
+        </ul>
+      </div>
+      
+      <p>If you need to make any changes to your booking or have any questions, please don't hesitate to contact us. We're here to make your event unforgettable!</p>
+      
+    </div>
+    
+    <div class="footer">
+      <p><strong>DJ Bobby Drake</strong></p>
+      <p>Email: therealdjbobbydrake@gmail.com</p>
+      <p>&copy; 2025 DJ Bobby Drake. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

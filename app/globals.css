@@ -3,8 +3,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
   --primary-color: #0070f3;
   --primary-hover: #0063db;
   --border-radius: 8px;
@@ -23,8 +41,25 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -42,7 +77,7 @@ html, body {
   font-family: 'Montserrat', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background.jpg');
+  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background-new.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -59,7 +94,7 @@ body {
   height: 100%;
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background.jpg');
+  background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background-new.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed !important;
@@ -1052,6 +1087,516 @@ h1, h2, h3, h4, h5, h6 {
   .main-content {
     padding: 0 !important;
     width: 100% !important;
+  }
+}
+
+/* Add animation support for UI components */
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+  body {
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
+  }
+}
+
+/* Animation classes for dialog and other components */
+@layer utilities {
+  .animate-in {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    --tw-enter-opacity: initial;
+    --tw-enter-scale: initial;
+    --tw-enter-rotate: initial;
+    --tw-enter-translate-x: initial;
+    --tw-enter-translate-y: initial;
+  }
+
+  .animate-out {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    --tw-exit-opacity: initial;
+    --tw-exit-scale: initial;
+    --tw-exit-rotate: initial;
+    --tw-exit-translate-x: initial;
+    --tw-exit-translate-y: initial;
+  }
+
+  .fade-in {
+    animation-name: fade-in;
+  }
+  .fade-out {
+    animation-name: fade-out;
+  }
+  .zoom-in {
+    animation-name: zoom-in;
+  }
+  .zoom-out {
+    animation-name: zoom-out;
+  }
+  .slide-in-from-top {
+    animation-name: slide-in-from-top;
+  }
+  .slide-out-to-top {
+    animation-name: slide-out-to-top;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: var(--tw-enter-opacity, 0);
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: var(--tw-exit-opacity, 0);
+    }
+  }
+
+  @keyframes zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(var(--tw-enter-scale, 0.95));
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes zoom-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(var(--tw-exit-scale, 0.95));
+    }
+  }
+
+  @keyframes slide-in-from-top {
+    from {
+      opacity: 0;
+      transform: translateY(var(--tw-enter-translate-y, -10px));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-out-to-top {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(var(--tw-exit-translate-y, -10px));
+    }
+  }
+}
+
+/* Add fixed positioning for date/time inputs on mobile */
+@media (max-width: 768px) {
+  .fixed-position-input {
+    position: relative !important;
+    transform: none !important;
+    height: 40px;
+    -webkit-transform: translate3d(0,0,0);
+  }
+  
+  .fixed-position-input:focus {
+    position: relative !important;
+    transform: none !important;
+    -webkit-transform: translate3d(0,0,0);
+  }
+  
+  /* Prevent viewport shifting when keyboard appears */
+  .form-container {
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Force hardware acceleration */
+  body.keyboard-open {
+    height: 100%;
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* React DatePicker Styles */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker__header {
+  background-color: #6366f1 !important;
+  border-bottom: 1px solid #5152c9 !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: white !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white !important;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: #e2e8f0 !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: bold;
+  border: 1px solid #6366f1;
+}
+
+.datepicker-input {
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: clamp(12px, 2vw, 16px);
+  font-size: clamp(16px, 2.5vw, 18px);
+  color: #000;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker-popper {
+    width: 100% !important;
+    max-width: 320px !important;
+    transform: none !important;
+    left: 50% !important;
+    margin-left: -160px !important;
+  }
+  
+  .react-datepicker {
+    width: 100% !important;
+  }
+}
+
+/* Payment Confirmation Page Styles */
+.payment-confirmation-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 2rem 1rem;
+}
+
+.confirmation-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.confirmation-header {
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  color: white;
+}
+
+.confirmation-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.confirmation-body {
+  padding: 2rem;
+}
+
+.info-card {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.info-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: #3b82f6;
+}
+
+.info-label {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.payment-method-card {
+  display: flex;
+  align-items: center;
+}
+
+.payment-method-icon {
+  font-size: 2rem;
+  margin-right: 0.75rem;
+}
+
+.payment-method-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.payment-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.payment-button-venmo {
+  background-color: #3D95CE;
+}
+
+.payment-button-cashapp {
+  background-color: #00C244;
+}
+
+.payment-button-paypal {
+  background-color: #003087;
+}
+
+.order-details-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border: none;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.order-details-content {
+  padding: 1.5rem;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.order-item-row:last-child {
+  border-bottom: none;
+}
+
+.order-item-name {
+  color: #64748b;
+}
+
+.order-item-price {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.order-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.help-card {
+  background-color: #eff6ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.help-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.help-content h3 {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.help-content p {
+  color: #475569;
+  margin-bottom: 1rem;
+}
+
+.help-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.help-link {
+  color: #3b82f6;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.help-link:hover {
+  color: #2563eb;
+}
+
+.confirmation-footer {
+  background-color: #f8fafc;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .confirmation-header {
+    padding: 2rem 1rem;
+  }
+  
+  .confirmation-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .info-card {
+    margin-bottom: 1rem;
+  }
+  
+  .help-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .help-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .help-links {
+    justify-content: center;
+  }
+}
+
+.background-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.mobile-background {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/dj-background-new.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .mobile-background {
+    display: block;
+  }
+  
+  body {
+    background-attachment: scroll !important;
+  }
+}
+
+/* Fix for iOS devices */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-attachment: scroll !important;
+  }
+  
+  .ios-background-fix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/dj-background-new.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
   }
 }
 

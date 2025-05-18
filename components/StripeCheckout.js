@@ -1,125 +1,53 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { loadStripe } from '@stripe/stripe-js';
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements
-} from '@stripe/react-stripe-js';
-import { FaLock, FaShieldAlt, FaCheck, FaCreditCard, FaReceipt, FaInfo } from 'react-icons/fa';
+import React, { useState } from 'react';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
-  const stripe = useStripe();
-  const elements = useElements();
+/**
+ * Simplified StripeCheckout component that redirects to the official Stripe checkout
+ */
+const StripeCheckout = ({ amount, contractDetails, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Extract services from contract details
-  const services = {
-    basePackage: true, // Always included
-    lighting: contractDetails?.lighting || false,
-    photography: contractDetails?.photography || false,
-    videoVisuals: contractDetails?.videoVisuals || false,
-    additionalHours: contractDetails?.additionalHours || 0
-  };
 
-  // Check for mobile screen on client side only
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth <= 480);
-      };
-      
-      // Initial check
-      checkMobile();
-      
-      // Add listener for resize
-      window.addEventListener('resize', checkMobile);
-      
-      // Cleanup
-      return () => window.removeEventListener('resize', checkMobile);
-    }
-  }, []);
+  // Convert amount from cents to dollars for display
+  const displayAmount = (amount / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  });
 
-  // Calculate correct total from services
-  const calculateTotal = () => {
-    const basePackage = 400;
-    const lighting = services.lighting ? 100 : 0;
-    const photography = services.photography ? 150 : 0;
-    const videoVisuals = services.videoVisuals ? 100 : 0;
-    const additionalHoursCost = services.additionalHours * 75;
-    
-    return basePackage + lighting + photography + videoVisuals + additionalHoursCost;
-  };
-  
-  // Get the final amount to use (either from props or calculated)
-  const finalAmount = amount || calculateTotal();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    
-    if (!confirmed) {
-      setError("Please confirm your services before proceeding with payment");
-      return;
-    }
-    
+  const handleCheckout = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Add timeout to prevent freezing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Calculate the amount in cents for Stripe
-      const amountInCents = calculateTotal() * 100;
-      
-      const response = await fetch('/api/create-payment-intent', {
+      const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          amount: amountInCents,
-          clientName: contractDetails?.clientName || 'Customer',
-          email: contractDetails?.email || 'customer@example.com',
-          eventType: contractDetails?.eventType || 'Event',
-          eventDate: contractDetails?.eventDate || new Date().toISOString(),
-          venueName: contractDetails?.venueName || 'Venue'
-        })
+          amount,
+          contractDetails
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create payment intent: ' + await response.text());
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      const { clientSecret } = await response.json();
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-        }
-      });
-
-      if (error) throw error;
-
-      if (paymentIntent.status === 'succeeded') {
-        await addDoc(collection(db, 'stripePayments'), {
-          paymentIntentId: paymentIntent.id,
-          amount: amountInCents,
-          currency: paymentIntent.currency,
-          ...contractDetails,
-          timestamp: new Date()
-        });
-        onSuccess(paymentIntent.id);
+      const { url } = await response.json();
+      
+      // Redirect to Stripe Checkout
+      if (url) {
+        // Navigate to the Stripe-hosted checkout page
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (err) {
-      setError(err.message || 'Payment failed');
+      console.error('Error redirecting to checkout:', err);
+      setError(err.message || 'Failed to initialize checkout');
     } finally {
       setLoading(false);
     }
@@ -128,338 +56,103 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
   return (
     <div style={{
       backgroundColor: 'white',
-      color: '#111',
-      padding: isMobile ? '1.5rem' : '2rem',
-      borderRadius: isMobile ? '12px' : '16px',
-      width: '100%',
-      maxWidth: '100%',
+      borderRadius: '8px',
+      padding: '1.5rem',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      maxWidth: '500px',
       margin: '0 auto',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5rem',
-      boxSizing: 'border-box'
+      textAlign: 'center'
     }}>
-      {/* Security Banner */}
+      <h3 style={{ 
+        fontSize: '1.25rem', 
+        fontWeight: 'bold',
+        marginBottom: '1rem',
+        color: '#333'
+      }}>
+        Ready to Proceed with Payment
+      </h3>
+      
+      <div style={{ 
+        fontSize: '1.5rem', 
+        fontWeight: 'bold',
+        marginBottom: '1.5rem',
+        color: '#4F46E5'
+      }}>
+        {displayAmount}
+      </div>
+      
       <div style={{
+        marginBottom: '1.5rem',
+        fontSize: '0.9rem',
+        color: '#666',
+        textAlign: 'left',
+        padding: '0.75rem',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '6px'
+      }}>
+        <p><strong>Event:</strong> {contractDetails?.eventType || 'Event'}</p>
+        <p><strong>Date:</strong> {contractDetails?.eventDate || 'TBD'}</p>
+        <p><strong>Venue:</strong> {contractDetails?.venueName || 'TBD'}</p>
+      </div>
+      
+      <button
+        onClick={handleCheckout}
+        disabled={loading}
+        style={{
+          backgroundColor: '#4F46E5',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          fontWeight: 'bold',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          opacity: loading ? 0.7 : 1,
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+          <path d="M13.3333 7.33334H2.66667C1.93029 7.33334 1.33334 7.93029 1.33334 8.66667V13.3333C1.33334 14.0697 1.93029 14.6667 2.66667 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V8.66667C14.6667 7.93029 14.0697 7.33334 13.3333 7.33334Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4.66667 7.33334V4.66667C4.66667 3.78262 5.01786 2.93477 5.64298 2.30965C6.2681 1.68453 7.11595 1.33334 8 1.33334C8.88406 1.33334 9.7319 1.68453 10.357 2.30965C10.9821 2.93477 11.3333 3.78262 11.3333 4.66667V7.33334" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        {loading ? 'Processing...' : 'Proceed to Checkout'}
+      </button>
+      
+      {error && (
+        <div style={{
+          color: '#DC2626',
+          marginTop: '1rem',
+          fontSize: '0.9rem',
+          padding: '0.5rem',
+          backgroundColor: '#FEF2F2',
+          borderRadius: '4px'
+        }}>
+          {error}
+        </div>
+      )}
+      
+      <div style={{
+        marginTop: '1rem',
+        fontSize: '0.85rem',
+        color: '#6B7280',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f0f8ff',
-        padding: '10px',
-        borderRadius: '8px',
-        marginBottom: '1rem',
-        border: '1px solid #dbeafe'
+        gap: '0.5rem'
       }}>
-        <FaShieldAlt size={18} style={{ color: '#2563eb', marginRight: '8px' }} />
-        <span style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '500' }}>
-          Secure, encrypted payment processing
-        </span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.3333 6.66667H2.66667C1.93333 6.66667 1.33333 7.26667 1.33333 8V13.3333C1.33333 14.0667 1.93333 14.6667 2.66667 14.6667H13.3333C14.0667 14.6667 14.6667 14.0667 14.6667 13.3333V8C14.6667 7.26667 14.0667 6.66667 13.3333 6.66667Z" stroke="#6B7280" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4.66667 6.66667V4.00001C4.66667 3.29276 4.94762 2.61449 5.44772 2.11439C5.94781 1.61429 6.62609 1.33334 7.33333 1.33334C8.04058 1.33334 8.71885 1.61429 9.21895 2.11439C9.71905 2.61449 10 3.29276 10 4.00001V6.66667" stroke="#6B7280" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Secure payment by Stripe
       </div>
-
-      {/* Order Summary Section */}
-      <div style={{
-        backgroundColor: '#f9fafb',
-        padding: isMobile ? '1.25rem' : '1.5rem',
-        borderRadius: '12px',
-        marginBottom: '0.5rem',
-        border: '1px solid #e5e7eb'
-      }}>
-        <h3 style={{
-          marginBottom: '1rem',
-          color: '#111',
-          fontSize: 'clamp(1.1rem, 4vw, 1.25rem)',
-          fontWeight: 'bold',
-          borderBottom: '2px solid #635BFF',
-          paddingBottom: '0.75rem',
-          display: 'flex',
-          alignItems: 'center'
-        }}>
-          <FaReceipt style={{ marginRight: '10px', color: '#635BFF' }} />
-          Order Summary
-        </h3>
-        
-        <div style={{ marginBottom: '0.5rem' }}>
-          {/* Base Package */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '0.5rem 0',
-            borderBottom: '1px solid #e5e7eb'
-          }}>
-            <span style={{ fontWeight: '500' }}>🎶 Base Package</span>
-            <span style={{ fontWeight: '500' }}>$400</span>
-          </div>
-          
-          {/* Lighting */}
-          {services.lighting && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '0.5rem 0',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <span>💡 Event Lighting</span>
-              <span>$100</span>
-            </div>
-          )}
-          
-          {/* Photography */}
-          {services.photography && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '0.5rem 0',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <span>📸 Photography</span>
-              <span>$150</span>
-            </div>
-          )}
-          
-          {/* Video Visuals */}
-          {services.videoVisuals && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '0.5rem 0',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <span>📽️ Video Visuals</span>
-              <span>$100</span>
-            </div>
-          )}
-          
-          {/* Additional Hours */}
-          {services.additionalHours > 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '0.5rem 0',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <span>⏱️ Additional Hours ({services.additionalHours})</span>
-              <span>${services.additionalHours * 75}</span>
-            </div>
-          )}
-          
-          {/* Total */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '0.75rem 0',
-            marginTop: '0.5rem',
-            borderTop: '2px solid #e5e7eb',
-            fontWeight: 'bold',
-            fontSize: '1.1rem'
-          }}>
-            <span>Total</span>
-            <span>${calculateTotal()}</span>
-          </div>
-          
-          {/* Deposit Note */}
-          <div style={{
-            backgroundColor: '#f0f9ff',
-            padding: '12px',
-            borderRadius: '8px',
-            marginTop: '1rem',
-            border: '1px solid #bae6fd',
-            fontSize: '0.9rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-              <FaInfo size={16} style={{ color: '#0369a1', marginRight: '8px', marginTop: '2px' }} />
-              <span>
-                50% deposit required to secure your booking. The remaining balance will be due on the event day.
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} style={{ marginTop: '0' }}>
-        {/* Card Details Section */}
-        <div style={{
-          marginBottom: '1.5rem',
-          backgroundColor: '#f9fafb',
-          padding: isMobile ? '1.25rem' : '1.5rem',
-          borderRadius: '12px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h3 style={{
-            marginBottom: '0.75rem',
-            color: '#111',
-            fontSize: 'clamp(1.1rem, 4vw, 1.25rem)',
-            fontWeight: 'bold',
-            borderBottom: '2px solid #635BFF',
-            paddingBottom: '0.75rem',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <FaCreditCard style={{ marginRight: '10px', color: '#635BFF' }} />
-            Payment Details
-          </h3>
-
-          {/* Card Element Container */}
-          <div style={{
-            padding: '1rem',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            border: '1px solid #d1d5db',
-            marginBottom: '1rem'
-          }}>
-            <CardElement options={{
-              style: {
-                base: {
-                  fontSize: '16px',
-                  color: '#111',
-                  '::placeholder': {
-                    color: '#6b7280',
-                  },
-                },
-                invalid: {
-                  color: '#ef4444',
-                },
-              },
-              hidePostalCode: true,
-            }} />
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div style={{
-              color: '#ef4444',
-              backgroundColor: '#fee2e2',
-              padding: '10px',
-              borderRadius: '6px',
-              marginBottom: '1rem',
-              fontSize: '0.9rem'
-            }}>
-              {error}
-            </div>
-          )}
-
-          {/* Terms Checkbox */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            marginBottom: '1rem',
-            padding: '0.75rem',
-            backgroundColor: confirmed ? 'rgba(99, 91, 255, 0.05)' : '#f9fafb',
-            borderRadius: '8px',
-            border: confirmed ? '1px solid rgba(99, 91, 255, 0.3)' : '1px solid #e5e7eb',
-            transition: 'all 0.2s ease'
-          }}>
-            <div 
-              onClick={() => setConfirmed(!confirmed)}
-              style={{
-                width: '20px',
-                height: '20px',
-                minWidth: '20px',
-                borderRadius: '4px',
-                border: confirmed ? '2px solid #635BFF' : '2px solid #d1d5db',
-                backgroundColor: confirmed ? '#635BFF' : 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '10px',
-                marginTop: '2px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {confirmed && <FaCheck color="white" size={12} />}
-            </div>
-            <div>
-              <label 
-                htmlFor="confirm-services"
-                style={{
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  color: '#111'
-                }}
-              >
-                I confirm my service selections and understand that a 50% deposit is required to secure my booking.
-                By proceeding, I agree to the terms and conditions, including the cancellation policy.
-              </label>
-              <input 
-                id="confirm-services"
-                type="checkbox" 
-                checked={confirmed} 
-                onChange={() => setConfirmed(!confirmed)}
-                style={{ position: 'absolute', opacity: 0 }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Button */}
-        <button
-          type="submit"
-          disabled={!stripe || loading || !confirmed}
-          style={{
-            width: '100%',
-            backgroundColor: confirmed ? '#635BFF' : '#d1d5db',
-            color: '#fff',
-            padding: '1.2rem 1.5rem',
-            borderRadius: '10px',
-            border: 'none',
-            cursor: confirmed ? 'pointer' : 'not-allowed',
-            fontWeight: 'bold',
-            fontSize: '1.1rem',
-            boxShadow: confirmed ? '0 2px 4px rgba(99, 91, 255, 0.25)' : 'none',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px'
-          }}
-        >
-          <FaLock size={16} />
-          {loading ? 'Processing Payment...' : 'Submit Secure Payment'}
-        </button>
-
-        {/* Security Note */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: '1rem',
-          color: '#6b7280',
-          fontSize: '0.85rem',
-          textAlign: 'center',
-          gap: '6px'
-        }}>
-          <FaLock size={12} style={{ color: '#635BFF' }} />
-          Your payment information is encrypted and secure
-        </div>
-        
-        {/* Secure Badges */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '1rem',
-          marginTop: '1rem'
-        }}>
-          <img 
-            src="https://cdn.jsdelivr.net/gh/stripe/stripe-icons@main/stripe-badge-white.svg" 
-            alt="Powered by Stripe" 
-            style={{ height: '32px' }}
-          />
-        </div>
-      </form>
     </div>
   );
 };
 
-export default function StripeCheckoutWrapper({ amount, onSuccess, contractDetails }) {
-  return (
-    <Elements stripe={stripePromise}>
-      <CheckoutForm 
-        amount={amount} 
-        onSuccess={onSuccess} 
-        contractDetails={contractDetails} 
-      />
-    </Elements>
-  );
-} 
+export default StripeCheckout; 

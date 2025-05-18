@@ -25,8 +25,8 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1.0,
-  maximumScale: 1.0,
-  userScalable: false, // Prevents pinch zoom on forms for better experience
+  maximumScale: 5.0,
+  userScalable: true, // Allow zooming for better accessibility
   viewportFit: 'cover',
 };
 
@@ -34,11 +34,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        
+        {/* Preload critical images */}
         <link rel="preload" href="/dj-background-new.jpg" as="image" />
+        <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" />
       </head>
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -58,9 +61,17 @@ export default function RootLayout({ children }) {
         {children}
 
         {/* Google Maps Places API for address autocomplete */}
+        <Script id="google-maps-callback">
+          {`
+            window.initGoogleMapsCallback = function() {
+              console.log('Google Maps initialized via callback');
+              window.googleMapsLoaded = true;
+            };
+          `}
+        </Script>
+        
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="beforeInteractive"
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`}
         />
 
         <Script id="ios-viewport-fix" strategy="afterInteractive">
@@ -86,6 +97,15 @@ export default function RootLayout({ children }) {
                 setTimeout(setAppHeight, 100);
               });
             });
+
+            // Fix for mobile viewport
+            const metas = document.getElementsByTagName('meta');
+            for (let i = 0; i < metas.length; i++) {
+              if (metas[i].name === 'viewport') {
+                metas[i].content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
+                break;
+              }
+            }
           `}
         </Script>
       </body>

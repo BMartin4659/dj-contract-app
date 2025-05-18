@@ -16,9 +16,6 @@ export default function EnvChecker() {
       key: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? 
         `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.substring(0, 7)}...` : 'Not set',
     },
-    emailjs: {
-      serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'Not set',
-    }
   };
 
   return (
@@ -43,7 +40,6 @@ export default function EnvChecker() {
             <li>Firebase Project: <strong>{envInfo.firebase.projectId}</strong></li>
             <li>Firebase API Key: <strong>{envInfo.firebase.apiKey}</strong></li>
             <li>Stripe Key: <strong>{envInfo.stripe.key}</strong></li>
-            <li>EmailJS Service: <strong>{envInfo.emailjs.serviceId}</strong></li>
           </ul>
           <p className="env-note">Note: Only partial key information is shown for security reasons.</p>
         </div>
