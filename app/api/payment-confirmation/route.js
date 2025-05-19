@@ -65,14 +65,17 @@ async function sendEmailConfirmation(bookingDetails) {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Booking Confirmation</title>
-        <style>
+        <style type="text/css">
           body { 
-            font-family: Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             line-height: 1.6;
             color: #333;
             margin: 0;
             padding: 0;
+            background-color: #f6f9fc;
+            -webkit-text-size-adjust: none;
           }
           .container {
             max-width: 600px;
@@ -80,17 +83,13 @@ async function sendEmailConfirmation(bookingDetails) {
             padding: 20px;
             border: 1px solid #e0e0e0;
             border-radius: 10px;
+            background-color: #ffffff;
           }
           .header {
             text-align: center;
-            background-image: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+            background-color: #3b82f6; /* Fallback color for Gmail */
             padding: 20px;
             border-radius: 10px 10px 0 0;
-          }
-          .logo {
-            width: 150px;
-            height: auto;
-            margin-bottom: 10px;
           }
           .content {
             padding: 20px;
@@ -151,7 +150,11 @@ async function sendEmailConfirmation(bookingDetails) {
       <body>
         <div class="container">
           <div class="header">
-            <img src="https://dj-contract-app.vercel.app/logo.png" alt="DJ Bobby Drake Logo" class="logo" style="width: 150px; height: auto;">
+            <img src="https://firebasestorage.googleapis.com/v0/b/dj-contract-app.appspot.com/o/logo.png?alt=media" 
+                 alt="DJ Bobby Drake Logo" 
+                 width="150" 
+                 height="150" 
+                 style="display: inline-block; width: 150px; height: auto; border: 0; outline: none; text-decoration: none; margin: 0 auto;">
             <h1>Booking Confirmation</h1>
           </div>
           
@@ -204,7 +207,8 @@ async function sendEmailConfirmation(bookingDetails) {
             
             <p>I'll be in touch soon to discuss the details of your event. If you have any questions or specific requests in the meantime, please don't hesitate to reach out.</p>
             
-            <p>Best regards,<br>DJ Bobby Drake<br>
+            <p>Best regards,<br>
+            DJ Bobby Drake<br>
             <a href="mailto:therealdjbobbydrake@gmail.com">therealdjbobbydrake@gmail.com</a></p>
           </div>
           
@@ -240,72 +244,84 @@ async function sendEmailConfirmation(bookingDetails) {
 
 export async function POST(request) {
   try {
-    const requestData = await request.json();
-    const { bookingId, paymentMethod, clientName, email, eventType, eventDate, venueName, venueLocation, startTime, endTime, totalAmount } = requestData;
-
-    if (!bookingId) {
+    // Parse request body
+    const bookingDetails = await request.json();
+    
+    // Check for required fields
+    if (!bookingDetails.bookingId) {
       return NextResponse.json(
-        { error: 'Missing required parameter: bookingId' },
+        { success: false, error: 'Missing booking ID' },
         { status: 400 }
       );
     }
-
-    // Get the booking document
-    const bookingRef = doc(db, "djContracts", bookingId);
-    const bookingSnap = await getDoc(bookingRef);
-
-    if (!bookingSnap.exists()) {
+    
+    // Get firestore document reference
+    const bookingRef = doc(db, 'djContracts', bookingDetails.bookingId);
+    
+    // Validate document exists
+    const bookingDoc = await getDoc(bookingRef);
+    if (!bookingDoc.exists()) {
       return NextResponse.json(
-        { error: 'Booking not found' },
+        { success: false, error: 'Booking not found' },
         { status: 404 }
       );
     }
-
-    const bookingData = bookingSnap.data();
-
-    // Update the booking document with payment information
-    await updateDoc(bookingRef, {
-      paymentMethod: paymentMethod || bookingData.paymentMethod,
-      paymentStatus: 'pending',
-      paymentInitiated: true,
-      paymentInitiatedAt: serverTimestamp(),
-      paymentInitiatedMethod: paymentMethod || bookingData.paymentMethod,
-      lastUpdated: serverTimestamp(),
-      emailSent: true,
-      emailSentAt: serverTimestamp()
-    });
-
-    // Extract booking details from both request and database
-    const bookingDetails = {
-      bookingId,
-      paymentMethod: paymentMethod || bookingData.paymentMethod,
-      amount: totalAmount || bookingData.totalAmount || 0,
-      eventDate: eventDate || bookingData.eventDate || '',
-      clientName: clientName || bookingData.clientName || '',
-      venueName: venueName || bookingData.venueName || '',
-      venueLocation: venueLocation || bookingData.venueLocation || '',
-      email: email || bookingData.email || '',
-      eventType: eventType || bookingData.eventType || '',
-      startTime: startTime || bookingData.startTime || '',
-      endTime: endTime || bookingData.endTime || '',
+    
+    // Get booking data
+    const bookingData = bookingDoc.data();
+    
+    // Merge data from the request with data from the database
+    const mergedBookingDetails = {
+      ...bookingData,
+      ...bookingDetails,
+      // Ensure we have an email address
+      email: bookingDetails.email || bookingData.email
     };
-
-    // Send confirmation email
-    const emailResult = await sendEmailConfirmation(bookingDetails);
     
-    // Return success response with booking details
-    return NextResponse.json({
-      success: true,
-      message: 'Payment confirmation recorded successfully',
-      bookingDetails,
-      emailSent: emailResult.success,
-      emailDetails: emailResult
-    });
+    // Send the email
+    const emailResult = await sendEmailConfirmation(mergedBookingDetails);
+    
+    // Update document with confirmation email status
+    try {
+      await updateDoc(bookingRef, {
+        emailConfirmationSent: emailResult.success,
+        emailConfirmationDate: serverTimestamp(),
+        emailConfirmationId: emailResult.messageId || null,
+        lastUpdated: serverTimestamp()
+      });
+    } catch (updateError) {
+      console.error('Error updating booking with email status:', updateError);
+      // Continue processing - don't fail the API call if only the update fails
+    }
+    
+    // Return appropriate response
+    if (emailResult.success) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Confirmation email sent successfully',
+        messageId: emailResult.messageId || null
+      });
+    } else if (emailResult.fallback) {
+      return NextResponse.json({ 
+        success: false, 
+        warning: emailResult.warning || 'Email sending failed with a recoverable issue',
+        fallbackMessage: 'Your booking is confirmed, but the email notification could not be sent at this time.'
+      }, { status: 200 });
+    } else {
+      return NextResponse.json({ 
+        success: false, 
+        error: emailResult.error || 'Failed to send confirmation email',
+        fallbackMessage: emailResult.fallbackMessage || 'We have your booking, but could not send an email confirmation.'
+      }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Error processing payment confirmation:', error);
-    
+    console.error('Error processing confirmation request:', error);
     return NextResponse.json(
-      { error: 'Server error processing payment confirmation' },
+      { 
+        success: false, 
+        error: error.message || 'Server error processing confirmation',
+        fallbackMessage: 'Something went wrong. Please try again or contact us directly.'
+      },
       { status: 500 }
     );
   }
