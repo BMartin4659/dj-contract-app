@@ -198,6 +198,32 @@ export default function WeddingAgendaForm() {
       newErrors.timeline = 'At least one timeline event is required';
     }
     
+    // Check for overlapping times
+    const timeFields = [
+      {name: 'cocktailHourTime', value: formData.cocktailHourTime},
+      {name: 'grandEntranceTime', value: formData.grandEntranceTime},
+      {name: 'firstDanceTime', value: formData.firstDanceTime},
+      {name: 'dinnerTime', value: formData.dinnerTime},
+      {name: 'toastsTime', value: formData.toastsTime},
+      {name: 'parentDancesTime', value: formData.parentDancesTime},
+      {name: 'cakeCuttingTime', value: formData.cakeCuttingTime},
+      {name: 'openDancingTime', value: formData.openDancingTime},
+      {name: 'lastDanceTime', value: formData.lastDanceTime}
+    ].filter(field => field.value); // Only include fields with values
+    
+    // Sort times chronologically
+    timeFields.sort((a, b) => {
+      return convertToMinutes(a.value) - convertToMinutes(b.value);
+    });
+    
+    // Check for duplicate times
+    for (let i = 0; i < timeFields.length - 1; i++) {
+      if (timeFields[i].value === timeFields[i + 1].value) {
+        const fieldName = timeFields[i + 1].name.replace('Time', '');
+        newErrors[timeFields[i + 1].name] = `${fieldName} cannot be at the same time as another event`;
+      }
+    }
+    
     return newErrors;
   };
 
@@ -363,8 +389,8 @@ export default function WeddingAgendaForm() {
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
           <div className="text-center mb-6">
             <Image 
-              src="/dj-bobby-drake-logo.png" 
-              alt="DJ Bobby Drake Logo" 
+              src="/wedding-agenda-logo.png" 
+              alt="Wedding Agenda Logo" 
               width={80} 
               height={80} 
               className="mx-auto mb-4 rounded-full"
@@ -425,17 +451,6 @@ export default function WeddingAgendaForm() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
       
-      {/* Back to main contract button */}
-      <div className="absolute top-4 left-4 z-10">
-        <Link 
-          href="/"
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <FaArrowLeft className="mr-2 -ml-1 h-3 w-3" />
-          Back to Contract
-        </Link>
-      </div>
-      
       {/* Main form container */}
       <div className="max-w-4xl mx-auto">
         <div style={{ 
@@ -469,8 +484,8 @@ export default function WeddingAgendaForm() {
                 justifyContent: 'center'
               }}>
                 <Image
-                  src="/dj-bobby-drake-logo.png"
-                  alt="DJ Bobby Drake Logo"
+                  src="/wedding-agenda-logo.png"
+                  alt="Wedding Agenda Logo"
                   width={150}
                   height={150}
                   priority
@@ -542,9 +557,10 @@ export default function WeddingAgendaForm() {
                   }}
                 >
                   <option value="Wedding">Wedding</option>
-                  <option value="Corporate">Corporate</option>
-                  <option value="Birthday">Birthday</option>
-                  <option value="Other">Other</option>
+                  <option value="Wedding Reception">Wedding Reception</option>
+                  <option value="Wedding Ceremony">Wedding Ceremony</option>
+                  <option value="Ceremony & Reception">Ceremony & Reception</option>
+                  <option value="Rehearsal Dinner">Rehearsal Dinner</option>
                 </select>
               </div>
               
@@ -1735,6 +1751,24 @@ export default function WeddingAgendaForm() {
               
               <div className="mt-4 text-sm text-gray-500">
                 Your information helps us prepare for your special day
+              </div>
+              
+              {/* Back to Contract button - Bottom */}
+              <div className="mt-6">
+                <Link 
+                  href="/"
+                  className="px-10 py-2.5 text-white font-medium rounded-full hover:bg-blue-700 focus:outline-none transition-all duration-200 text-base mx-auto inline-flex items-center justify-center"
+                  style={{
+                    border: 'none',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                    minWidth: '200px',
+                    letterSpacing: '0.3px',
+                    backgroundColor: '#1a73e8'
+                  }}
+                >
+                  <FaArrowLeft className="mr-3" style={{ fontSize: '14px' }} />
+                  Back to Contract
+                </Link>
               </div>
             </div>
           </form>
