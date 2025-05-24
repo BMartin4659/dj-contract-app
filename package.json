@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node ensure-components.js && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "node clear-cache.js",
+    "clean:build": "node clear-cache.js && next build",
+    "clean:dev": "node clear-cache.js && next dev"
   },
   "dependencies": {
     "@floating-ui/core": "^1.2.6",
