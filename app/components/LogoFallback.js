@@ -14,7 +14,8 @@ export default function LogoFallback({ width = 200, height = 200, className = ""
     '/dj-bobby-drake-logo.png',
     '/dJ-bobby-drake-logo.png',
     '/DJ-bobby-drake-logo.png',
-    '/dj-bobby-drake-logo-original.png'
+    '/dj-bobby-drake-logo-original.png',
+    'https://raw.githubusercontent.com/BMartin4659/dj-contract-app/dev/public/dj-bobby-drake-logo-original.png'
   ];
   
   const handleImageError = () => {
