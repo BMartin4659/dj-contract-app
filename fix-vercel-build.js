@@ -614,4 +614,4 @@ try {
   console.error('Error cleaning cache:', error);
 }
 
-console.log('Build fix completed successfully'); 
+console.log('Build preparation completed successfully'); 

@@ -69,4 +69,31 @@ exec('npm cache clean --force', (error, stdout, stderr) => {
   
   console.log('All cache cleaning operations completed.');
   console.log('You can now run the build command: npm run build');
-}); 
+});
+
+console.log('Clearing Next.js cache...');
+
+const cacheDir = path.join(process.cwd(), '.next/cache');
+
+try {
+  if (fs.existsSync(cacheDir)) {
+    console.log(`Removing cache directory: ${cacheDir}`);
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log('Cache directory successfully removed');
+  } else {
+    console.log('Cache directory does not exist, no need to clear');
+  }
+  
+  // Also remove the .next/server directory which can cause issues
+  const serverDir = path.join(process.cwd(), '.next/server');
+  if (fs.existsSync(serverDir)) {
+    console.log(`Removing server directory: ${serverDir}`);
+    fs.rmSync(serverDir, { recursive: true, force: true });
+    console.log('Server directory successfully removed');
+  }
+  
+  console.log('Cache cleanup completed successfully');
+} catch (error) {
+  console.error('Error cleaning cache:', error);
+  // Don't fail the build if cache cleaning fails
+} 

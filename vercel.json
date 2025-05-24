@@ -5,7 +5,7 @@
       "src": "package.json",
       "use": "@vercel/next",
       "config": {
-        "installCommand": "npm install && node fix-vercel-build.js && node ensure-components.js"
+        "installCommand": "npm install && node ensure-components.js && node clear-cache.js"
       }
     }
   ],

@@ -329,6 +329,13 @@ requiredComponents.forEach(component => {
       console.log(`Created missing component: ${component.path}`);
     } else {
       console.log(`Component already exists: ${component.path}`);
+      
+      // Check if we need to update existing file to fix issues
+      const existingContent = fs.readFileSync(fullPath, 'utf8');
+      if (existingContent !== component.content) {
+        console.log(`Updating component with fixes: ${component.path}`);
+        fs.writeFileSync(fullPath, component.content, 'utf8');
+      }
     }
   } catch (error) {
     console.error(`Error ensuring component ${component.path} exists:`, error);
