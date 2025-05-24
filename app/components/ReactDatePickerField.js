@@ -38,7 +38,7 @@ const ReactDatePickerField = ({
   placeholder = 'Select event date',
   dateFormat = 'MMMM d, yyyy',
   minDate = new Date(),
-  errorMessage = null
+  error = null
 }) => {
   return (
     <div className="relative w-full" style={{ width: '100%', marginBottom: '1rem', display: 'block' }}>
@@ -61,8 +61,8 @@ const ReactDatePickerField = ({
         shouldCloseOnSelect
         formatWeekDay={nameOfDay => nameOfDay.substring(0, 2)}
       />
-      {errorMessage && (
-        <p className="text-red-500 text-xs italic mt-1">{errorMessage}</p>
+      {error && (
+        <p className="text-red-500 text-xs italic mt-1">{error}</p>
       )}
     </div>
   );

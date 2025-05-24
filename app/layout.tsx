@@ -1,5 +1,8 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
+import ClientOnly from './components/ClientOnly';
+import FixHydration from './components/FixHydration';
+import CustomDocument from './custom-document';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,13 +19,17 @@ export default function RootLayout({
         <link rel="icon" href="/dj-bobby-drake-logo.png" />
         <meta name="theme-color" content="#6366f1" />
       </head>
-      <body className={inter.className}>
-        {/* Background wrapper for mobile devices */}
-        <div className="background-wrapper">
-          <div className="mobile-background"></div>
-          <div className="ios-background-fix"></div>
-        </div>
-        {children}
+      <body className={inter.className} suppressHydrationWarning>
+        <CustomDocument />
+        <FixHydration />
+        <ClientOnly>
+          {/* Background wrapper for mobile devices */}
+          <div className="background-wrapper">
+            <div className="mobile-background"></div>
+            <div className="ios-background-fix"></div>
+          </div>
+          {children}
+        </ClientOnly>
       </body>
     </html>
   )

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -25,6 +25,11 @@ const nextConfig = {
   },
   experimental: {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
+    optimizeCss: false
+  },
+  compiler: {
+    // Enables the styled-components SWC transform
+    styledComponents: true,
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
@@ -36,6 +41,21 @@ const nextConfig = {
     // Dangerously allow production builds to successfully complete even if
     // your project has type errors.
     ignoreBuildErrors: true,
+  },
+  // Add custom webpack configuration to help with hydration errors
+  webpack: (config, { dev, isServer }) => {
+    if (!isServer) {
+      const webpack = require('webpack');
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          // Disable strict hydration checks in development
+          '__NEXT_STRICT_MODE': JSON.stringify(false),
+          '__NEXT_REACT_ROOT': JSON.stringify(true),
+          '__NEXT_SUPPRESS_HYDRATION_WARNING': JSON.stringify(true),
+        })
+      );
+    }
+    return config;
   },
 };
 

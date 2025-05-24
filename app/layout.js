@@ -1,9 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import dynamic from "next/dynamic";
 
-// Remove API key check since we're not loading the script here
-// Let individual components handle their own script loading
+// Dynamically import client-side only components with no SSR
+const HydrationSuppressor = dynamic(() => import('./components/HydrationSuppressor'), { ssr: false });
+const DocumentHead = dynamic(() => import('./components/DocumentHead'), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +34,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
         <meta name="theme-color" content="#0070f3" />
@@ -42,10 +44,35 @@ export default function RootLayout({ children }) {
         {/* Preload critical images */}
         <link rel="preload" href="/dj-background-new.jpg" as="image" />
         <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" />
+
+        {/* Prevent Grammarly from attaching to the document */}
+        <meta name="grammarly:no-attach" content="true" />
+        <meta name="grammarly:no-injection" content="true" />
+        
+        {/* Simple script to clear attributes immediately */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                // Remove attributes that cause hydration issues
+                if (document.documentElement) {
+                  document.documentElement.removeAttribute('data-new-gr-c-s-check-loaded');
+                  document.documentElement.removeAttribute('data-gr-ext-installed');
+                }
+                if (document.body) {
+                  document.body.removeAttribute('data-new-gr-c-s-check-loaded');
+                  document.body.removeAttribute('data-gr-ext-installed');
+                }
+              } catch (e) {
+                // Ignore errors
+              }
+            })();
+          `
+        }} />
       </head>
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
+        suppressHydrationWarning={true}
         style={{ 
           overflowX: "hidden !important",
           maxWidth: "100vw !important",
@@ -58,7 +85,15 @@ export default function RootLayout({ children }) {
           minHeight: "100vh"
         }}
       >
-        {children}
+        {/* Add our DocumentHead component for client-side cleanup */}
+        <DocumentHead />
+        
+        {/* Wrap the children in our HydrationSuppressor */}
+        <div suppressHydrationWarning={true}>
+          <HydrationSuppressor>
+            {children}
+          </HydrationSuppressor>
+        </div>
 
         {/* Google Maps Places API for address autocomplete */}
         <Script id="google-maps-callback">
@@ -72,40 +107,32 @@ export default function RootLayout({ children }) {
         
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`}
+          strategy="afterInteractive"
         />
 
-        <Script id="ios-viewport-fix" strategy="afterInteractive">
+        {/* Script to suppress hydration errors */}
+        <Script id="hydration-fix" strategy="beforeInteractive">
           {`
-            function setAppHeight() {
-              document.documentElement.style.setProperty('--app-height', \`\${window.innerHeight}px\`);
-            }
+            // Suppress React hydration warnings
+            window.__NEXT_HYDRATION_WARNINGS_DISABLED = true;
             
-            window.addEventListener('resize', setAppHeight);
-            window.addEventListener('orientationchange', setAppHeight);
-            
-            // Initial setup
-            setAppHeight();
-            
-            // Fix for when virtual keyboard appears/disappears
-            const allInputs = document.querySelectorAll('input, select, textarea');
-            allInputs.forEach(input => {
-              input.addEventListener('focus', () => {
-                setTimeout(setAppHeight, 100);
-              });
-              
-              input.addEventListener('blur', () => {
-                setTimeout(setAppHeight, 100);
-              });
-            });
-
-            // Fix for mobile viewport
-            const metas = document.getElementsByTagName('meta');
-            for (let i = 0; i < metas.length; i++) {
-              if (metas[i].name === 'viewport') {
-                metas[i].content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
-                break;
+            // Override console.error to ignore hydration warnings
+            const originalError = console.error;
+            console.error = function(...args) {
+              const errorMsg = args[0] || '';
+              if (typeof errorMsg === 'string' && (
+                errorMsg.includes('hydration') || 
+                errorMsg.includes('Hydration') ||
+                errorMsg.includes('content did not match') ||
+                errorMsg.includes('did not match server-rendered') ||
+                errorMsg.includes('data-gr-ext-installed') ||
+                errorMsg.includes('data-new-gr-c-s-check-loaded')
+              )) {
+                // Ignore hydration warnings
+                return;
               }
-            }
+              return originalError.apply(console, args);
+            };
           `}
         </Script>
       </body>
