@@ -133,6 +133,25 @@
 
 **Verification**: Users can now select payment methods, payment options, additional hours, and streaming services, then navigate to the wedding agenda form and back without losing any of these selections.
 
+### 11. **Dynamic Package Text Feature** 💍
+**Feature Request**: Change "Base Package" text to "Wedding Package" when a wedding event type is selected.
+
+**Solution**: Implemented dynamic package text that automatically updates based on event type:
+- **Smart Text Detection**: Uses `isWeddingEvent()` utility to detect wedding-related events
+- **Dynamic Display**: "Base Package" changes to "Wedding Package" with wedding ring emoji (💍)
+- **Consistent Implementation**: Applied to both main form itemized total and Stripe checkout component
+- **Real-time Updates**: Text changes immediately when event type is selected
+
+**Files Modified**:
+- `app/page.js` - Updated `itemizedTotal()` function with dynamic text logic
+- `components/StripeCheckout-fixed.js` - Added `isWeddingEvent` import and dynamic text logic
+
+**Visual Enhancement**: 
+- Standard events: "🎶 Base Package"
+- Wedding events: "💍 Wedding Package"
+
+**Verification**: When users select any wedding-related event type (Wedding Ceremony, Wedding Reception, etc.), the package text automatically changes from "Base Package" to "Wedding Package" in both the main form summary and Stripe checkout page.
+
 ## Technical Implementation Details
 
 ### Data Persistence Architecture
@@ -190,6 +209,7 @@ The additional services cards (lighting, photography, video visuals) now have:
 9. **✅ Additional Hours Selection**: Hour selection buttons work and persist
 10. **✅ Streaming Service Selection**: Music service selection works and persists
 11. **✅ Music Preferences**: Genre selection and playlist links persist properly
+12. **✅ Dynamic Package Text**: "Base Package" automatically changes to "Wedding Package" for wedding events
 
 ### User Experience Improvements:
 - **Seamless Navigation**: Users can freely move between forms without data loss

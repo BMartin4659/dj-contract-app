@@ -10,6 +10,7 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
+import { isWeddingEvent } from '../app/utils/eventUtils';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -135,7 +136,9 @@ const CheckoutForm = ({ amount, onSuccess, contractDetails }) => {
             padding: '0.5rem 0',
             borderBottom: '1px solid #eee'
           }}>
-            <span>🎶 Base Package</span>
+            <span>
+              {isWeddingEvent(contractDetails?.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
+            </span>
             <span>$350</span>
           </div>
           

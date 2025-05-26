@@ -2707,7 +2707,9 @@ Live City DJ Contract Terms and Conditions:
         flexWrap: 'wrap',
         gap: '0.5rem',
       }}>
-        <span style={{ flex: '1 1 auto' }}>🎶 Base Package</span>
+        <span style={{ flex: '1 1 auto' }}>
+          {isWeddingEvent(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
+        </span>
         <span style={{ whiteSpace: 'nowrap' }}>${basePrice}</span>
       </div>
       {formData.lighting && <li>💡 Lighting: ${SERVICES.LIGHTING}</li>}
