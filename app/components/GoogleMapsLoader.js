@@ -5,15 +5,27 @@ import { useEffect, useState } from 'react';
 export default function GoogleMapsLoader() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Check if API key is available
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY') {
+      console.warn('GoogleMapsLoader: No valid Google Maps API key found. Address autocomplete will be disabled.');
+      setError('Google Maps API key not configured');
+      setLoading(false);
+      return;
+    }
     
     // Define a global callback for the script to call
     window.initGoogleMapsCallback = () => {
       console.log('GoogleMapsLoader: Maps API loaded via callback');
       window.googleMapsLoaded = true;
       setLoading(false);
+      setError(null);
     };
     
     // If already loaded, don't load again
@@ -34,6 +46,7 @@ export default function GoogleMapsLoader() {
           console.log('GoogleMapsLoader: Maps API detected as loaded');
           clearInterval(checkInterval);
           setLoading(false);
+          setError(null);
         }
       }, 100);
       
@@ -42,11 +55,17 @@ export default function GoogleMapsLoader() {
         clearInterval(checkInterval);
         if (!window.google?.maps?.places) {
           console.error('GoogleMapsLoader: Maps API failed to load after timeout');
-          setError('Failed to load Google Maps');
           
-          // Remove the failed script and try again
-          existingScript.remove();
-          loadMapsScript();
+          // Remove the failed script and try again if we haven't exceeded max retries
+          if (retryCount < maxRetries) {
+            console.log(`GoogleMapsLoader: Retrying... (${retryCount + 1}/${maxRetries})`);
+            existingScript.remove();
+            setRetryCount(prev => prev + 1);
+            loadMapsScript();
+          } else {
+            setError('Google Maps failed to load after multiple attempts');
+            setLoading(false);
+          }
         }
       }, 10000);
       
@@ -61,13 +80,25 @@ export default function GoogleMapsLoader() {
       
       // Create and add script element
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMapsCallback`;
       script.async = true;
       script.defer = true;
       
       script.onerror = (err) => {
         console.error('GoogleMapsLoader: Error loading Maps API:', err);
-        setError('Failed to load Google Maps API');
+        
+        // Retry if we haven't exceeded max retries
+        if (retryCount < maxRetries) {
+          console.log(`GoogleMapsLoader: Retrying after error... (${retryCount + 1}/${maxRetries})`);
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => {
+            script.remove();
+            loadMapsScript();
+          }, 2000); // Wait 2 seconds before retry
+        } else {
+          setError('Failed to load Google Maps API - please check your internet connection');
+          setLoading(false);
+        }
       };
       
       document.head.appendChild(script);
@@ -79,7 +110,7 @@ export default function GoogleMapsLoader() {
         console.log('GoogleMapsLoader: Maps API loaded after component unmounted');
       };
     };
-  }, []);
+  }, [retryCount]);
 
   // Initialize address input fields with autocomplete when Maps is loaded
   useEffect(() => {
@@ -107,6 +138,18 @@ export default function GoogleMapsLoader() {
             // Mark as initialized
             input.dataset.autocompleteInitialized = 'true';
             console.log(`GoogleMapsLoader: Initialized autocomplete for input ${index + 1}`);
+            
+            // Add place changed listener
+            autocomplete.addListener('place_changed', () => {
+              const place = autocomplete.getPlace();
+              if (place.formatted_address) {
+                input.value = place.formatted_address;
+                // Trigger change event for form handling
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+              }
+            });
+            
           } catch (err) {
             console.error(`GoogleMapsLoader: Error initializing autocomplete for input ${index + 1}:`, err);
           }
@@ -117,6 +160,10 @@ export default function GoogleMapsLoader() {
     }, 1000); // Wait 1s for the DOM to be fully ready
   }, [loading, error]);
 
-  // This component doesn't render anything visible
+  // This component doesn't render anything visible, but we can optionally show loading/error states
+  if (error) {
+    console.warn('GoogleMapsLoader error:', error);
+  }
+  
   return null;
 } 

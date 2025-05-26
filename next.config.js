@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  env: {
+    // Fallback Google Maps API key if not set in environment
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc',
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

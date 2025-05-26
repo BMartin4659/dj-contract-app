@@ -94,34 +94,34 @@ export default function EventTypeDropdown({
   showWeddingAgendaLink = true,
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState(value || selectedEvent || '');
   const [priceNote, setPriceNote] = useState('');
   const [showAgendaAlert, setShowAgendaAlert] = useState(false);
 
-  const effectiveValue = value || selectedEvent;
+  // Use the passed value directly, don't maintain separate state
+  const currentValue = value || selectedEvent || '';
   const effectiveOnChange = onChange || onEventChange;
   const effectiveOnPriceUpdate = onPriceUpdate || handleBasePrice;
 
   useEffect(() => {
-    if (effectiveValue) {
+    if (currentValue) {
       // Set initial price on mount
       if (effectiveOnPriceUpdate) {
-        effectiveOnPriceUpdate(getBasePrice(effectiveValue));
+        effectiveOnPriceUpdate(getBasePrice(currentValue));
       }
       
       // Set initial price note and agenda alert on mount
-      const price = getBasePrice(effectiveValue);
-      if (isWeddingEvent(effectiveValue)) {
-        console.log('EventTypeDropdown - Detected wedding event on mount:', effectiveValue);
+      const price = getBasePrice(currentValue);
+      if (isWeddingEvent(currentValue)) {
+        console.log('EventTypeDropdown - Detected wedding event on mount:', currentValue);
         setPriceNote(`💰 Base price updated to $${price} for weddings`);
         if (showWeddingAgendaLink) setShowAgendaAlert(true);
       } else {
-        console.log('EventTypeDropdown - Detected event on mount:', effectiveValue, 'Price:', price);
+        console.log('EventTypeDropdown - Detected event on mount:', currentValue, 'Price:', price);
         setPriceNote(`💰 Base price set to $${price} for this event`);
         setShowAgendaAlert(false); // Explicitly set to false for non-wedding events
       }
     }
-  }, [effectiveValue, effectiveOnPriceUpdate, showWeddingAgendaLink]);
+  }, [currentValue, effectiveOnPriceUpdate, showWeddingAgendaLink]);
 
   useEffect(() => {
     if (priceNote) {
@@ -139,57 +139,52 @@ export default function EventTypeDropdown({
 
   const handleChange = (e) => {
     const newValue = e.target.value;
-    setSelected(newValue);
     console.log('EventTypeDropdown - Value changed to:', newValue);
 
-    // Dispatch a custom event to notify other components
-    const eventTypeChanged = new Event('eventTypeUpdated');
-    window.dispatchEvent(eventTypeChanged);
-
+    // Call the parent onChange immediately
     if (effectiveOnChange) {
-      // Add a small delay to ensure state updates happen in the correct order
-      setTimeout(() => {
-        if (typeof effectiveOnChange === 'function' && effectiveOnChange.length >= 1) {
-          console.log('EventTypeDropdown - Calling onChange with event');
-          effectiveOnChange(e);
-        } else {
-          console.log('EventTypeDropdown - Calling onChange with value');
-          effectiveOnChange(newValue);
-        }
-      }, 0);
+      if (typeof effectiveOnChange === 'function' && effectiveOnChange.length >= 1) {
+        console.log('EventTypeDropdown - Calling onChange with event');
+        effectiveOnChange(e);
+      } else {
+        console.log('EventTypeDropdown - Calling onChange with value');
+        effectiveOnChange(newValue);
+      }
     }
 
-    // Add a delay to ensure that the price updates after the event type change is processed
+    // Update price immediately
+    const price = getBasePrice(newValue);
+    if (effectiveOnPriceUpdate) {
+      console.log('EventTypeDropdown - Updating price to:', price);
+      effectiveOnPriceUpdate(price);
+    }
+
+    // Update UI feedback
+    const isWedding = isWeddingEvent(newValue);
+    console.log('EventTypeDropdown - Event type changed:', newValue, 'Is wedding:', isWedding);
+    
+    if (isWedding) {
+      console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
+      setPriceNote(`💰 Base price updated to $${price} for weddings`);
+      if (showWeddingAgendaLink) {
+        setShowAgendaAlert(true);
+        console.log('EventTypeDropdown - Wedding agenda alert shown');
+      }
+    } else {
+      console.log('EventTypeDropdown - Setting pricing and hiding agenda alert. Price:', price);
+      setPriceNote(`💰 Base price set to $${price} for this event`);
+      setShowAgendaAlert(false);
+    }
+    
+    // Dispatch events for other components
+    const eventTypeChanged = new Event('eventTypeUpdated');
+    window.dispatchEvent(eventTypeChanged);
+    
     setTimeout(() => {
-      const price = getBasePrice(newValue);
-      if (effectiveOnPriceUpdate) {
-        console.log('EventTypeDropdown - Updating price to:', price);
-        effectiveOnPriceUpdate(price);
-      }
-  
-      const isWedding = isWeddingEvent(newValue);
-      console.log('EventTypeDropdown - Event type changed:', newValue, 'Is wedding:', isWedding);
-      
-      if (isWedding) {
-        console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
-        setPriceNote(`💰 Base price updated to $${price} for weddings`);
-        if (showWeddingAgendaLink) {
-          setShowAgendaAlert(true);
-          console.log('EventTypeDropdown - Wedding agenda alert shown');
-        }
-      } else {
-        console.log('EventTypeDropdown - Setting pricing and hiding agenda alert. Price:', price);
-        setPriceNote(`💰 Base price set to $${price} for this event`);
-        setShowAgendaAlert(false); // Explicitly set to false for non-wedding events
-      }
-      
-      // Dispatch a second event after all processing is complete
-      setTimeout(() => {
-        const eventProcessingComplete = new Event('eventTypeProcessed');
-        window.dispatchEvent(eventProcessingComplete);
-        console.log('EventTypeDropdown - Event type processing complete');
-      }, 10);
-    }, 50);
+      const eventProcessingComplete = new Event('eventTypeProcessed');
+      window.dispatchEvent(eventProcessingComplete);
+      console.log('EventTypeDropdown - Event type processing complete');
+    }, 10);
   };
 
   const handleAgendaLinkClick = (e) => {
@@ -202,7 +197,7 @@ export default function EventTypeDropdown({
     <div className="w-full max-w-md mx-auto">
       <div className="relative">
         <select
-          value={selected}
+          value={currentValue}
           onChange={handleChange}
           name={name || 'eventType'}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -256,7 +251,7 @@ export default function EventTypeDropdown({
 
       {/* Wedding Agenda Alert - Only show for wedding events */}
       <AnimatePresence>
-        {showAgendaAlert && showWeddingAgendaLink && isWeddingEvent(selected) && (
+        {showAgendaAlert && showWeddingAgendaLink && isWeddingEvent(currentValue) && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}

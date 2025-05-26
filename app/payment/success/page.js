@@ -538,10 +538,13 @@ function PaymentSuccessContent() {
           </span>
         </div>
         <div className="success-actions">
-          <Link href="/" className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', minWidth: '140px' }}>
+          <Link href="/" className="success-btn success-btn-primary" style={{ background: color.main, color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', minWidth: '140px' }}>
+            <FaRedo /> <span style={{marginLeft: '0.5em', fontWeight: 600}}>Book Again</span>
+          </Link>
+          <Link href="/" className="success-btn success-btn-alt" style={{ background: 'transparent', color: color.main, border: `2px solid ${color.main}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', minWidth: '140px' }}>
             <FaHome /> <span style={{marginLeft: '0.5em', fontWeight: 600}}>Return Home</span>
           </Link>
-          <button onClick={() => window.print()} className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none' }}>
+          <button onClick={() => window.print()} className="success-btn success-btn-alt" style={{ background: 'transparent', color: color.main, border: `2px solid ${color.main}`, borderRadius: '8px' }}>
             <FaReceipt /> Print Receipt
           </button>
         </div>
@@ -636,9 +639,16 @@ function PaymentSuccessContent() {
         }
         .success-actions {
           display: flex;
-          gap: 1rem;
-          justify-content: center;
+          flex-direction: column;
+          gap: 0.8rem;
           margin-top: 0.5rem;
+        }
+        @media (min-width: 480px) {
+          .success-actions {
+            flex-direction: row;
+            justify-content: center;
+            gap: 1rem;
+          }
         }
         .success-btn {
           border-radius: 8px;

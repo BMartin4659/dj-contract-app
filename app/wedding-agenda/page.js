@@ -148,6 +148,62 @@ export default function WeddingAgendaForm() {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
+  // Sync with contract form data whenever it changes
+  useEffect(() => {
+    if (contextIsClient && contractFormData && Object.keys(contractFormData).length > 0) {
+      console.log('Wedding agenda syncing with contract form data:', contractFormData);
+      
+      setFormData(prev => {
+        const updatedData = { ...prev };
+        let hasChanges = false;
+        
+        // Sync client name to bride/groom names if they're empty
+        if (contractFormData.clientName && (!prev.brideName || !prev.groomName)) {
+          const nameParts = contractFormData.clientName.split(' ');
+          if (nameParts.length >= 2) {
+            if (!prev.brideName) {
+              updatedData.brideName = nameParts[0];
+              hasChanges = true;
+            }
+            if (!prev.groomName) {
+              updatedData.groomName = nameParts.slice(1).join(' ');
+              hasChanges = true;
+            }
+          } else if (!prev.brideName) {
+            updatedData.brideName = contractFormData.clientName;
+            hasChanges = true;
+          }
+        }
+        
+        // Sync email
+        if (contractFormData.email && !prev.email) {
+          updatedData.email = contractFormData.email;
+          hasChanges = true;
+        }
+        
+        // Sync phone
+        if (contractFormData.contactPhone && !prev.phone) {
+          updatedData.phone = contractFormData.contactPhone;
+          hasChanges = true;
+        }
+        
+        // Sync wedding date
+        if (contractFormData.eventDate && !prev.weddingDate) {
+          updatedData.weddingDate = contractFormData.eventDate;
+          hasChanges = true;
+        }
+        
+        // If we made changes, save to context
+        if (hasChanges) {
+          console.log('Wedding agenda updated with contract data:', updatedData);
+          updateWeddingAgendaData(updatedData);
+        }
+        
+        return hasChanges ? updatedData : prev;
+      });
+    }
+  }, [contextIsClient, contractFormData, updateWeddingAgendaData]);
+
   // Check for mobile device
   useEffect(() => {
     const checkMobile = () => {
@@ -213,52 +269,20 @@ export default function WeddingAgendaForm() {
     };
   }, []);
   
-  // Sync with context data when returning from contract form
-  useEffect(() => {
-    if (contextIsClient && Object.keys(contractFormData).length > 0) {
-      console.log('Syncing wedding agenda with updated contract data:', contractFormData);
-      setFormData(prev => {
-        const updatedData = { ...prev };
-        
-        // Update contact info if changed in contract form
-        if (contractFormData.email && contractFormData.email !== prev.email) {
-          updatedData.email = contractFormData.email;
-        }
-        
-        if (contractFormData.contactPhone && contractFormData.contactPhone !== prev.phone) {
-          updatedData.phone = contractFormData.contactPhone;
-        }
-        
-        if (contractFormData.eventDate && contractFormData.eventDate !== prev.weddingDate) {
-          updatedData.weddingDate = contractFormData.eventDate;
-        }
-        
-        // Update names if they were changed in contract form and we don't have them yet
-        if (contractFormData.clientName && (!prev.brideName || !prev.groomName)) {
-          const nameParts = contractFormData.clientName.split(' ');
-          if (nameParts.length >= 2) {
-            if (!prev.brideName) updatedData.brideName = nameParts[0];
-            if (!prev.groomName) updatedData.groomName = nameParts.slice(1).join(' ');
-          } else if (!prev.brideName) {
-            updatedData.brideName = contractFormData.clientName;
-          }
-        }
-        
-        // Save updated data to context
-        updateWeddingAgendaData(updatedData);
-        
-        return updatedData;
-      });
-    }
-  }, [contextIsClient, contractFormData, updateWeddingAgendaData]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
       
-      // Save to context for persistence
+      // Save to context for persistence across navigation
       updateWeddingAgendaData(newData);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving wedding agenda to localStorage:', error);
+      }
       
       return newData;
     });
@@ -279,8 +303,15 @@ export default function WeddingAgendaForm() {
       updatedArray[index] = value;
       const newData = { ...prev, [group]: updatedArray };
       
-      // Save to context for persistence
+      // Save to context for persistence across navigation
       updateWeddingAgendaData(newData);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving wedding agenda to localStorage:', error);
+      }
       
       return newData;
     });
@@ -294,8 +325,15 @@ export default function WeddingAgendaForm() {
         [group]: [...prev[group], ''] 
       };
       
-      // Save to context for persistence
+      // Save to context for persistence across navigation
       updateWeddingAgendaData(newData);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving wedding agenda to localStorage:', error);
+      }
       
       return newData;
     });
@@ -313,8 +351,15 @@ export default function WeddingAgendaForm() {
         [group]: updatedArray 
       };
       
-      // Save to context for persistence
+      // Save to context for persistence across navigation
       updateWeddingAgendaData(newData);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving wedding agenda to localStorage:', error);
+      }
       
       return newData;
     });

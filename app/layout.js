@@ -103,20 +103,7 @@ export default function RootLayout({ children }) {
           </div>
         </ClientFormProvider>
 
-        {/* Google Maps Places API for address autocomplete */}
-        <Script id="google-maps-callback">
-          {`
-            window.initGoogleMapsCallback = function() {
-              console.log('Google Maps initialized via callback');
-              window.googleMapsLoaded = true;
-            };
-          `}
-        </Script>
-        
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`}
-          strategy="afterInteractive"
-        />
+
 
         {/* Script to suppress hydration errors */}
         <Script id="hydration-fix" strategy="beforeInteractive">

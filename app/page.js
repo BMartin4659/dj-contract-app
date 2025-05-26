@@ -1185,7 +1185,7 @@ export default function DJContractForm() {
   const router = useRouter();
   
   // Get form context (now returns default values if not available)
-  const { contractFormData, updateContractFormData, isClient: contextIsClient } = useFormContext();
+  const { contractFormData, weddingAgendaData, updateContractFormData, isClient: contextIsClient } = useFormContext();
   
   // Debug: Log context values on every render
   console.log('Contract form render - Context values:', {
@@ -1410,18 +1410,16 @@ Live City DJ Contract Terms and Conditions:
   
   // Memoized service card style function for better performance
   const getServiceCardStyle = useCallback((serviceName) => {
-    const isSelected = formData[serviceName];
+    const isSelected = formData[serviceName] === true;
     return {
       backgroundColor: isSelected ? '#e6f3ff' : 'white',
       border: isSelected ? '2px solid #0070f3' : '1px solid #ddd',
       borderRadius: '12px',
       padding: 'clamp(16px, 3vw, 20px)',
-      cursor: 'pointer',
       transition: 'all 0.2s ease',
       boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
       transform: isSelected ? 'translateY(-2px)' : 'none',
-      userSelect: 'none',
-      WebkitTapHighlightColor: 'transparent'
+      position: 'relative'
     };
   }, [formData.lighting, formData.photography, formData.videoVisuals]);
   
@@ -1715,6 +1713,52 @@ Live City DJ Contract Terms and Conditions:
       console.log('Context not yet client-side ready');
     }
   }, [contextIsClient, contractFormData, getBasePriceForEventType]);
+
+  // Sync with wedding agenda data when available (for shared fields)
+  useEffect(() => {
+    if (contextIsClient && weddingAgendaData && Object.keys(weddingAgendaData).length > 0) {
+      console.log('Contract form syncing with wedding agenda data:', weddingAgendaData);
+      
+      setFormData(prev => {
+        const updatedData = { ...prev };
+        let hasChanges = false;
+        
+        // Sync email if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.email && !prev.email) {
+          updatedData.email = weddingAgendaData.email;
+          hasChanges = true;
+        }
+        
+        // Sync phone if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.phone && !prev.contactPhone) {
+          updatedData.contactPhone = weddingAgendaData.phone;
+          hasChanges = true;
+        }
+        
+        // Sync event date if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.weddingDate && !prev.eventDate) {
+          updatedData.eventDate = weddingAgendaData.weddingDate;
+          hasChanges = true;
+        }
+        
+        // Sync client name from bride/groom names if not set in contract form
+        if ((weddingAgendaData.brideName || weddingAgendaData.groomName) && !prev.clientName) {
+          const brideName = weddingAgendaData.brideName || '';
+          const groomName = weddingAgendaData.groomName || '';
+          updatedData.clientName = `${brideName} ${groomName}`.trim();
+          hasChanges = true;
+        }
+        
+        // If we made changes, save to context
+        if (hasChanges) {
+          console.log('Contract form updated with wedding agenda data:', updatedData);
+          updateContractFormData(updatedData);
+        }
+        
+        return hasChanges ? updatedData : prev;
+      });
+    }
+  }, [contextIsClient, weddingAgendaData, updateContractFormData]);
   
   // Force reload data when component mounts (for navigation scenarios)
   useEffect(() => {
@@ -1768,74 +1812,153 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [formData.eventType, basePrice, getBasePriceForEventType]);
 
-  // Add this to manually load Google Maps API only if needed
+  // Define initializeGooglePlaces function before it's used
+  const initializeGooglePlaces = useCallback(() => {
+    try {
+      console.log('Initializing Google Places Autocomplete...', venueLocationRef.current);
+      
+      // Check for DOM reference first
+      if (!venueLocationRef.current) {
+        console.error('Venue location reference is not available');
+        setMapsError('Cannot initialize address autocomplete: input reference not found');
+        return;
+      }
+      
+      // Check for Google Places API
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        console.error('Google Maps API is not fully loaded:', window.google);
+        setMapsError('Google Maps API is not properly loaded');
+        return;
+      }
+      
+      // Clear any existing autocomplete instance
+      if (window.googleAutocompleteInstance) {
+        try {
+          window.google.maps.event.clearInstanceListeners(window.googleAutocompleteInstance);
+          delete window.googleAutocompleteInstance;
+        } catch (e) {
+          console.log('Could not clear existing autocomplete listeners');
+        }
+      }
+      
+      console.log('Creating autocomplete instance with options:', {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address', 'geometry', 'name']
+      });
+      
+      // Initialize autocomplete
+      const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address', 'geometry', 'name'],
+      });
+      
+      console.log('Autocomplete instance created:', autocomplete);
+      
+      // Add place_changed listener
+      autocomplete.addListener('place_changed', () => {
+        console.log('Place changed event fired');
+        try {
+          const place = autocomplete.getPlace();
+          console.log('Place selected:', place);
+          
+          if (place && place.formatted_address) {
+            console.log('Selected place details:', place.formatted_address);
+            setFormData(prev => {
+              const newData = {
+                ...prev,
+                venueLocation: place.formatted_address,
+              };
+              updateContractFormData(newData);
+              return newData;
+            });
+          } else {
+            console.warn('No place details available');
+            if (place) {
+              console.log('Place object returned without formatted_address. Available fields:', Object.keys(place));
+            }
+          }
+        } catch (placeError) {
+          console.error('Error in place_changed handler:', placeError);
+        }
+      });
+      
+      // Store reference to autocomplete instance
+      window.googleAutocompleteInstance = autocomplete;
+      
+      console.log('Google Places Autocomplete initialized successfully!');
+      setMapsError(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Error initializing Google Places Autocomplete:', error);
+      // More detailed error message
+      let errorMsg = 'Error initializing address autocomplete.';
+      if (error.message) {
+        errorMsg += ` Error: ${error.message}`;
+      }
+      setMapsError(errorMsg);
+    }
+  }, [updateContractFormData]);
+
+  // Improved Google Maps loading effect with better error handling
   useEffect(() => {
-    // Skip if already loaded or loading via layout.js
-    if (window.googleMapsLoaded || 
-        document.querySelector('script[src*="maps.googleapis.com"][src*="callback=initGoogleMapsCallback"]')) {
-      console.log('Google Maps already loading via layout.js - skipping manual load');
+    if (!isClient) return;
+    
+    // Check if API key is configured
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY') {
+      console.warn('Google Maps API key not configured. Address autocomplete will be disabled.');
+      setMapsError('Google Maps API key not configured');
       return;
     }
     
-    if (isClient && !window.google?.maps?.places) {
-      console.log('Checking for existing Google Maps script...');
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      
-      if (!existingScript) {
-        console.log('No existing Google Maps script found. Loading manually...');
-        
-        // First add the callback
-        window.initMapCallback = () => {
-          console.log('Google Maps API loaded manually via component callback!');
+    const initializeMaps = () => {
+      if (window.google?.maps?.places && venueLocationRef.current) {
+        console.log('Google Maps API available, initializing autocomplete...');
+        try {
           setMapsLoaded(true);
-          if (venueLocationRef.current) {
-            initializeGooglePlaces();
-          }
-          // Set the global flag to indicate it's loaded
-          window.googleMapsLoaded = true;
-        };
-        
-        // Then add the script
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMapCallback`;
-        script.async = true;
-        script.defer = true;
-        
-        script.onerror = (err) => {
-          console.error('Failed to load Google Maps API manually!', err);
-          setMapsError('Failed to load Google Maps API. Please check your connection.');
-        };
-        
-        document.head.appendChild(script);
-      } else {
-        console.log('Existing Google Maps script found. Waiting for it to load...');
-        
-        // Set up a check to see if Google Maps loads through the existing script
-        const checkGoogleMapsInterval = setInterval(() => {
-          if (window.google?.maps?.places || window.googleMapsLoaded) {
-            console.log('Google Maps loaded via existing script!');
-            clearInterval(checkGoogleMapsInterval);
-            setMapsLoaded(true);
-            if (venueLocationRef.current) {
-              initializeGooglePlaces();
-            }
-          }
-        }, 500);
-        
-        // Stop checking after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkGoogleMapsInterval);
-          if (!window.google?.maps?.places && !window.googleMapsLoaded) {
-            console.error('Google Maps failed to load after waiting');
-            setMapsError('Google Maps failed to load. Please try refreshing the page.');
-          }
-        }, 10000);
+          setMapsError(null);
+          initializeGooglePlaces();
+          return true;
+        } catch (error) {
+          console.error('Error initializing Google Places:', error);
+          setMapsError('Error initializing address autocomplete');
+          return false;
+        }
       }
-    } else if (isClient && window.google?.maps?.places) {
-      console.log('Google Maps API already loaded!');
-      setMapsLoaded(true);
-    }
-  }, [isClient]);
+      return false;
+    };
+    
+    // Try to initialize immediately if already loaded
+    if (initializeMaps()) return;
+    
+    // Set up callback for when Google Maps loads
+    window.initGoogleMapsCallback = () => {
+      console.log('Google Maps API loaded via callback!');
+      initializeMaps();
+    };
+    
+    // Check periodically if Google Maps has loaded
+    const checkInterval = setInterval(() => {
+      if (initializeMaps()) {
+        clearInterval(checkInterval);
+      }
+    }, 500);
+    
+    // Clean up after 20 seconds (increased timeout)
+    const timeout = setTimeout(() => {
+      clearInterval(checkInterval);
+      if (!window.google?.maps?.places) {
+        console.warn('Google Maps failed to load after 20 seconds - address autocomplete will be disabled');
+        setMapsError('Address autocomplete unavailable (Google Maps failed to load)');
+      }
+    }, 20000);
+    
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+    };
+  }, [isClient, initializeGooglePlaces]);
 
   // Add mobile viewport fix for proper display on mobile devices and Vercel
   useEffect(() => {
@@ -2038,81 +2161,7 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
   
-  const initializeGooglePlaces = () => {
-    try {
-      console.log('Initializing Google Places Autocomplete...', venueLocationRef.current);
-      
-      // Check for DOM reference first
-      if (!venueLocationRef.current) {
-        console.error('Venue location reference is not available');
-        setMapsError('Cannot initialize address autocomplete: input reference not found');
-        return;
-      }
-      
-      // Check for Google Places API
-      if (!window.google || !window.google.maps || !window.google.maps.places) {
-        console.error('Google Maps API is not fully loaded:', window.google);
-        setMapsError('Google Maps API is not properly loaded');
-        return;
-      }
-      
-      // Create a new ID for the element to avoid any previous association issues
-      const uniqueId = `location-input-${Date.now()}`;
-      venueLocationRef.current.id = uniqueId;
-      
-      console.log('Creating autocomplete instance with options:', {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name']
-      });
-      
-      // Initialize autocomplete
-      const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name'],
-      });
-      
-      console.log('Autocomplete instance created:', autocomplete);
-      
-      // Add place_changed listener
-      autocomplete.addListener('place_changed', () => {
-        console.log('Place changed event fired');
-        try {
-          const place = autocomplete.getPlace();
-          console.log('Place selected:', place);
-          
-          if (place && place.formatted_address) {
-            console.log('Selected place details:', place.formatted_address);
-            setFormData(prev => ({
-              ...prev,
-              venueLocation: place.formatted_address,
-            }));
-          } else {
-            console.warn('No place details available');
-            if (place) {
-              console.log('Place object returned without formatted_address. Available fields:', Object.keys(place));
-            }
-          }
-        } catch (placeError) {
-          console.error('Error in place_changed handler:', placeError);
-        }
-      });
-      
-      // Store reference to autocomplete instance
-      window.googleAutocompleteInstance = autocomplete;
-      
-      console.log('Google Places Autocomplete initialized successfully!');
-    } catch (error) {
-      console.error('Error initializing Google Places Autocomplete:', error);
-      // More detailed error message
-      let errorMsg = 'Error initializing address autocomplete.';
-      if (error.message) {
-        errorMsg += ` Error: ${error.message}`;
-      }
-      setMapsError(errorMsg);
-    }
-  };
+
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -2154,8 +2203,15 @@ Live City DJ Contract Terms and Conditions:
       console.log(`Updated formData ${name}:`, newData[name]);
       console.log('Full form data being saved to context:', newData);
       
-      // Save to context for persistence
+      // Save to context for persistence across navigation
       updateContractFormData(newData);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
       
       return newData;
     });
@@ -2897,7 +2953,17 @@ Live City DJ Contract Terms and Conditions:
     });
     
     // Update form data immediately to avoid state update issues
-    setFormData(prev => ({ ...prev, paymentMethod: method }));
+    setFormData(prev => {
+      const newData = { ...prev, paymentMethod: method };
+      updateContractFormData(newData);
+      // Also save to localStorage as backup
+      try {
+        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving payment method to localStorage:', error);
+      }
+      return newData;
+    });
     
     // Clear any payment method error when a selection is made
     if (formErrors.paymentMethod) {
@@ -2907,7 +2973,7 @@ Live City DJ Contract Terms and Conditions:
         return newErrors;
       });
     }
-  }, [formErrors]);
+  }, [formErrors, updateContractFormData]);
 
   // Memoize the payment method option styles to reduce recalculations
   const getPaymentOptionStyle = useCallback((method) => {
@@ -3022,11 +3088,13 @@ Live City DJ Contract Terms and Conditions:
     
     // Apply changes and close the modal
     const applyChanges = () => {
-      setFormData(prev => ({
-        ...prev,
+      const newData = {
+        ...formData,
         musicPreferences: selectedGenres,
         otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
-      }));
+      };
+      setFormData(newData);
+      updateContractFormData(newData);
       onClose();
     };
     
@@ -3907,18 +3975,22 @@ Live City DJ Contract Terms and Conditions:
                         if (formData.endTime) {
                           // If end time already exists, calculate new additional hours
                           const additionalHours = calculateAdditionalHours(value, formData.endTime);
-                          setFormData((prev) => ({
-                            ...prev,
+                          const newData = {
+                            ...formData,
                             startTime: value,
                             additionalHours
-                          }));
+                          };
+                          setFormData(newData);
+                          updateContractFormData(newData);
                         } else {
                           // If no end time yet, just update start time
-                          setFormData((prev) => ({
-                            ...prev,
+                          const newData = {
+                            ...formData,
                             startTime: value,
                             endTime: '' // reset endTime on startTime change
-                          }));
+                          };
+                          setFormData(newData);
+                          updateContractFormData(newData);
                         }
                       }}
                       required
@@ -4032,25 +4104,46 @@ Live City DJ Contract Terms and Conditions:
                     const isSelected = formData[name] === true;
                     console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
                     
+                    const handleServiceToggle = (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
+                      
+                      // Use direct state update with explicit true/false values
+                      const newValue = formData[name] === true ? false : true;
+                      console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
+                      
+                      const newData = {
+                        ...formData,
+                        [name]: newValue
+                      };
+                      
+                      setFormData(newData);
+                      
+                      // Save to context for persistence across navigation
+                      updateContractFormData(newData);
+                      
+                      // Also save directly to localStorage as backup
+                      try {
+                        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        console.log(`Saved ${name} service selection to localStorage:`, newValue);
+                      } catch (error) {
+                        console.error('Error saving service selection to localStorage:', error);
+                      }
+                    };
+                    
                     return (
                       <div 
                         key={name}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
-                          // Use direct state update with explicit true/false values
-                          setFormData(prev => {
-                            const newValue = prev[name] === true ? false : true;
-                            console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
-                            return {
-                              ...prev,
-                              [name]: newValue
-                            };
-                          });
-                        }}
+                        onClick={handleServiceToggle}
                         className="service-card"
-                        style={getServiceCardStyle(name)}
+                        style={{
+                          ...getServiceCardStyle(name),
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          touchAction: 'manipulation'
+                        }}
                       >
                         {formData[name] === true && (
                           <div style={{
@@ -4280,10 +4373,17 @@ Live City DJ Contract Terms and Conditions:
                       {streamingServices.map(service => (
                         <div 
                           key={service.id}
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            streamingService: service.id
-                          }))}
+                          onClick={() => {
+                            const newData = { ...formData, streamingService: service.id };
+                            setFormData(newData);
+                            updateContractFormData(newData);
+                            // Also save to localStorage as backup
+                            try {
+                              localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                            } catch (error) {
+                              console.error('Error saving streaming service to localStorage:', error);
+                            }
+                          }}
                           style={{
                             padding: '8px 12px',
                             borderRadius: '6px',
@@ -4383,14 +4483,15 @@ Live City DJ Contract Terms and Conditions:
                           type="button"
                           onClick={() => {
                             console.log(`Setting additionalHours to ${num}`);
-                            // Direct state update for hours
-                            setFormData(prev => {
-                              console.log(`Setting additionalHours from ${prev.additionalHours} to ${num}`);
-                              return {
-                                ...prev,
-                                additionalHours: num
-                              };
-                            });
+                            const newData = { ...formData, additionalHours: num };
+                            setFormData(newData);
+                            updateContractFormData(newData);
+                            // Also save to localStorage as backup
+                            try {
+                              localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                            } catch (error) {
+                              console.error('Error saving additional hours to localStorage:', error);
+                            }
                           }}
                           style={{
                             width: '40px',
@@ -4474,7 +4575,17 @@ Live City DJ Contract Terms and Conditions:
                     {/* Deposit Option */}
                     <div 
                       className="payment-amount-option"
-                      onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'deposit' }))}
+                      onClick={() => {
+                        const newData = { ...formData, paymentAmount: 'deposit' };
+                        setFormData(newData);
+                        updateContractFormData(newData);
+                        // Also save to localStorage as backup
+                        try {
+                          localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        } catch (error) {
+                          console.error('Error saving payment amount to localStorage:', error);
+                        }
+                      }}
                       style={{
                         border: `2px solid ${formData.paymentAmount === 'deposit' ? '#0070f3' : '#ddd'}`,
                         borderRadius: '12px',
@@ -4522,7 +4633,17 @@ Live City DJ Contract Terms and Conditions:
                         name="paymentAmount"
                         value="deposit"
                         checked={formData.paymentAmount === 'deposit'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                        onChange={(e) => {
+                          const newData = { ...formData, paymentAmount: e.target.value };
+                          setFormData(newData);
+                          updateContractFormData(newData);
+                          // Also save to localStorage as backup
+                          try {
+                            localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                          } catch (error) {
+                            console.error('Error saving payment amount to localStorage:', error);
+                          }
+                        }}
                         style={{ position: 'absolute', opacity: 0 }}
                       />
                     </div>
@@ -4530,7 +4651,17 @@ Live City DJ Contract Terms and Conditions:
                     {/* Full Payment Option */}
                     <div 
                       className="payment-amount-option"
-                      onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'full' }))}
+                      onClick={() => {
+                        const newData = { ...formData, paymentAmount: 'full' };
+                        setFormData(newData);
+                        updateContractFormData(newData);
+                        // Also save to localStorage as backup
+                        try {
+                          localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        } catch (error) {
+                          console.error('Error saving payment amount to localStorage:', error);
+                        }
+                      }}
                       style={{
                         border: `2px solid ${formData.paymentAmount === 'full' ? '#0070f3' : '#ddd'}`,
                         borderRadius: '12px',
@@ -4578,7 +4709,17 @@ Live City DJ Contract Terms and Conditions:
                         name="paymentAmount"
                         value="full"
                         checked={formData.paymentAmount === 'full'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                        onChange={(e) => {
+                          const newData = { ...formData, paymentAmount: e.target.value };
+                          setFormData(newData);
+                          updateContractFormData(newData);
+                          // Also save to localStorage as backup
+                          try {
+                            localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                          } catch (error) {
+                            console.error('Error saving payment amount to localStorage:', error);
+                          }
+                        }}
                         style={{ position: 'absolute', opacity: 0 }}
                       />
                     </div>

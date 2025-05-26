@@ -17,15 +17,29 @@ export default function WeddingAgendaCard({ eventType }) {
     // Listen for custom event type update events
     const handleEventTypeUpdate = () => {
       console.log('WeddingAgendaCard - Event type update detected');
-      // Force re-evaluation of the wedding event type
-      const isWedding = eventType && isWeddingEvent(eventType);
-      setShowCard(isWedding);
+      // Small delay to ensure the event type has been updated in the parent
+      setTimeout(() => {
+        const isWedding = eventType && isWeddingEvent(eventType);
+        console.log('WeddingAgendaCard - Re-evaluating after event update:', eventType, 'Is Wedding:', isWedding);
+        setShowCard(isWedding);
+      }, 50);
+    };
+    
+    const handleEventProcessed = () => {
+      console.log('WeddingAgendaCard - Event type processing complete');
+      setTimeout(() => {
+        const isWedding = eventType && isWeddingEvent(eventType);
+        console.log('WeddingAgendaCard - Final evaluation after processing:', eventType, 'Is Wedding:', isWedding);
+        setShowCard(isWedding);
+      }, 100);
     };
     
     window.addEventListener('eventTypeUpdated', handleEventTypeUpdate);
+    window.addEventListener('eventTypeProcessed', handleEventProcessed);
     
     return () => {
       window.removeEventListener('eventTypeUpdated', handleEventTypeUpdate);
+      window.removeEventListener('eventTypeProcessed', handleEventProcessed);
     };
   }, [eventType]);
   
