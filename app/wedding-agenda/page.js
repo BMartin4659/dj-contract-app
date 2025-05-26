@@ -239,9 +239,16 @@ export default function WeddingAgendaForm() {
     return total < 180 ? total + 1440 : total; // if before 3:00 AM, treat as after midnight
   }, []);
 
+  // Sync eventType state with formData.eventType
+  useEffect(() => {
+    if (formData.eventType && typeof formData.eventType === 'string' && formData.eventType !== eventType) {
+      setEventType(formData.eventType);
+    }
+  }, [formData.eventType, eventType]);
+
   // Set base price based on event type (Wedding = $1000.00)
   useEffect(() => {
-    if (eventType.toLowerCase() === 'wedding') {
+    if (eventType && typeof eventType === 'string' && eventType.toLowerCase() === 'wedding') {
       setBasePrice(1000);
     } else {
       setBasePrice(400);
@@ -288,7 +295,7 @@ export default function WeddingAgendaForm() {
     });
     
     // If event type is changing, update state
-    if (name === 'eventType') {
+    if (name === 'eventType' && typeof value === 'string') {
       setEventType(value);
     }
     

@@ -1908,59 +1908,47 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [updateContractFormData]);
 
-  // Improved Google Maps loading effect with better error handling
+  // Simplified Google Maps initialization - works with GoogleMapsLoader component
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !venueLocationRef.current) return;
     
-    // Check if API key is configured
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY') {
-      console.warn('Google Maps API key not configured. Address autocomplete will be disabled.');
-      setMapsError('Google Maps API key not configured');
-      return;
-    }
-    
-    const initializeMaps = () => {
+    // Simple check if Google Maps is already loaded and initialize
+    const initializeIfReady = () => {
       if (window.google?.maps?.places && venueLocationRef.current) {
-        console.log('Google Maps API available, initializing autocomplete...');
-        try {
-          setMapsLoaded(true);
-          setMapsError(null);
-          initializeGooglePlaces();
-          return true;
-        } catch (error) {
-          console.error('Error initializing Google Places:', error);
-          setMapsError('Error initializing address autocomplete');
-          return false;
+        // Check if already initialized to prevent duplicates
+        if (!venueLocationRef.current.dataset.autocompleteInitialized) {
+          console.log('Google Maps API detected - initializing autocomplete for contract form...');
+          try {
+            initializeGooglePlaces();
+            setMapsLoaded(true);
+            setMapsError(null);
+          } catch (error) {
+            console.error('Error initializing Google Places:', error);
+            setMapsError('Error initializing address autocomplete');
+          }
         }
       }
-      return false;
     };
     
-    // Try to initialize immediately if already loaded
-    if (initializeMaps()) return;
+    // Try immediate initialization
+    initializeIfReady();
     
-    // Set up callback for when Google Maps loads
-    window.initGoogleMapsCallback = () => {
-      console.log('Google Maps API loaded via callback!');
-      initializeMaps();
-    };
-    
-    // Check periodically if Google Maps has loaded
+    // Set up a listener for when GoogleMapsLoader finishes loading
     const checkInterval = setInterval(() => {
-      if (initializeMaps()) {
+      if (window.google?.maps?.places && !venueLocationRef.current?.dataset.autocompleteInitialized) {
+        initializeIfReady();
         clearInterval(checkInterval);
       }
     }, 500);
     
-    // Clean up after 20 seconds (increased timeout)
+    // Clean up after 10 seconds
     const timeout = setTimeout(() => {
       clearInterval(checkInterval);
       if (!window.google?.maps?.places) {
-        console.warn('Google Maps failed to load after 20 seconds - address autocomplete will be disabled');
-        setMapsError('Address autocomplete unavailable (Google Maps failed to load)');
+        console.warn('Google Maps API not available - address autocomplete disabled');
+        setMapsError('Address autocomplete unavailable');
       }
-    }, 20000);
+    }, 10000);
     
     return () => {
       clearInterval(checkInterval);
@@ -1968,210 +1956,7 @@ Live City DJ Contract Terms and Conditions:
     };
   }, [isClient, initializeGooglePlaces]);
 
-  // Add mobile viewport fix for proper display on mobile devices and Vercel
-  useEffect(() => {
-    if (isClient) {
-      // Create a style element to add CSS fix for mobile scrolling and display
-      const styleEl = document.createElement('style');
-      styleEl.textContent = `
-        html, body {
-          overflow-x: hidden !important;
-          position: relative;
-          width: 100% !important;
-          -webkit-overflow-scrolling: touch;
-          min-height: 100%;
-        }
-        body {
-          background-size: cover !important;
-          background-attachment: fixed !important;
-          background-position: center center !important;
-          height: auto !important;
-          min-height: 100vh !important;
-        }
-        .main-wrapper {
-          width: 100%;
-          min-height: 100vh;
-          padding-bottom: 50px;
-          position: relative;
-          z-index: 1;
-        }
-        @media (max-width: 767px) {
-          .main-content {
-            padding: 10px;
-            margin-bottom: 80px;
-          }
-          .form-container {
-            margin-bottom: 80px;
-          }
-          form {
-            margin-bottom: 30px;
-            padding: 1.5rem 1rem !important;
-            width: 96% !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-          .form-header h1 {
-            line-height: 1.3 !important;
-            margin-bottom: 1rem !important;
-          }
-          input, select, textarea {
-            font-size: 16px !important;
-          }
-          .payment-options {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-      `;
-      document.head.appendChild(styleEl);
-      
-      // Create and add a meta viewport tag to prevent scaling issues
-      const metaViewport = document.createElement('meta');
-      metaViewport.name = 'viewport';
-      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover';
-      
-      // Remove any existing viewport meta tags first to avoid conflicts
-      const existingMetaTags = document.querySelectorAll('meta[name="viewport"]');
-      existingMetaTags.forEach(tag => tag.remove());
-      
-      document.head.appendChild(metaViewport);
-      
-      // Add iOS-specific fixes
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // Create iOS specific style fixes
-        const iOSStyleEl = document.createElement('style');
-        iOSStyleEl.textContent = `
-          @supports (-webkit-touch-callout: none) {
-            body {
-              background-attachment: scroll !important;
-            }
-            
-            .ios-background-fix {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg');
-              background-size: cover;
-              background-position: center;
-              background-repeat: no-repeat;
-              z-index: -1;
-            }
-          }
-        `;
-        document.head.appendChild(iOSStyleEl);
-        
-        // Add iOS background fix div
-        const iOSBackgroundFix = document.createElement('div');
-        iOSBackgroundFix.className = 'ios-background-fix';
-        document.body.prepend(iOSBackgroundFix);
-      }
-      
-      return () => {
-        if (document.head.contains(styleEl)) {
-          document.head.removeChild(styleEl);
-        }
-        if (document.head.contains(metaViewport)) {
-          document.head.removeChild(metaViewport);
-        }
-      };
-    }
-  }, [isClient]);
-  
-  // Google Maps Places API initialization - Enhanced for navigation handling
-  useEffect(() => {
-    if (isClient && venueLocationRef.current) {
-      console.log('Google Maps initialization useEffect triggered - checking API status...');
-      
-      // First check if the API is loaded via the callback
-      if (window.googleMapsLoaded) {
-        console.log('Google Maps already loaded via callback - initializing Places...');
-        try {
-          initializeGooglePlaces();
-          setMapsLoaded(true);
-        } catch (error) {
-          console.error('Error initializing Google Places despite callback:', error);
-          setMapsError('Error initializing Google Places autocomplete');
-        }
-        return;
-      }
-      
-      // Fallback check if the API is loaded directly
-      if (window.google && window.google.maps && window.google.maps.places) {
-        console.log('Google Maps API detected - initializing Places...');
-        try {
-          initializeGooglePlaces();
-          setMapsLoaded(true);
-        } catch (error) {
-          console.error('Error initializing Google Places:', error);
-          setMapsError('Error initializing Google Places autocomplete');
-        }
-      } else {
-        console.log('Google Maps API not detected in initialization hook - waiting for load...');
-        // Wait for API to load with a timeout
-        let attempts = 0;
-        const checkGoogleMapsLoaded = setInterval(() => {
-          attempts++;
-          console.log(`Attempt ${attempts} to check if Google Maps API is loaded...`);
-          
-          // Check for callback flag first
-          if (window.googleMapsLoaded) {
-            clearInterval(checkGoogleMapsLoaded);
-            console.log('Google Maps loaded via callback!');
-            try {
-              initializeGooglePlaces();
-              setMapsLoaded(true);
-            } catch (error) {
-              console.error('Error initializing Google Places after callback:', error);
-              setMapsError('Error initializing Google Places autocomplete');
-            }
-            return;
-          }
-          
-          // Then check for direct API loading
-          if (window.google?.maps?.places) {
-            clearInterval(checkGoogleMapsLoaded);
-            console.log('Google Maps API loaded successfully after attempts!');
-            try {
-              initializeGooglePlaces();
-              setMapsLoaded(true);
-            } catch (error) {
-              console.error('Error initializing Google Places after waiting:', error);
-              setMapsError('Error initializing Google Places autocomplete');
-            }
-          } else if (attempts > 20) { // Increase timeout to 10 seconds
-            // After 10 seconds (20 attempts x 500ms), show error
-            clearInterval(checkGoogleMapsLoaded);
-            
-            // Log available Google object properties to help debug
-            if (window.google) {
-              console.log('Google object exists but not complete. Available properties:', Object.keys(window.google));
-              if (window.google.maps) {
-                console.log('Maps object exists. Available properties:', Object.keys(window.google.maps));
-              }
-            }
-            
-            const errorMsg = 'Google Maps API could not be loaded. Check browser console for details.';
-            setMapsError(errorMsg);
-            console.error(errorMsg);
-            
-            // Attempt to log API key details (without revealing the full key)
-            try {
-              const apiKeyPartial = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(0, 5) + '...' + 
-                                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.length - 4);
-              console.log(`API key being used (partial): ${apiKeyPartial}`);
-            } catch (e) {
-              console.error('Could not log API key info:', e);
-            }
-          }
-        }, 500);
-        
-        return () => clearInterval(checkGoogleMapsLoaded);
-      }
-    }
-  }, [isClient, initializeGooglePlaces]); // Added initializeGooglePlaces dependency
-  
-  // Additional useEffect to handle navigation back from wedding agenda form
+  // Handle navigation back from wedding agenda form
   useEffect(() => {
     if (isClient && venueLocationRef.current && window.google?.maps?.places) {
       // Check if we need to reinitialize autocomplete after navigation
@@ -2190,7 +1975,7 @@ Live City DJ Contract Terms and Conditions:
         }
       }
     }
-     }, [isClient, initializeGooglePlaces, formData.venueLocation]); // Include venueLocation to trigger on form data changes
+  }, [isClient, initializeGooglePlaces, formData.venueLocation]);
 
   // Cleanup effect for Google Maps autocomplete
   useEffect(() => {

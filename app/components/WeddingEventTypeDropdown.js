@@ -41,13 +41,9 @@ export default function WeddingEventTypeDropdown({
     const newValue = e.target.value;
     setSelected(newValue);
     
-    // Support callback pattern
+    // Support callback pattern - always pass the value, not the event
     if (onChange) {
-      if (typeof onChange === 'function' && onChange.length >= 1) {
-        onChange(e);
-      } else {
-        onChange(newValue);
-      }
+      onChange(newValue);
     }
 
     // All options are wedding-related, so always set to wedding price

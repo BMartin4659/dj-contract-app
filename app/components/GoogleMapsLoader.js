@@ -26,12 +26,21 @@ export default function GoogleMapsLoader() {
       window.googleMapsLoaded = true;
       setLoading(false);
       setError(null);
+      
+      // Trigger initialization for any waiting components
+      setTimeout(() => {
+        initializeAddressInputs();
+      }, 100);
     };
     
     // If already loaded, don't load again
     if (window.google?.maps?.places) {
       console.log('GoogleMapsLoader: Maps API already loaded');
+      window.googleMapsLoaded = true;
       setLoading(false);
+      setTimeout(() => {
+        initializeAddressInputs();
+      }, 100);
       return;
     }
 
@@ -45,12 +54,16 @@ export default function GoogleMapsLoader() {
         if (window.google?.maps?.places) {
           console.log('GoogleMapsLoader: Maps API detected as loaded');
           clearInterval(checkInterval);
+          window.googleMapsLoaded = true;
           setLoading(false);
           setError(null);
+          setTimeout(() => {
+            initializeAddressInputs();
+          }, 100);
         }
       }, 100);
       
-      // Timeout after 10 seconds
+      // Timeout after 15 seconds
       setTimeout(() => {
         clearInterval(checkInterval);
         if (!window.google?.maps?.places) {
@@ -67,7 +80,7 @@ export default function GoogleMapsLoader() {
             setLoading(false);
           }
         }
-      }, 10000);
+      }, 15000);
       
       return () => clearInterval(checkInterval);
     } else {
@@ -112,14 +125,16 @@ export default function GoogleMapsLoader() {
     };
   }, [retryCount]);
 
-  // Initialize address input fields with autocomplete when Maps is loaded
-  useEffect(() => {
-    if (typeof window === 'undefined' || loading || error) return;
+  // Function to initialize address inputs with autocomplete
+  const initializeAddressInputs = () => {
+    if (typeof window === 'undefined' || !window.google?.maps?.places) return;
     
-    // Wait for DOM to be ready
+    // Wait a bit for DOM to be ready
     setTimeout(() => {
-      // Find all address inputs
-      const addressInputs = document.querySelectorAll('input[name="venueLocation"], input[placeholder*="address"], input[placeholder*="Address"]');
+      // Find all address inputs - more specific selectors
+      const addressInputs = document.querySelectorAll(
+        'input[name="venueLocation"], input[placeholder*="address"], input[placeholder*="Address"], input[placeholder*="venue"], input[placeholder*="location"]'
+      );
       
       if (addressInputs.length > 0) {
         console.log('GoogleMapsLoader: Found address inputs to initialize:', addressInputs.length);
@@ -127,12 +142,16 @@ export default function GoogleMapsLoader() {
         addressInputs.forEach((input, index) => {
           try {
             // Skip if already initialized
-            if (input.dataset.autocompleteInitialized) return;
+            if (input.dataset.autocompleteInitialized) {
+              console.log(`GoogleMapsLoader: Input ${index + 1} already initialized, skipping`);
+              return;
+            }
             
             // Initialize autocomplete
             const autocomplete = new google.maps.places.Autocomplete(input, {
               types: ['address'],
-              componentRestrictions: { country: 'us' }
+              componentRestrictions: { country: 'us' },
+              fields: ['formatted_address', 'geometry', 'name']
             });
             
             // Mark as initialized
@@ -147,6 +166,7 @@ export default function GoogleMapsLoader() {
                 // Trigger change event for form handling
                 const event = new Event('change', { bubbles: true });
                 input.dispatchEvent(event);
+                console.log('GoogleMapsLoader: Place selected and change event dispatched');
               }
             });
             
@@ -157,10 +177,36 @@ export default function GoogleMapsLoader() {
       } else {
         console.log('GoogleMapsLoader: No address inputs found to initialize');
       }
-    }, 1000); // Wait 1s for the DOM to be fully ready
+    }, 500); // Wait 500ms for the DOM to be fully ready
+  };
+
+  // Re-initialize inputs when Maps loads
+  useEffect(() => {
+    if (!loading && !error && window.google?.maps?.places) {
+      initializeAddressInputs();
+      
+      // Set up a periodic check for new inputs (for dynamic content)
+      const periodicCheck = setInterval(() => {
+        const uninitializedInputs = document.querySelectorAll(
+          'input[name="venueLocation"]:not([data-autocomplete-initialized]), input[placeholder*="address"]:not([data-autocomplete-initialized])'
+        );
+        
+        if (uninitializedInputs.length > 0) {
+          console.log('GoogleMapsLoader: Found new uninitialized inputs, initializing...');
+          initializeAddressInputs();
+        }
+      }, 2000);
+      
+      // Clean up after 30 seconds
+      setTimeout(() => {
+        clearInterval(periodicCheck);
+      }, 30000);
+      
+      return () => clearInterval(periodicCheck);
+    }
   }, [loading, error]);
 
-  // This component doesn't render anything visible, but we can optionally show loading/error states
+  // This component doesn't render anything visible
   if (error) {
     console.warn('GoogleMapsLoader error:', error);
   }
