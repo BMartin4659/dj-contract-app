@@ -34,6 +34,7 @@ import WeddingEventTypeDropdown from '../components/WeddingEventTypeDropdown';
 import ClientOnly from '../components/ClientOnly';
 import SuppressHydration from '../components/SuppressHydration';
 import { useRouter } from 'next/navigation';
+import { useFormContext } from '../contexts/FormContext';
 
 // SectionHeader component for consistent styling
 const SectionHeader = ({ icon, label, color = 'text-blue-500' }) => (
@@ -56,9 +57,14 @@ const animationStyles = `
 `;
 
 export default function WeddingAgendaForm() {
+  // Get form context
+  const { contractFormData, weddingAgendaData, updateWeddingAgendaData, updateContractFormData, isClient: contextIsClient } = useFormContext();
+  
   const [eventType, setEventType] = useState('Wedding');
   const [basePrice, setBasePrice] = useState(1000);
-  const [formData, setFormData] = useState({
+  
+  // Initial form data structure
+  const initialFormData = {
     eventType: 'Wedding',
     brideName: '',
     groomName: '',
@@ -103,6 +109,37 @@ export default function WeddingAgendaForm() {
     lastSongArtist: '',
     // Additional details
     specialInstructions: '',
+  };
+  
+  // Initialize form data with context data if available, and pre-fill from contract form
+  const [formData, setFormData] = useState(() => {
+    const mergedData = { ...initialFormData, ...weddingAgendaData };
+    
+    // Pre-fill from contract form data if available
+    if (contractFormData.clientName && !mergedData.brideName && !mergedData.groomName) {
+      // Try to split client name into bride/groom names
+      const nameParts = contractFormData.clientName.split(' ');
+      if (nameParts.length >= 2) {
+        mergedData.brideName = nameParts[0];
+        mergedData.groomName = nameParts.slice(1).join(' ');
+      } else {
+        mergedData.brideName = contractFormData.clientName;
+      }
+    }
+    
+    if (contractFormData.email && !mergedData.email) {
+      mergedData.email = contractFormData.email;
+    }
+    
+    if (contractFormData.contactPhone && !mergedData.phone) {
+      mergedData.phone = contractFormData.contactPhone;
+    }
+    
+    if (contractFormData.eventDate && !mergedData.weddingDate) {
+      mergedData.weddingDate = contractFormData.eventDate;
+    }
+    
+    return mergedData;
   });
   const [errors, setErrors] = useState({});
   const formRef = useRef();
@@ -175,10 +212,56 @@ export default function WeddingAgendaForm() {
       }
     };
   }, []);
+  
+  // Sync with context data when returning from contract form
+  useEffect(() => {
+    if (contextIsClient && Object.keys(contractFormData).length > 0) {
+      console.log('Syncing wedding agenda with updated contract data:', contractFormData);
+      setFormData(prev => {
+        const updatedData = { ...prev };
+        
+        // Update contact info if changed in contract form
+        if (contractFormData.email && contractFormData.email !== prev.email) {
+          updatedData.email = contractFormData.email;
+        }
+        
+        if (contractFormData.contactPhone && contractFormData.contactPhone !== prev.phone) {
+          updatedData.phone = contractFormData.contactPhone;
+        }
+        
+        if (contractFormData.eventDate && contractFormData.eventDate !== prev.weddingDate) {
+          updatedData.weddingDate = contractFormData.eventDate;
+        }
+        
+        // Update names if they were changed in contract form and we don't have them yet
+        if (contractFormData.clientName && (!prev.brideName || !prev.groomName)) {
+          const nameParts = contractFormData.clientName.split(' ');
+          if (nameParts.length >= 2) {
+            if (!prev.brideName) updatedData.brideName = nameParts[0];
+            if (!prev.groomName) updatedData.groomName = nameParts.slice(1).join(' ');
+          } else if (!prev.brideName) {
+            updatedData.brideName = contractFormData.clientName;
+          }
+        }
+        
+        // Save updated data to context
+        updateWeddingAgendaData(updatedData);
+        
+        return updatedData;
+      });
+    }
+  }, [contextIsClient, contractFormData, updateWeddingAgendaData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      
+      // Save to context for persistence
+      updateWeddingAgendaData(newData);
+      
+      return newData;
+    });
     
     // If event type is changing, update state
     if (name === 'eventType') {
@@ -194,17 +277,27 @@ export default function WeddingAgendaForm() {
     setFormData(prev => {
       const updatedArray = [...prev[group]];
       updatedArray[index] = value;
-      return { ...prev, [group]: updatedArray };
+      const newData = { ...prev, [group]: updatedArray };
+      
+      // Save to context for persistence
+      updateWeddingAgendaData(newData);
+      
+      return newData;
     });
   };
 
   // Add a new field to bridesmaids or groomsmen
   const addPartyMember = (group) => {
     setFormData(prev => {
-      return { 
+      const newData = { 
         ...prev, 
         [group]: [...prev[group], ''] 
       };
+      
+      // Save to context for persistence
+      updateWeddingAgendaData(newData);
+      
+      return newData;
     });
   };
 
@@ -215,59 +308,49 @@ export default function WeddingAgendaForm() {
       
       const updatedArray = [...prev[group]];
       updatedArray.splice(index, 1);
-      return { 
+      const newData = { 
         ...prev, 
         [group]: updatedArray 
       };
+      
+      // Save to context for persistence
+      updateWeddingAgendaData(newData);
+      
+      return newData;
     });
   };
 
   const validate = () => {
     const newErrors = {};
+    
+    // Required fields - only the most essential ones
     if (!formData.brideName) newErrors.brideName = 'Required';
     if (!formData.groomName) newErrors.groomName = 'Required';
     if (!formData.weddingDate) newErrors.weddingDate = 'Required';
+    
+    // Contact info validation - make phone optional
     if (!formData.email) newErrors.email = 'Required';
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
-    if (!formData.phone) newErrors.phone = 'Required';
-    if (!formData.entranceMusic) newErrors.entranceMusic = 'Required';
+    // Phone is now optional - removed the requirement
     
-    // Require at least one timeline event with time
-    if (!formData.cocktailHourTime && 
-        !formData.grandEntranceTime && 
-        !formData.firstDanceTime && 
-        !formData.dinnerTime && 
-        !formData.toastsTime && 
-        !formData.parentDancesTime && 
-        !formData.cakeCuttingTime && 
-        !formData.openDancingTime) {
-      newErrors.timeline = 'At least one timeline event is required';
-    }
+    // Make entrance music optional
+    if (formData.entranceMusic === undefined) formData.entranceMusic = '';
     
-    // Check for overlapping times
-    const timeFields = [
-      {name: 'cocktailHourTime', value: formData.cocktailHourTime},
-      {name: 'grandEntranceTime', value: formData.grandEntranceTime},
-      {name: 'firstDanceTime', value: formData.firstDanceTime},
-      {name: 'dinnerTime', value: formData.dinnerTime},
-      {name: 'toastsTime', value: formData.toastsTime},
-      {name: 'parentDancesTime', value: formData.parentDancesTime},
-      {name: 'cakeCuttingTime', value: formData.cakeCuttingTime},
-      {name: 'openDancingTime', value: formData.openDancingTime},
-      {name: 'lastDanceTime', value: formData.lastDanceTime}
-    ].filter(field => field.value); // Only include fields with values
+    // Very flexible timeline validation - just check that at least one timeline element is specified
+    const hasAnyTimelineEvent = formData.cocktailHourTime || 
+                               formData.grandEntranceTime || 
+                               formData.firstDanceTime || 
+                               formData.dinnerTime || 
+                               formData.toastsTime ||
+                               formData.parentDancesTime ||
+                               formData.cakeCuttingTime ||
+                               formData.openDancingTime ||
+                               formData.lastDanceTime;
     
-    // Sort times chronologically
-    timeFields.sort((a, b) => {
-      return convertToMinutes(a.value) - convertToMinutes(b.value);
-    });
-    
-    // Check for duplicate times
-    for (let i = 0; i < timeFields.length - 1; i++) {
-      if (timeFields[i].value === timeFields[i + 1].value) {
-        const fieldName = timeFields[i + 1].name.replace('Time', '');
-        newErrors[timeFields[i + 1].name] = `${fieldName} cannot be at the same time as another event`;
-      }
+    // Make timeline optional too - only warn if completely empty
+    if (!hasAnyTimelineEvent) {
+      // Don't make this a hard error, just a warning
+      console.log('Warning: No timeline events specified, but allowing submission');
     }
     
     return newErrors;

@@ -10,20 +10,48 @@ export default function WeddingAgendaCard({ eventType }) {
   const router = useRouter();
   const [showCard, setShowCard] = useState(false);
   
+  // Add more comprehensive logging to debug issues
   useEffect(() => {
-    // Only evaluate the condition on the client side
-    const isWedding = eventType && isWeddingEvent(eventType);
-    console.log('WeddingAgendaCard - Event Type:', eventType, 'Is Wedding:', isWedding, 'Wedding Types:', WEDDING_EVENT_TYPES);
-    setShowCard(isWedding);
+    console.log('WeddingAgendaCard - Initial render with event type:', eventType);
+    
+    // Listen for custom event type update events
+    const handleEventTypeUpdate = () => {
+      console.log('WeddingAgendaCard - Event type update detected');
+      // Force re-evaluation of the wedding event type
+      const isWedding = eventType && isWeddingEvent(eventType);
+      setShowCard(isWedding);
+    };
+    
+    window.addEventListener('eventTypeUpdated', handleEventTypeUpdate);
+    
+    return () => {
+      window.removeEventListener('eventTypeUpdated', handleEventTypeUpdate);
+    };
   }, [eventType]);
   
-  // Double safety check - if not a wedding event, don't render anything
+  useEffect(() => {
+    // Only evaluate the condition on the client side and debounce updates
+    const isWedding = eventType && isWeddingEvent(eventType);
+    console.log('WeddingAgendaCard - Event Type:', eventType, 'Is Wedding:', isWedding, 'Wedding Types:', WEDDING_EVENT_TYPES);
+    
+    // Use a small timeout to ensure this runs after event type changes are fully processed
+    const timer = setTimeout(() => {
+      setShowCard(isWedding);
+      console.log('WeddingAgendaCard - Card visibility set to:', isWedding);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [eventType]);
+  
+  // Improve the safety checks and make them clearer
   if (!eventType) {
     console.log('WeddingAgendaCard - No event type provided');
     return null;
   }
   
-  if (!isWeddingEvent(eventType)) {
+  // First check if the event is a wedding type before rendering anything
+  const isWedding = isWeddingEvent(eventType);
+  if (!isWedding) {
     console.log('WeddingAgendaCard - Not a wedding event:', eventType);
     return null;
   }

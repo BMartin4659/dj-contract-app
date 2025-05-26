@@ -110,13 +110,14 @@ export default function EventTypeDropdown({
       }
       
       // Set initial price note and agenda alert on mount
+      const price = getBasePrice(effectiveValue);
       if (isWeddingEvent(effectiveValue)) {
         console.log('EventTypeDropdown - Detected wedding event on mount:', effectiveValue);
-        setPriceNote('💰 Base price updated to $1000 for weddings');
+        setPriceNote(`💰 Base price updated to $${price} for weddings`);
         if (showWeddingAgendaLink) setShowAgendaAlert(true);
       } else {
-        console.log('EventTypeDropdown - Detected standard event on mount:', effectiveValue);
-        setPriceNote('💰 Base price set to $400 for standard events');
+        console.log('EventTypeDropdown - Detected event on mount:', effectiveValue, 'Price:', price);
+        setPriceNote(`💰 Base price set to $${price} for this event`);
         setShowAgendaAlert(false); // Explicitly set to false for non-wedding events
       }
     }
@@ -139,30 +140,56 @@ export default function EventTypeDropdown({
   const handleChange = (e) => {
     const newValue = e.target.value;
     setSelected(newValue);
+    console.log('EventTypeDropdown - Value changed to:', newValue);
+
+    // Dispatch a custom event to notify other components
+    const eventTypeChanged = new Event('eventTypeUpdated');
+    window.dispatchEvent(eventTypeChanged);
 
     if (effectiveOnChange) {
-      if (typeof effectiveOnChange === 'function' && effectiveOnChange.length >= 1) {
-        effectiveOnChange(e);
-      } else {
-        effectiveOnChange(newValue);
+      // Add a small delay to ensure state updates happen in the correct order
+      setTimeout(() => {
+        if (typeof effectiveOnChange === 'function' && effectiveOnChange.length >= 1) {
+          console.log('EventTypeDropdown - Calling onChange with event');
+          effectiveOnChange(e);
+        } else {
+          console.log('EventTypeDropdown - Calling onChange with value');
+          effectiveOnChange(newValue);
+        }
+      }, 0);
+    }
+
+    // Add a delay to ensure that the price updates after the event type change is processed
+    setTimeout(() => {
+      const price = getBasePrice(newValue);
+      if (effectiveOnPriceUpdate) {
+        console.log('EventTypeDropdown - Updating price to:', price);
+        effectiveOnPriceUpdate(price);
       }
-    }
-
-    const price = getBasePrice(newValue);
-    if (effectiveOnPriceUpdate) effectiveOnPriceUpdate(price);
-
-    const isWedding = isWeddingEvent(newValue);
-    console.log('EventTypeDropdown - Event type changed:', newValue, 'Is wedding:', isWedding);
-    
-    if (isWedding) {
-      console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
-      setPriceNote('💰 Base price updated to $1000 for weddings');
-      if (showWeddingAgendaLink) setShowAgendaAlert(true);
-    } else {
-      console.log('EventTypeDropdown - Setting standard pricing and hiding agenda alert');
-      setPriceNote('💰 Base price set to $400 for standard events');
-      setShowAgendaAlert(false); // Explicitly set to false for non-wedding events
-    }
+  
+      const isWedding = isWeddingEvent(newValue);
+      console.log('EventTypeDropdown - Event type changed:', newValue, 'Is wedding:', isWedding);
+      
+      if (isWedding) {
+        console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
+        setPriceNote(`💰 Base price updated to $${price} for weddings`);
+        if (showWeddingAgendaLink) {
+          setShowAgendaAlert(true);
+          console.log('EventTypeDropdown - Wedding agenda alert shown');
+        }
+      } else {
+        console.log('EventTypeDropdown - Setting pricing and hiding agenda alert. Price:', price);
+        setPriceNote(`💰 Base price set to $${price} for this event`);
+        setShowAgendaAlert(false); // Explicitly set to false for non-wedding events
+      }
+      
+      // Dispatch a second event after all processing is complete
+      setTimeout(() => {
+        const eventProcessingComplete = new Event('eventTypeProcessed');
+        window.dispatchEvent(eventProcessingComplete);
+        console.log('EventTypeDropdown - Event type processing complete');
+      }, 10);
+    }, 50);
   };
 
   const handleAgendaLinkClick = (e) => {

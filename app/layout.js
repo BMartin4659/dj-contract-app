@@ -2,6 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import dynamic from "next/dynamic";
+import { Inter } from 'next/font/google';
+import GoogleMapsLoader from './components/GoogleMapsLoader';
+import ClientFormProvider from './components/ClientFormProvider';
 
 // Dynamically import client-side only components with no SSR
 const HydrationSuppressor = dynamic(() => import('./components/HydrationSuppressor'), { ssr: false });
@@ -16,6 +19,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: "Live City DJ Contract",
@@ -71,7 +76,7 @@ export default function RootLayout({ children }) {
         }} />
       </head>
       <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.className} antialiased`}
         suppressHydrationWarning={true}
         style={{ 
           overflowX: "hidden !important",
@@ -88,12 +93,15 @@ export default function RootLayout({ children }) {
         {/* Add our DocumentHead component for client-side cleanup */}
         <DocumentHead />
         
-        {/* Wrap the children in our HydrationSuppressor */}
-        <div suppressHydrationWarning={true}>
-          <HydrationSuppressor>
-            {children}
-          </HydrationSuppressor>
-        </div>
+        {/* Wrap the children in ClientFormProvider first, then HydrationSuppressor */}
+        <ClientFormProvider>
+          <div suppressHydrationWarning={true}>
+            <HydrationSuppressor>
+              <GoogleMapsLoader />
+              {children}
+            </HydrationSuppressor>
+          </div>
+        </ClientFormProvider>
 
         {/* Google Maps Places API for address autocomplete */}
         <Script id="google-maps-callback">

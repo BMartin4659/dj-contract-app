@@ -154,6 +154,22 @@ function PaymentConfirmationContent() {
           </div>
         </div>
 
+        {/* Payment Button - Made more prominent */}
+        <div className="mt-8 mx-4">
+          <h3 className="text-xs uppercase text-gray-500 font-semibold tracking-wider mb-3 text-center">
+            COMPLETE YOUR BOOKING
+          </h3>
+          <Link href={`/payment?bookingId=${bookingData?.id}`}>
+            <button 
+              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-colors text-lg flex items-center justify-center"
+              style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
+            >
+              <span className="mr-2">💳</span> Proceed to Payment
+            </button>
+          </Link>
+          <p className="text-xs text-center text-gray-500 mt-2">Secure payment processing by Stripe</p>
+        </div>
+
         {/* Reservation Details */}
         <div className="mt-6 mx-4">
           <h3 className="text-xs uppercase text-gray-500 font-semibold tracking-wider mb-3">

@@ -100,6 +100,9 @@ import SuppressHydration from './components/SuppressHydration';
 // Import the event utilities
 import { isWeddingEvent } from './utils/eventUtils';
 
+// Import the form context
+import { useFormContext } from './contexts/FormContext';
+
 // Dynamic import for client-only component with no SSR
 import dynamic from 'next/dynamic';
 
@@ -786,15 +789,42 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
   }, []);
   
   // Handle payment button click
-  const handlePaymentClick = () => {
+  const handlePaymentClick = async () => {
     if (formData.paymentMethod === 'Stripe') {
-      // For Stripe, use the stored URL from localStorage
-      const stripeUrl = localStorage.getItem('stripeCheckoutUrl');
-      if (stripeUrl) {
-        window.location.href = stripeUrl;
-      } else {
-        // Fallback if URL is not in localStorage
-        alert('Stripe checkout URL not found. Please contact support.');
+      try {
+        // Create Stripe checkout session
+        const response = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contractDetails: {
+              clientName: formData.clientName,
+              email: formData.email,
+              eventType: formData.eventType,
+              eventDate: formData.eventDate,
+              venueName: formData.venueName,
+              venueLocation: formData.venueLocation,
+              totalAmount: formData.paymentAmount === 'deposit' ? (formData.totalAmount / 2) : formData.totalAmount,
+              bookingId: formData.bookingId
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create checkout session');
+        }
+
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error) {
+        console.error('Error creating Stripe checkout:', error);
+        alert('Unable to process Stripe payment. Please try again or contact support.');
       }
     } else if (paymentDetails.url) {
       // For other payment methods, use their direct URLs
@@ -984,7 +1014,7 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
               </div>
             </div>
             
-            {paymentDetails.url && (
+            {(paymentDetails.url || formData.paymentMethod === 'Stripe') && (
               <button
                 onClick={handlePaymentClick}
                 style={{
@@ -1154,12 +1184,15 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
 export default function DJContractForm() {
   const router = useRouter();
   
+  // Get form context (now returns default values if not available)
+  const { contractFormData, updateContractFormData, isClient: contextIsClient } = useFormContext();
+  
   // Initial form data with blank values
   const initialFormData = {
     clientName: '',
     email: '',
     contactPhone: '',
-    eventType: 'Wedding',
+    eventType: '',
     guestCount: '100',
     venueName: '',
     venueLocation: '',
@@ -1251,6 +1284,104 @@ Live City DJ Contract Terms and Conditions:
   const [submitError, setSubmitError] = useState(null);
   const [basePrice, setBasePrice] = useState(400); // Added setBasePrice state
   
+  // Debug function to manually reload form data
+  const debugReloadFormData = () => {
+    console.log('Manual reload triggered...');
+    try {
+      const savedData = localStorage.getItem('djContractFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        console.log('Manual reload found data:', parsedData);
+        
+        setFormData(prev => {
+          const mergedData = { ...prev, ...parsedData };
+          console.log('Manual reload merged data:', mergedData);
+          return mergedData;
+        });
+        
+        if (parsedData.eventType) {
+          const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+          setBasePrice(newBasePrice);
+        }
+      } else {
+        console.log('Manual reload: No data found in localStorage');
+      }
+    } catch (error) {
+      console.error('Manual reload error:', error);
+    }
+  };
+  
+  // Helper function to get base price for event type
+  const getBasePriceForEventType = useCallback((eventType) => {
+    if (isWeddingEvent(eventType)) {
+      return 1000;
+    }
+    
+    // Specific event types that should be $500
+    const fiveHundredDollarEvents = [
+      'Company Holiday Party',
+      'Engagement Party', 
+      'Bachelor Party',
+      'Bachelorette Party',
+      'Bachelor/Bachelorette Party',
+      'Prom',
+      'Homecoming'
+    ];
+    
+    if (fiveHundredDollarEvents.includes(eventType)) {
+      return 500;
+    }
+    
+    // Default for other events
+    return 400;
+  }, []);
+  
+  // Handler for event type changes
+  const handleEventTypeChange = useCallback((e) => {
+    const newEventType = e.target ? e.target.value : e;
+    console.log('Event type changed to:', newEventType);
+    
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        eventType: newEventType
+      };
+      
+      // Save to context for persistence
+      updateContractFormData(newData);
+      
+      return newData;
+    });
+    
+    // Update base price based on event type
+    const newBasePrice = getBasePriceForEventType(newEventType);
+    setBasePrice(newBasePrice);
+    console.log('Base price updated to:', newBasePrice, 'for event type:', newEventType);
+  }, [getBasePriceForEventType, updateContractFormData]);
+
+  // Handler for base price updates
+  const handleBasePriceUpdate = useCallback((price) => {
+    console.log('Base price update requested:', price);
+    setBasePrice(price);
+  }, []);
+  
+  // Memoized service card style function for better performance
+  const getServiceCardStyle = useCallback((serviceName) => {
+    const isSelected = formData[serviceName];
+    return {
+      backgroundColor: isSelected ? '#e6f3ff' : 'white',
+      border: isSelected ? '2px solid #0070f3' : '1px solid #ddd',
+      borderRadius: '12px',
+      padding: 'clamp(16px, 3vw, 20px)',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+      transform: isSelected ? 'translateY(-2px)' : 'none',
+      userSelect: 'none',
+      WebkitTapHighlightColor: 'transparent'
+    };
+  }, [formData.lighting, formData.photography, formData.videoVisuals]);
+  
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
     if (!t) return 0;
@@ -1336,10 +1467,193 @@ Live City DJ Contract Terms and Conditions:
     }));
   };
   
-  // Set isClient to true when running on client side
+  // Set isClient to true when running on client side and force reload context data
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    
+    // Force reload context data when component mounts (user navigates back)
+    if (typeof window !== 'undefined') {
+      console.log('Component mounted, checking for saved form data...');
+      
+      // Small delay to ensure context is ready
+      setTimeout(() => {
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Found saved contract data on mount:', parsedData);
+            
+            // Force update the form data
+            setFormData(prev => {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Force updating form data on mount:', mergedData);
+              return mergedData;
+            });
+            
+            // Update base price if needed
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
+              console.log('Force updating base price on mount:', newBasePrice);
+            }
+          }
+        } catch (error) {
+          console.error('Error force loading data on mount:', error);
+        }
+      }, 100);
+    }
+  }, [getBasePriceForEventType]);
+  
+  // Listen for page visibility changes to reload data when user returns
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isClient) {
+        console.log('Page became visible, reloading form data...');
+        
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Reloading contract data on visibility change:', parsedData);
+            
+            setFormData(prev => {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Updated form data on visibility change:', mergedData);
+              return mergedData;
+            });
+            
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
+            }
+          }
+        } catch (error) {
+          console.error('Error reloading data on visibility change:', error);
+        }
+      }
+    };
+    
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Listen for window focus to reload data when user navigates back
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (isClient) {
+        console.log('Window focused, reloading form data...');
+        
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Reloading contract data on window focus:', parsedData);
+            
+            setFormData(prev => {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Updated form data on window focus:', mergedData);
+              return mergedData;
+            });
+            
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
+            }
+          }
+        } catch (error) {
+          console.error('Error reloading data on window focus:', error);
+        }
+      }
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleWindowFocus);
+      
+      return () => {
+        window.removeEventListener('focus', handleWindowFocus);
+      };
+    }
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Listen for localStorage changes from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'djContractFormData' && e.newValue && isClient) {
+        console.log('localStorage changed from another tab, reloading form data...');
+        
+        try {
+          const parsedData = JSON.parse(e.newValue);
+          console.log('Reloading contract data from storage event:', parsedData);
+          
+          setFormData(prev => {
+            const mergedData = { ...prev, ...parsedData };
+            console.log('Updated form data from storage event:', mergedData);
+            return mergedData;
+          });
+          
+          if (parsedData.eventType) {
+            const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+            setBasePrice(newBasePrice);
+          }
+        } catch (error) {
+          console.error('Error reloading data from storage event:', error);
+        }
+      }
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Sync with context data on mount and when context data changes
+  useEffect(() => {
+    console.log('Context sync effect triggered:', { contextIsClient, contractFormData });
+    
+    if (contextIsClient) {
+      if (contractFormData && Object.keys(contractFormData).length > 0) {
+        console.log('Syncing contract form with context data:', contractFormData);
+        setFormData(prev => {
+          const mergedData = { ...prev, ...contractFormData };
+          console.log('Previous form data:', prev);
+          console.log('Context data:', contractFormData);
+          console.log('Merged form data:', mergedData);
+          return mergedData;
+        });
+        
+        // Update base price if event type is loaded from context
+        if (contractFormData.eventType) {
+          const newBasePrice = getBasePriceForEventType(contractFormData.eventType);
+          setBasePrice(newBasePrice);
+          console.log('Base price updated from context to:', newBasePrice, 'for event type:', contractFormData.eventType);
+        }
+      } else {
+        console.log('No contract form data in context or context is empty');
+      }
+    } else {
+      console.log('Context not yet client-side ready');
+    }
+  }, [contextIsClient, contractFormData, getBasePriceForEventType]);
+  
+  // Update base price when event type changes
+  useEffect(() => {
+    if (formData.eventType) {
+      const newBasePrice = getBasePriceForEventType(formData.eventType);
+      if (newBasePrice !== basePrice) {
+        setBasePrice(newBasePrice);
+        console.log('Base price updated to:', newBasePrice, 'for event type:', formData.eventType);
+      }
+    }
+  }, [formData.eventType, basePrice, getBasePriceForEventType]);
 
   // Add this to manually load Google Maps API only if needed
   useEffect(() => {
@@ -1695,6 +2009,8 @@ Live City DJ Contract Terms and Conditions:
     }
     
     setFormData((prev) => {
+      let newData;
+      
       // Special handler for musicPreferences checkboxes
       if (name.startsWith('music_')) {
         const genreId = name.replace('music_', '');
@@ -1710,19 +2026,24 @@ Live City DJ Contract Terms and Conditions:
           updatedPreferences = updatedPreferences.filter(id => id !== genreId);
         }
         
-        return {
+        newData = {
           ...prev,
           musicPreferences: updatedPreferences
         };
+      } else {
+        // Default handler for other form fields
+        newData = {
+          ...prev,
+          [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
+        };
       }
       
-      // Default handler for other form fields
-      const newData = {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
-      };
-      
       console.log(`Updated formData ${name}:`, newData[name]);
+      console.log('Full form data being saved to context:', newData);
+      
+      // Save to context for persistence
+      updateContractFormData(newData);
+      
       return newData;
     });
   };
@@ -2218,7 +2539,7 @@ Live City DJ Contract Terms and Conditions:
         gap: '0.5rem',
       }}>
         <span style={{ flex: '1 1 auto' }}>🎶 Base Package</span>
-        <span style={{ whiteSpace: 'nowrap' }}>${SERVICES.BASE}</span>
+        <span style={{ whiteSpace: 'nowrap' }}>${basePrice}</span>
       </div>
       {formData.lighting && <li>💡 Lighting: ${SERVICES.LIGHTING}</li>}
       {formData.photography && <li>📸 Event Photography: ${SERVICES.PHOTOGRAPHY}</li>}
@@ -2494,25 +2815,7 @@ Live City DJ Contract Terms and Conditions:
     };
   }, [formData.paymentMethod, isChangingPayment]);
 
-  // Create a service card style generator
-  const getServiceCardStyle = useCallback((name) => {
-    const isSelected = formData[name] === true;
-    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
-    
-    return {
-      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
-      borderRadius: '12px',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      cursor: 'pointer',
-      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
-      transition: 'all 0.2s ease',
-      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-      position: 'relative',
-      overflow: 'hidden'
-    };
-  }, [formData]);
+
 
   // Memoize common styles to avoid recreation on each render
   const paymentIconStyle = useMemo(() => ({ 
@@ -3218,6 +3521,42 @@ Live City DJ Contract Terms and Conditions:
                     }}>📝</span>
                     <span>EVENT CONTRACT</span>
                   </h1>
+                  
+                  {/* Debug section - temporary for testing */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#fef3c7',
+                      borderRadius: '8px',
+                      border: '1px solid #f59e0b'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={debugReloadFormData}
+                        style={{
+                          backgroundColor: '#f59e0b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 16px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          marginBottom: '10px'
+                        }}
+                      >
+                        🔄 Debug: Reload Form Data
+                      </button>
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>
+                        <div>Client Name: {formData.clientName || 'empty'}</div>
+                        <div>Email: {formData.email || 'empty'}</div>
+                        <div>Event Type: {formData.eventType || 'empty'}</div>
+                        <div>Context Client: {contextIsClient ? 'true' : 'false'}</div>
+                        <div>Context Data Keys: {Object.keys(contractFormData).length}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Spacer div between email address and client name */}
@@ -3305,12 +3644,8 @@ Live City DJ Contract Terms and Conditions:
                     </label>
                     <EventTypeDropdown
                       value={formData.eventType}
-                      onChange={(value) => {
-                        setFormData(prev => ({ ...prev, eventType: value }));
-                      }}
-                      onPriceUpdate={(price) => {
-                        setBasePrice(price);
-                      }}
+                      onChange={handleEventTypeChange}
+                      onPriceUpdate={handleBasePriceUpdate}
                       showWeddingAgendaLink={true}
                     />
                   </div>
@@ -3411,6 +3746,7 @@ Live City DJ Contract Terms and Conditions:
                     
                     {/* Replace CustomDatePicker with ReactDatePickerField */}
                     <ReactDatePickerField
+                      key={`date-picker-${formData.eventType}`}
                       selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
                       onChange={(date) => {
                         handleChange({
@@ -3529,12 +3865,16 @@ Live City DJ Contract Terms and Conditions:
                 </div>
 
                 {/* Redesigned Card-Style Additional Services */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '20px',
-                  marginBottom: '2rem'
-                }} className="service-options">
+                <div 
+                  key={`service-options-${formData.eventType}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '2rem'
+                  }} 
+                  className="service-options"
+                >
                   {[
                     {
                       name: 'lighting',
@@ -3565,7 +3905,9 @@ Live City DJ Contract Terms and Conditions:
                     return (
                       <div 
                         key={name}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
                           // Use direct state update with explicit true/false values
                           setFormData(prev => {
@@ -3648,7 +3990,10 @@ Live City DJ Contract Terms and Conditions:
                   {/* Wedding Agenda Card - Using client-only component */}
                   {formData.eventType && isWeddingEvent(formData.eventType) ? (
                     <div>
-                      <WeddingAgendaCard eventType={formData.eventType} />
+                      <WeddingAgendaCard 
+                        key={`wedding-agenda-${formData.eventType}`}
+                        eventType={formData.eventType} 
+                      />
                     </div>
                   ) : null}
                 </div>

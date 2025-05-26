@@ -53,5 +53,25 @@ export function isWeddingEvent(eventType) {
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
-  return isWeddingEvent(eventType) ? 1000 : 400;
+  if (isWeddingEvent(eventType)) {
+    return 1000;
+  }
+  
+  // Specific event types that should be $500
+  const fiveHundredDollarEvents = [
+    'Company Holiday Party',
+    'Engagement Party', 
+    'Bachelor Party',
+    'Bachelorette Party',
+    'Bachelor/Bachelorette Party',
+    'Prom',
+    'Homecoming'
+  ];
+  
+  if (fiveHundredDollarEvents.includes(eventType)) {
+    return 500;
+  }
+  
+  // Default for other events
+  return 400;
 } 
