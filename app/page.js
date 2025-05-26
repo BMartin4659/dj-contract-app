@@ -1187,6 +1187,14 @@ export default function DJContractForm() {
   // Get form context (now returns default values if not available)
   const { contractFormData, updateContractFormData, isClient: contextIsClient } = useFormContext();
   
+  // Debug: Log context values on every render
+  console.log('Contract form render - Context values:', {
+    contractFormData,
+    contextIsClient,
+    contractFormDataKeys: Object.keys(contractFormData),
+    hasUpdateFunction: typeof updateContractFormData === 'function'
+  });
+  
   // Initial form data with blank values
   const initialFormData = {
     clientName: '',
@@ -1215,8 +1223,24 @@ export default function DJContractForm() {
     bookingId: '' // To store the booking ID when created
   };
 
-  // Initialize form data with the initial values
-  const [formData, setFormData] = useState(initialFormData);
+  // Initialize form data with the initial values, but check localStorage first
+  const [formData, setFormData] = useState(() => {
+    // Only check localStorage on client side
+    if (typeof window !== 'undefined') {
+      try {
+        const savedData = localStorage.getItem('djContractFormData');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          console.log('Initializing form with saved data:', parsedData);
+          return { ...initialFormData, ...parsedData };
+        }
+      } catch (error) {
+        console.error('Error loading saved data during initialization:', error);
+      }
+    }
+    console.log('Initializing form with default data');
+    return initialFormData;
+  });
   
   // Terms and conditions text
   const termsAndConditionsText = `
@@ -1309,6 +1333,25 @@ Live City DJ Contract Terms and Conditions:
     } catch (error) {
       console.error('Manual reload error:', error);
     }
+  };
+  
+  // Debug function to manually save test data
+  const debugSaveTestData = () => {
+    console.log('Saving test data...');
+    const testData = {
+      clientName: 'Test Client',
+      email: 'test@example.com',
+      contactPhone: '1234567890',
+      eventType: 'wedding'
+    };
+    
+    // Save via context
+    updateContractFormData(testData);
+    
+    // Also save directly to localStorage for comparison
+    localStorage.setItem('djContractFormData', JSON.stringify(testData));
+    
+    console.log('Test data saved:', testData);
   };
   
   // Helper function to get base price for event type
@@ -1474,11 +1517,17 @@ Live City DJ Contract Terms and Conditions:
     // Force reload context data when component mounts (user navigates back)
     if (typeof window !== 'undefined') {
       console.log('Component mounted, checking for saved form data...');
+      console.log('localStorage contents:', {
+        contractData: localStorage.getItem('djContractFormData'),
+        agendaData: localStorage.getItem('djWeddingAgendaData')
+      });
       
       // Small delay to ensure context is ready
       setTimeout(() => {
         try {
           const savedData = localStorage.getItem('djContractFormData');
+          console.log('Raw localStorage data:', savedData);
+          
           if (savedData) {
             const parsedData = JSON.parse(savedData);
             console.log('Found saved contract data on mount:', parsedData);
@@ -1486,6 +1535,8 @@ Live City DJ Contract Terms and Conditions:
             // Force update the form data
             setFormData(prev => {
               const mergedData = { ...prev, ...parsedData };
+              console.log('Previous form data:', prev);
+              console.log('Parsed saved data:', parsedData);
               console.log('Force updating form data on mount:', mergedData);
               return mergedData;
             });
@@ -1496,6 +1547,8 @@ Live City DJ Contract Terms and Conditions:
               setBasePrice(newBasePrice);
               console.log('Force updating base price on mount:', newBasePrice);
             }
+          } else {
+            console.log('No saved data found in localStorage');
           }
         } catch (error) {
           console.error('Error force loading data on mount:', error);
@@ -1620,29 +1673,89 @@ Live City DJ Contract Terms and Conditions:
     console.log('Context sync effect triggered:', { contextIsClient, contractFormData });
     
     if (contextIsClient) {
-      if (contractFormData && Object.keys(contractFormData).length > 0) {
-        console.log('Syncing contract form with context data:', contractFormData);
-        setFormData(prev => {
-          const mergedData = { ...prev, ...contractFormData };
-          console.log('Previous form data:', prev);
-          console.log('Context data:', contractFormData);
-          console.log('Merged form data:', mergedData);
-          return mergedData;
-        });
-        
-        // Update base price if event type is loaded from context
-        if (contractFormData.eventType) {
-          const newBasePrice = getBasePriceForEventType(contractFormData.eventType);
-          setBasePrice(newBasePrice);
-          console.log('Base price updated from context to:', newBasePrice, 'for event type:', contractFormData.eventType);
+      // Add a small delay to ensure localStorage has been loaded by the context
+      setTimeout(() => {
+        // Check localStorage directly as a fallback
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          console.log('Direct localStorage check:', savedData);
+          
+          let dataToMerge = contractFormData;
+          
+          // If context data is empty but localStorage has data, use localStorage data
+          if ((!contractFormData || Object.keys(contractFormData).length === 0) && savedData) {
+            dataToMerge = JSON.parse(savedData);
+            console.log('Using localStorage data as fallback:', dataToMerge);
+          }
+          
+          if (dataToMerge && Object.keys(dataToMerge).length > 0) {
+            console.log('Syncing contract form with data:', dataToMerge);
+            setFormData(prev => {
+              const mergedData = { ...prev, ...dataToMerge };
+              console.log('Previous form data:', prev);
+              console.log('Data to merge:', dataToMerge);
+              console.log('Merged form data:', mergedData);
+              return mergedData;
+            });
+            
+            // Update base price if event type is loaded
+            if (dataToMerge.eventType) {
+              const newBasePrice = getBasePriceForEventType(dataToMerge.eventType);
+              setBasePrice(newBasePrice);
+              console.log('Base price updated to:', newBasePrice, 'for event type:', dataToMerge.eventType);
+            }
+          } else {
+            console.log('No contract form data available in context or localStorage');
+          }
+        } catch (error) {
+          console.error('Error in context sync effect:', error);
         }
-      } else {
-        console.log('No contract form data in context or context is empty');
-      }
+      }, 100); // Small delay to ensure context has loaded localStorage data
     } else {
       console.log('Context not yet client-side ready');
     }
   }, [contextIsClient, contractFormData, getBasePriceForEventType]);
+  
+  // Force reload data when component mounts (for navigation scenarios)
+  useEffect(() => {
+    if (isClient) {
+      console.log('Component mounted, forcing data reload...');
+      
+      // Force reload from localStorage on mount
+      try {
+        const savedData = localStorage.getItem('djContractFormData');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          console.log('Force reload on mount found data:', parsedData);
+          
+          setFormData(prev => {
+            // Only merge if the saved data has more information than current form
+            const hasMoreData = Object.keys(parsedData).some(key => 
+              parsedData[key] && parsedData[key] !== '' && 
+              (!prev[key] || prev[key] === '')
+            );
+            
+            if (hasMoreData) {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Force merging data on mount:', mergedData);
+              return mergedData;
+            } else {
+              console.log('Current form data is more complete, not overriding');
+              return prev;
+            }
+          });
+          
+          if (parsedData.eventType) {
+            const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+            setBasePrice(newBasePrice);
+            console.log('Force updated base price on mount:', newBasePrice);
+          }
+        }
+      } catch (error) {
+        console.error('Error in force reload on mount:', error);
+      }
+    }
+  }, [isClient, getBasePriceForEventType]);
   
   // Update base price when event type changes
   useEffect(() => {
@@ -3543,10 +3656,27 @@ Live City DJ Contract Terms and Conditions:
                           padding: '8px 16px',
                           fontSize: '14px',
                           cursor: 'pointer',
-                          marginBottom: '10px'
+                          marginBottom: '10px',
+                          marginRight: '10px'
                         }}
                       >
                         🔄 Debug: Reload Form Data
+                      </button>
+                      <button
+                        type="button"
+                        onClick={debugSaveTestData}
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 16px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          marginBottom: '10px'
+                        }}
+                      >
+                        💾 Save Test Data
                       </button>
                       <div style={{ fontSize: '12px', color: '#92400e' }}>
                         <div>Client Name: {formData.clientName || 'empty'}</div>
