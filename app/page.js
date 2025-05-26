@@ -1841,6 +1841,11 @@ Live City DJ Contract Terms and Conditions:
         }
       }
       
+      // Clear the initialization flag if it exists
+      if (venueLocationRef.current && venueLocationRef.current.dataset.autocompleteInitialized) {
+        delete venueLocationRef.current.dataset.autocompleteInitialized;
+      }
+      
       console.log('Creating autocomplete instance with options:', {
         types: ['address'],
         componentRestrictions: { country: 'us' },
@@ -1886,6 +1891,9 @@ Live City DJ Contract Terms and Conditions:
       
       // Store reference to autocomplete instance
       window.googleAutocompleteInstance = autocomplete;
+      
+      // Mark the input as initialized to prevent duplicate initialization
+      venueLocationRef.current.dataset.autocompleteInitialized = 'true';
       
       console.log('Google Places Autocomplete initialized successfully!');
       setMapsError(''); // Clear any previous errors
@@ -2070,9 +2078,11 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [isClient]);
   
-  // Google Maps Places API initialization
+  // Google Maps Places API initialization - Enhanced for navigation handling
   useEffect(() => {
     if (isClient && venueLocationRef.current) {
+      console.log('Google Maps initialization useEffect triggered - checking API status...');
+      
       // First check if the API is loaded via the callback
       if (window.googleMapsLoaded) {
         console.log('Google Maps already loaded via callback - initializing Places...');
@@ -2159,8 +2169,44 @@ Live City DJ Contract Terms and Conditions:
         return () => clearInterval(checkGoogleMapsLoaded);
       }
     }
-  }, [isClient]);
+  }, [isClient, initializeGooglePlaces]); // Added initializeGooglePlaces dependency
   
+  // Additional useEffect to handle navigation back from wedding agenda form
+  useEffect(() => {
+    if (isClient && venueLocationRef.current && window.google?.maps?.places) {
+      // Check if we need to reinitialize autocomplete after navigation
+      const currentInput = venueLocationRef.current;
+      
+      // If the input exists but doesn't have autocomplete initialized, reinitialize it
+      if (currentInput && !currentInput.dataset.autocompleteInitialized) {
+        console.log('Detected navigation back to contract form - reinitializing Google Maps autocomplete...');
+        try {
+          initializeGooglePlaces();
+          setMapsLoaded(true);
+          setMapsError(null);
+        } catch (error) {
+          console.error('Error reinitializing Google Places after navigation:', error);
+          setMapsError('Error reinitializing address autocomplete');
+        }
+      }
+    }
+     }, [isClient, initializeGooglePlaces, formData.venueLocation]); // Include venueLocation to trigger on form data changes
+
+  // Cleanup effect for Google Maps autocomplete
+  useEffect(() => {
+    return () => {
+      // Cleanup autocomplete instance when component unmounts
+      if (window.googleAutocompleteInstance) {
+        try {
+          window.google.maps.event.clearInstanceListeners(window.googleAutocompleteInstance);
+          delete window.googleAutocompleteInstance;
+          console.log('Cleaned up Google Maps autocomplete instance on unmount');
+        } catch (e) {
+          console.log('Could not clean up autocomplete listeners on unmount');
+        }
+      }
+    };
+  }, []);
 
 
   const handleChange = (e) => {
