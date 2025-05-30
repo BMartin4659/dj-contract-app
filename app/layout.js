@@ -1,10 +1,12 @@
+'use client';
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import dynamic from "next/dynamic";
 import { Inter } from 'next/font/google';
-import GoogleMapsLoader from './components/GoogleMapsLoader';
 import ClientFormProvider from './components/ClientFormProvider';
+import { useEffect } from 'react';
 
 // Dynamically import client-side only components with no SSR
 const HydrationSuppressor = dynamic(() => import('./components/HydrationSuppressor'), { ssr: false });
@@ -22,25 +24,37 @@ const geistMono = Geist_Mono({
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
-  title: "Live City DJ Contract",
-  description: "Book your DJ services with Live City - Professional DJ services for weddings, parties and events",
-  applicationName: "Live City DJ Booking",
-  keywords: ["DJ", "booking", "contract", "event", "party", "wedding", "live music"],
-};
-
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1.0,
-  maximumScale: 5.0,
-  userScalable: true, // Allow zooming for better accessibility
-  viewportFit: 'cover',
-};
-
+// Metadata moved to head section since this is a client component
 export default function RootLayout({ children }) {
+  useEffect(() => {
+    // Set document title and meta tags
+    document.title = "Live City DJ Contract";
+    
+    // Update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.name = 'description';
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.content = "Book your DJ services with Live City - Professional DJ services for weddings, parties and events";
+    
+    // Update meta application name
+    let metaAppName = document.querySelector('meta[name="application-name"]');
+    if (!metaAppName) {
+      metaAppName = document.createElement('meta');
+      metaAppName.name = 'application-name';
+      document.head.appendChild(metaAppName);
+    }
+    metaAppName.content = "Live City DJ Booking";
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
+        <title>Live City DJ Contract</title>
+        <meta name="description" content="Book your DJ services with Live City - Professional DJ services for weddings, parties and events" />
+        <meta name="keywords" content="DJ, booking, contract, event, party, wedding, live music" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
         <meta name="theme-color" content="#0070f3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -97,13 +111,10 @@ export default function RootLayout({ children }) {
         <ClientFormProvider>
           <div suppressHydrationWarning={true}>
             <HydrationSuppressor>
-              <GoogleMapsLoader />
               {children}
             </HydrationSuppressor>
           </div>
         </ClientFormProvider>
-
-
 
         {/* Script to suppress hydration errors */}
         <Script id="hydration-fix" strategy="beforeInteractive">

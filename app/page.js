@@ -103,6 +103,9 @@ import { isWeddingEvent } from './utils/eventUtils';
 // Import the form context
 import { useFormContext } from './contexts/FormContext';
 
+// Import the optimized address autocomplete component
+import AddressAutocomplete from './components/AddressAutocomplete';
+
 // Dynamic import for client-only component with no SSR
 import dynamic from 'next/dynamic';
 
@@ -792,6 +795,17 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
   const handlePaymentClick = async () => {
     if (formData.paymentMethod === 'Stripe') {
       try {
+        // Calculate the amount to charge (in cents for Stripe)
+        const amountInDollars = formData.paymentAmount === 'deposit' ? (formData.totalAmount / 2) : formData.totalAmount;
+        const amountInCents = Math.round(amountInDollars * 100);
+        
+        console.log('Creating Stripe checkout with amount:', {
+          amountInDollars,
+          amountInCents,
+          paymentAmount: formData.paymentAmount,
+          totalAmount: formData.totalAmount
+        });
+        
         // Create Stripe checkout session
         const response = await fetch('/api/create-checkout-session', {
           method: 'POST',
@@ -799,6 +813,7 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            amount: amountInCents, // Amount in cents at root level
             contractDetails: {
               clientName: formData.clientName,
               email: formData.email,
@@ -806,7 +821,6 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
               eventDate: formData.eventDate,
               venueName: formData.venueName,
               venueLocation: formData.venueLocation,
-              totalAmount: formData.paymentAmount === 'deposit' ? (formData.totalAmount / 2) : formData.totalAmount,
               bookingId: formData.bookingId
             }
           }),
@@ -1232,7 +1246,22 @@ export default function DJContractForm() {
         if (savedData) {
           const parsedData = JSON.parse(savedData);
           console.log('Initializing form with saved data:', parsedData);
-          return { ...initialFormData, ...parsedData };
+          // Ensure all string fields have string values (not undefined)
+          const sanitizedData = {};
+          Object.keys(initialFormData).forEach(key => {
+            if (typeof initialFormData[key] === 'string') {
+              sanitizedData[key] = parsedData[key] || initialFormData[key] || '';
+            } else if (typeof initialFormData[key] === 'boolean') {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            } else if (typeof initialFormData[key] === 'number') {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            } else if (Array.isArray(initialFormData[key])) {
+              sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : initialFormData[key];
+            } else {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            }
+          });
+          return sanitizedData;
         }
       } catch (error) {
         console.error('Error loading saved data during initialization:', error);
@@ -1284,13 +1313,12 @@ Live City DJ Contract Terms and Conditions:
     { id: 'tidal', label: 'TIDAL', icon: 'https://tidal.com/img/tidal-share-image.jpg', placeholder: 'Paste your TIDAL playlist link' }
   ];
 
-  const venueLocationRef = useRef(null);
+
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [mapsLoaded, setMapsLoaded] = useState(false);
-  const [mapsError, setMapsError] = useState(null);
+  // Google Maps state is now handled by the AddressAutocomplete component
   const [isChangingPayment, setIsChangingPayment] = useState(false);
   const [hasSignature, setHasSignature] = useState(false); // Track signature status
   
@@ -1307,6 +1335,8 @@ Live City DJ Contract Terms and Conditions:
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [basePrice, setBasePrice] = useState(400); // Added setBasePrice state
+  
+  // Google Maps autocomplete is now handled by the AddressAutocomplete component
   
   // Debug function to manually reload form data
   const debugReloadFormData = () => {
@@ -1568,9 +1598,23 @@ Live City DJ Contract Terms and Conditions:
             console.log('Reloading contract data on visibility change:', parsedData);
             
             setFormData(prev => {
-              const mergedData = { ...prev, ...parsedData };
-              console.log('Updated form data on visibility change:', mergedData);
-              return mergedData;
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = parsedData[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+                } else {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                }
+              });
+              console.log('Updated form data on visibility change:', sanitizedData);
+              return sanitizedData;
             });
             
             if (parsedData.eventType) {
@@ -1606,9 +1650,23 @@ Live City DJ Contract Terms and Conditions:
             console.log('Reloading contract data on window focus:', parsedData);
             
             setFormData(prev => {
-              const mergedData = { ...prev, ...parsedData };
-              console.log('Updated form data on window focus:', mergedData);
-              return mergedData;
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = parsedData[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+                } else {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                }
+              });
+              console.log('Updated form data on window focus:', sanitizedData);
+              return sanitizedData;
             });
             
             if (parsedData.eventType) {
@@ -1642,9 +1700,23 @@ Live City DJ Contract Terms and Conditions:
           console.log('Reloading contract data from storage event:', parsedData);
           
           setFormData(prev => {
-            const mergedData = { ...prev, ...parsedData };
-            console.log('Updated form data from storage event:', mergedData);
-            return mergedData;
+            // Sanitize the data to prevent undefined values
+            const sanitizedData = {};
+            Object.keys(initialFormData).forEach(key => {
+              if (typeof initialFormData[key] === 'string') {
+                sanitizedData[key] = parsedData[key] || prev[key] || '';
+              } else if (typeof initialFormData[key] === 'boolean') {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              } else if (typeof initialFormData[key] === 'number') {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              } else if (Array.isArray(initialFormData[key])) {
+                sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+              } else {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              }
+            });
+            console.log('Updated form data from storage event:', sanitizedData);
+            return sanitizedData;
           });
           
           if (parsedData.eventType) {
@@ -1689,11 +1761,25 @@ Live City DJ Contract Terms and Conditions:
           if (dataToMerge && Object.keys(dataToMerge).length > 0) {
             console.log('Syncing contract form with data:', dataToMerge);
             setFormData(prev => {
-              const mergedData = { ...prev, ...dataToMerge };
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = dataToMerge[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(dataToMerge[key]) ? dataToMerge[key] : prev[key];
+                } else {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                }
+              });
               console.log('Previous form data:', prev);
               console.log('Data to merge:', dataToMerge);
-              console.log('Merged form data:', mergedData);
-              return mergedData;
+              console.log('Sanitized merged data:', sanitizedData);
+              return sanitizedData;
             });
             
             // Update base price if event type is loaded
@@ -1812,186 +1898,8 @@ Live City DJ Contract Terms and Conditions:
     }
   }, [formData.eventType, basePrice, getBasePriceForEventType]);
 
-  // Define initializeGooglePlaces function before it's used
-  const initializeGooglePlaces = useCallback(() => {
-    try {
-      console.log('Initializing Google Places Autocomplete...', venueLocationRef.current);
-      
-      // Check for DOM reference first
-      if (!venueLocationRef.current) {
-        console.error('Venue location reference is not available');
-        setMapsError('Cannot initialize address autocomplete: input reference not found');
-        return;
-      }
-      
-      // Check for Google Places API
-      if (!window.google || !window.google.maps || !window.google.maps.places) {
-        console.error('Google Maps API is not fully loaded:', window.google);
-        setMapsError('Google Maps API is not properly loaded');
-        return;
-      }
-      
-      // Clear any existing autocomplete instance
-      if (window.googleAutocompleteInstance) {
-        try {
-          window.google.maps.event.clearInstanceListeners(window.googleAutocompleteInstance);
-          delete window.googleAutocompleteInstance;
-        } catch (e) {
-          console.log('Could not clear existing autocomplete listeners');
-        }
-      }
-      
-      // Clear the initialization flag if it exists
-      if (venueLocationRef.current && venueLocationRef.current.dataset.autocompleteInitialized) {
-        delete venueLocationRef.current.dataset.autocompleteInitialized;
-      }
-      
-      console.log('Creating autocomplete instance with options:', {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name']
-      });
-      
-      // Initialize autocomplete
-      const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name'],
-      });
-      
-      console.log('Autocomplete instance created:', autocomplete);
-      
-      // Add place_changed listener
-      autocomplete.addListener('place_changed', () => {
-        console.log('Place changed event fired');
-        try {
-          const place = autocomplete.getPlace();
-          console.log('Place selected:', place);
-          
-          if (place && place.formatted_address) {
-            console.log('Selected place details:', place.formatted_address);
-            setFormData(prev => {
-              const newData = {
-                ...prev,
-                venueLocation: place.formatted_address,
-              };
-              updateContractFormData(newData);
-              return newData;
-            });
-          } else {
-            console.warn('No place details available');
-            if (place) {
-              console.log('Place object returned without formatted_address. Available fields:', Object.keys(place));
-            }
-          }
-        } catch (placeError) {
-          console.error('Error in place_changed handler:', placeError);
-        }
-      });
-      
-      // Store reference to autocomplete instance
-      window.googleAutocompleteInstance = autocomplete;
-      
-      // Mark the input as initialized to prevent duplicate initialization
-      venueLocationRef.current.dataset.autocompleteInitialized = 'true';
-      
-      console.log('Google Places Autocomplete initialized successfully!');
-      setMapsError(''); // Clear any previous errors
-    } catch (error) {
-      console.error('Error initializing Google Places Autocomplete:', error);
-      // More detailed error message
-      let errorMsg = 'Error initializing address autocomplete.';
-      if (error.message) {
-        errorMsg += ` Error: ${error.message}`;
-      }
-      setMapsError(errorMsg);
-    }
-  }, [updateContractFormData]);
-
-  // Simplified Google Maps initialization - works with GoogleMapsLoader component
-  useEffect(() => {
-    if (!isClient || !venueLocationRef.current) return;
-    
-    // Simple check if Google Maps is already loaded and initialize
-    const initializeIfReady = () => {
-      if (window.google?.maps?.places && venueLocationRef.current) {
-        // Check if already initialized to prevent duplicates
-        if (!venueLocationRef.current.dataset.autocompleteInitialized) {
-          console.log('Google Maps API detected - initializing autocomplete for contract form...');
-          try {
-            initializeGooglePlaces();
-            setMapsLoaded(true);
-            setMapsError(null);
-          } catch (error) {
-            console.error('Error initializing Google Places:', error);
-            setMapsError('Error initializing address autocomplete');
-          }
-        }
-      }
-    };
-    
-    // Try immediate initialization
-    initializeIfReady();
-    
-    // Set up a listener for when GoogleMapsLoader finishes loading
-    const checkInterval = setInterval(() => {
-      if (window.google?.maps?.places && !venueLocationRef.current?.dataset.autocompleteInitialized) {
-        initializeIfReady();
-        clearInterval(checkInterval);
-      }
-    }, 500);
-    
-    // Clean up after 10 seconds
-    const timeout = setTimeout(() => {
-      clearInterval(checkInterval);
-      if (!window.google?.maps?.places) {
-        console.warn('Google Maps API not available - address autocomplete disabled');
-        setMapsError('Address autocomplete unavailable');
-      }
-    }, 10000);
-    
-    return () => {
-      clearInterval(checkInterval);
-      clearTimeout(timeout);
-    };
-  }, [isClient, initializeGooglePlaces]);
-
-  // Handle navigation back from wedding agenda form
-  useEffect(() => {
-    if (isClient && venueLocationRef.current && window.google?.maps?.places) {
-      // Check if we need to reinitialize autocomplete after navigation
-      const currentInput = venueLocationRef.current;
-      
-      // If the input exists but doesn't have autocomplete initialized, reinitialize it
-      if (currentInput && !currentInput.dataset.autocompleteInitialized) {
-        console.log('Detected navigation back to contract form - reinitializing Google Maps autocomplete...');
-        try {
-          initializeGooglePlaces();
-          setMapsLoaded(true);
-          setMapsError(null);
-        } catch (error) {
-          console.error('Error reinitializing Google Places after navigation:', error);
-          setMapsError('Error reinitializing address autocomplete');
-        }
-      }
-    }
-  }, [isClient, initializeGooglePlaces, formData.venueLocation]);
-
-  // Cleanup effect for Google Maps autocomplete
-  useEffect(() => {
-    return () => {
-      // Cleanup autocomplete instance when component unmounts
-      if (window.googleAutocompleteInstance) {
-        try {
-          window.google.maps.event.clearInstanceListeners(window.googleAutocompleteInstance);
-          delete window.googleAutocompleteInstance;
-          console.log('Cleaned up Google Maps autocomplete instance on unmount');
-        } catch (e) {
-          console.log('Could not clean up autocomplete listeners on unmount');
-        }
-      }
-    };
-  }, []);
+  // Google Maps autocomplete is now handled by the AddressAutocomplete component
+  // Removed duplicate initialization code to prevent conflicts
 
 
   const handleChange = (e) => {
@@ -2034,8 +1942,10 @@ Live City DJ Contract Terms and Conditions:
       console.log(`Updated formData ${name}:`, newData[name]);
       console.log('Full form data being saved to context:', newData);
       
-      // Save to context for persistence across navigation
-      updateContractFormData(newData);
+      // Defer context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
       
       // Also save directly to localStorage as backup
       try {
@@ -2788,7 +2698,12 @@ Live City DJ Contract Terms and Conditions:
     // Update form data immediately to avoid state update issues
     setFormData(prev => {
       const newData = { ...prev, paymentMethod: method };
-      updateContractFormData(newData);
+      
+      // Defer context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
+      
       // Also save to localStorage as backup
       try {
         localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -2863,49 +2778,7 @@ Live City DJ Contract Terms and Conditions:
     });
   }, []);
 
-  // Add this to manually load Google Maps API if other methods fail
-  useEffect(() => {
-    if (isClient && mapsError) {
-      console.log('Attempting to reload Google Maps API after error...');
-      
-      // Remove any existing Google Maps scripts
-      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
-      existingScripts.forEach(script => script.remove());
-      
-      // Reset Google object
-      if (window.google && window.google.maps) {
-        try {
-          // This is a best-effort attempt to clear the Google object
-          window.google.maps = undefined;
-        } catch (e) {
-          console.error('Error clearing Google maps object:', e);
-        }
-      }
-      
-      // Create and add new script
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`;
-      script.async = true;
-      script.defer = true;
-      
-      // Define callback function
-      window.initGoogleMapsCallback = () => {
-        console.log('Google Maps API reloaded successfully!');
-        setMapsError(null);
-        setMapsLoaded(true);
-        if (venueLocationRef.current) {
-          initializeGooglePlaces();
-        }
-      };
-      
-      script.onerror = (err) => {
-        console.error('Failed to reload Google Maps API:', err);
-        setMapsError('Failed to load Google Maps API. Please try refreshing the page.');
-      };
-      
-      document.head.appendChild(script);
-    }
-  }, [mapsError, isClient]);
+
 
   // GenreSelectionModal component for selecting music genres
   function GenreSelectionModal({ onClose }) {
@@ -2927,7 +2800,12 @@ Live City DJ Contract Terms and Conditions:
         otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
       };
       setFormData(newData);
-      updateContractFormData(newData);
+      
+      // Use setTimeout to defer the context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
+      
       onClose();
     };
     
@@ -3619,7 +3497,7 @@ Live City DJ Contract Terms and Conditions:
                         padding: 'clamp(12px, 2vw, 16px)'
                       }}
                       className="field-input"
-                      value={formData.clientName}
+                      value={formData.clientName || ''}
                       onChange={handleChange}
                       placeholder="Enter your full name"
                     />
@@ -3636,7 +3514,7 @@ Live City DJ Contract Terms and Conditions:
                       required
                       style={inputStyle}
                       className="field-input"
-                      value={formData.email}
+                      value={formData.email || ''}
                       onChange={handleChange}
                     />
                   </div>
@@ -3652,7 +3530,7 @@ Live City DJ Contract Terms and Conditions:
                       required
                       style={inputStyle}
                       className="field-input"
-                      value={formData.contactPhone}
+                      value={formData.contactPhone || ''}
                       onChange={handleChange}
                       placeholder="(123) 456-7890"
                     />
@@ -3692,7 +3570,7 @@ Live City DJ Contract Terms and Conditions:
                       required
                       style={inputStyle}
                       className="field-input"
-                      value={formData.guestCount}
+                      value={formData.guestCount || ''}
                       onChange={handleChange}
                     />
                   </div>
@@ -3712,7 +3590,7 @@ Live City DJ Contract Terms and Conditions:
                       required
                       style={inputStyle}
                       className="field-input"
-                      value={formData.venueName}
+                      value={formData.venueName || ''}
                       onChange={handleChange}
                     />
                   </div>
@@ -3722,46 +3600,14 @@ Live City DJ Contract Terms and Conditions:
                         {venueLocationIcon} Venue Location:
                       </span>
                     </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        ref={venueLocationRef}
-                        name="venueLocation"
-                        type="text"
-                        value={formData.venueLocation}
-                        onChange={handleChange}
-                        required
-                        placeholder="Enter venue address"
-                        style={{ 
-                          backgroundColor: 'white', 
-                          width: '100%', 
-                          padding: 'clamp(12px, 2vw, 16px)', 
-                          marginBottom: '1rem', 
-                          borderRadius: '8px', 
-                          border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
-                          color: 'black',
-                          transition: 'all 0.2s ease',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)'
-                        }}
-                        className="field-input"
-                      />
-                      <div style={{ 
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        color: '#888',
-                        fontSize: '14px'
-                      }}>
-                        <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
-                      </div>
-                      <p style={{ 
-                        fontSize: '0.75rem', 
-                        color: mapsError ? '#e53e3e' : '#666', 
-                        marginTop: '-0.75rem',
-                        marginBottom: '1rem'
-                      }}>
-                        {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
-                      </p>
-                    </div>
+                    <AddressAutocomplete
+                      value={formData.venueLocation || ''}
+                      onChange={handleChange}
+                      name="venueLocation"
+                      placeholder="Enter venue address"
+                      required={true}
+                      className="field-input"
+                    />
                   </div>
                 </div>
 
@@ -3801,7 +3647,7 @@ Live City DJ Contract Terms and Conditions:
                     </label>
                     <select
                       name="startTime"
-                      value={formData.startTime}
+                      value={formData.startTime || ''}
                       onChange={(e) => {
                         const value = e.target.value;
                         
@@ -3847,7 +3693,7 @@ Live City DJ Contract Terms and Conditions:
                   </label>
                   <select
                     name="endTime"
-                    value={formData.endTime}
+                    value={formData.endTime || ''}
                     onChange={(e) => handleEndTimeChange(e.target.value)}
                     required
                     disabled={!formData.startTime}
@@ -3953,8 +3799,10 @@ Live City DJ Contract Terms and Conditions:
                       
                       setFormData(newData);
                       
-                      // Save to context for persistence across navigation
-                      updateContractFormData(newData);
+                      // Defer context update to avoid setState during render
+                      setTimeout(() => {
+                        updateContractFormData(newData);
+                      }, 0);
                       
                       // Also save directly to localStorage as backup
                       try {
@@ -4209,7 +4057,12 @@ Live City DJ Contract Terms and Conditions:
                           onClick={() => {
                             const newData = { ...formData, streamingService: service.id };
                             setFormData(newData);
-                            updateContractFormData(newData);
+                            
+                            // Defer context update to avoid setState during render
+                            setTimeout(() => {
+                              updateContractFormData(newData);
+                            }, 0);
+                            
                             // Also save to localStorage as backup
                             try {
                               localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -4260,7 +4113,7 @@ Live City DJ Contract Terms and Conditions:
                         <input
                           type="text"
                           name="playlistLink"
-                          value={formData.playlistLink}
+                          value={formData.playlistLink || ''}
                           onChange={handleChange}
                           placeholder={streamingServices.find(s => s.id === formData.streamingService)?.placeholder || 'Paste your playlist link'}
                           style={{
@@ -4318,7 +4171,12 @@ Live City DJ Contract Terms and Conditions:
                             console.log(`Setting additionalHours to ${num}`);
                             const newData = { ...formData, additionalHours: num };
                             setFormData(newData);
-                            updateContractFormData(newData);
+                            
+                            // Defer context update to avoid setState during render
+                            setTimeout(() => {
+                              updateContractFormData(newData);
+                            }, 0);
+                            
                             // Also save to localStorage as backup
                             try {
                               localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -4469,7 +4327,12 @@ Live City DJ Contract Terms and Conditions:
                         onChange={(e) => {
                           const newData = { ...formData, paymentAmount: e.target.value };
                           setFormData(newData);
-                          updateContractFormData(newData);
+                          
+                          // Defer context update to avoid setState during render
+                          setTimeout(() => {
+                            updateContractFormData(newData);
+                          }, 0);
+                          
                           // Also save to localStorage as backup
                           try {
                             localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -4487,7 +4350,12 @@ Live City DJ Contract Terms and Conditions:
                       onClick={() => {
                         const newData = { ...formData, paymentAmount: 'full' };
                         setFormData(newData);
-                        updateContractFormData(newData);
+                        
+                        // Defer context update to avoid setState during render
+                        setTimeout(() => {
+                          updateContractFormData(newData);
+                        }, 0);
+                        
                         // Also save to localStorage as backup
                         try {
                           localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -4545,7 +4413,12 @@ Live City DJ Contract Terms and Conditions:
                         onChange={(e) => {
                           const newData = { ...formData, paymentAmount: e.target.value };
                           setFormData(newData);
-                          updateContractFormData(newData);
+                          
+                          // Defer context update to avoid setState during render
+                          setTimeout(() => {
+                            updateContractFormData(newData);
+                          }, 0);
+                          
                           // Also save to localStorage as backup
                           try {
                             localStorage.setItem('djContractFormData', JSON.stringify(newData));
@@ -4690,7 +4563,7 @@ Live City DJ Contract Terms and Conditions:
                     <input
                       name="signerName"
                       type="text"
-                      value={formData.signerName}
+                      value={formData.signerName || ''}
                       onChange={(e) => {
                         // Capitalize the first letter and letters after spaces
                         const input = e.target.value;

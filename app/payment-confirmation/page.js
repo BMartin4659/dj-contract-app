@@ -74,7 +74,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800">Loading booking details...</h2>
@@ -86,7 +91,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FaExclamationTriangle className="text-3xl text-red-500" />
@@ -105,7 +115,12 @@ function PaymentConfirmationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{
+      backgroundImage: 'url(/party-theme-background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       {/* Green Header */}
       <div className="bg-green-500 text-white px-4 pb-10 pt-6 relative shadow-md">
         <div className="max-w-2xl mx-auto relative">

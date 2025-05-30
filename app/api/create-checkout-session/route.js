@@ -68,7 +68,19 @@ export async function POST(request) {
         email: contractDetails?.email || '',
         eventType: contractDetails?.eventType || '',
         eventDate: contractDetails?.eventDate || '',
-        venueName: contractDetails?.venueName || ''
+        venueName: contractDetails?.venueName || '',
+        venueLocation: contractDetails?.venueLocation || '',
+        startTime: contractDetails?.startTime || '',
+        endTime: contractDetails?.endTime || '',
+        contactPhone: contractDetails?.contactPhone || '',
+        guestCount: contractDetails?.guestCount || '',
+        paymentAmount: contractDetails?.paymentAmount || 'full',
+        isDeposit: contractDetails?.isDeposit ? 'true' : 'false',
+        bookingId: contractDetails?.bookingId || '',
+        additionalHours: contractDetails?.additionalHours || '0',
+        lighting: contractDetails?.lighting ? 'true' : 'false',
+        photography: contractDetails?.photography ? 'true' : 'false',
+        videoVisuals: contractDetails?.videoVisuals ? 'true' : 'false'
       }
     });
 

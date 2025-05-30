@@ -71,7 +71,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <p className="text-gray-500 text-sm">Loading booking details...</p>
       </div>
     );
@@ -79,7 +84,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <p className="text-lg text-red-600 font-semibold">Booking Failed</p>
         <p className="text-sm text-gray-600 mb-4">{error}</p>
         <button
@@ -93,7 +103,12 @@ function PaymentConfirmationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{
+      backgroundImage: 'url(/party-theme-background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       {/* Green Header */}
       <div className="bg-green-500 rounded-b-3xl text-white px-6 pb-10 pt-12 relative shadow-md">
         <button
