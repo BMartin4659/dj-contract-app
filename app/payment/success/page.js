@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft, FaExclamationCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft, FaExclamationCircle, FaCalendarCheck, FaMusic, FaPhone, FaStar } from 'react-icons/fa';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { FaPaypal, FaCreditCard } from 'react-icons/fa';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -191,987 +192,473 @@ const PAYMENT_COLORS = {
   paypal:  { main: '#003087', dark: '#001f4c' },
 };
 
-// --- Redesigned Payment Success Page ---
-
+// Payment Success Page Component
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // Safely extract search parameters
-  const sessionId = React.useMemo(() => {
-    try {
-      return searchParams?.get('session_id') || null;
-    } catch (error) {
-      console.error('Error getting session_id:', error);
-      return null;
-    }
-  }, [searchParams]);
-  
-  const paymentMethod = React.useMemo(() => {
-    try {
-      return searchParams?.get('payment_method') || null;
-    } catch (error) {
-      console.error('Error getting payment_method:', error);
-      return null;
-    }
-  }, [searchParams]);
-  
-  const bookingId = React.useMemo(() => {
-    try {
-      return searchParams?.get('booking_id') || null;
-    } catch (error) {
-      console.error('Error getting booking_id:', error);
-      return null;
-    }
-  }, [searchParams]);
-  
-  const amount = React.useMemo(() => {
-    try {
-      return searchParams?.get('amount') || null;
-    } catch (error) {
-      console.error('Error getting amount:', error);
-      return null;
-    }
-  }, [searchParams]);
-
-  // Debug logging
-  console.log('PaymentSuccessContent mounted with params:', {
-    sessionId,
-    paymentMethod,
-    bookingId,
-    amount,
-    searchParamsAvailable: !!searchParams
-  });
-
-  const [paymentDetails, setPaymentDetails] = useState(null);
-  const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
-  const [hasProcessed, setHasProcessed] = useState(false); // Track if we've already processed this session
-  const [componentError, setComponentError] = useState(null);
 
-  // Add error handling for component-level errors
-  React.useEffect(() => {
-    const handleError = (error) => {
-      console.error('Unhandled error in PaymentSuccessContent:', error);
-      setComponentError(error.message || 'An unexpected error occurred');
-    };
-
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', (event) => {
-      handleError(new Error(event.reason));
-    });
-
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleError);
-    };
-  }, []);
+  // Extract parameters from URL
+  const sessionId = searchParams.get('session_id');
+  const bookingId = searchParams.get('booking_id');
 
   useEffect(() => {
-    // Prevent multiple processing of the same session
-    if (hasProcessed) return;
-    
-    let isMounted = true; // Track if component is still mounted
-    
-    const processPayment = async () => {
-      // Check if we've already processed this session in localStorage
-      const processedKey = sessionId ? `processed_${sessionId}` : `processed_${paymentMethod}_${bookingId}`;
-      const alreadyProcessed = localStorage.getItem(processedKey);
-      
-      if (alreadyProcessed) {
-        console.log('Session already processed, skipping email send');
-        if (isMounted) {
-          setHasProcessed(true);
-          // Still fetch details but don't send email
-          if (sessionId) {
-            await getPaymentDetailsOnly();
-          } else if (paymentMethod && bookingId) {
-            await handleNonStripePaymentOnly();
-          }
-        }
-        return;
-      }
-      
-      // Mark as processed immediately to prevent race conditions
-      localStorage.setItem(processedKey, 'true');
-      if (isMounted) {
-        setHasProcessed(true);
-        
-        if (sessionId) {
-          await getPaymentDetails();
-        } else if (paymentMethod && bookingId) {
-          await handleNonStripePayment();
-        } else {
-          setLoading(false);
-          setError('No payment information provided');
-        }
-      }
-    };
-    
-    processPayment();
-    
-    // Cleanup function
-    return () => {
-      isMounted = false;
-    };
-  }, [sessionId, paymentMethod, bookingId]); // Only depend on the URL parameters
-  
-  // Get payment details without sending email (for already processed sessions)
-  const getPaymentDetailsOnly = async () => {
+    if (sessionId) {
+      processStripePayment();
+    } else if (bookingId) {
+      processDirectBooking();
+    } else {
+      setError('Invalid payment session. Missing payment information.');
+      setLoading(false);
+    }
+  }, [sessionId, bookingId]);
+
+  const processStripePayment = async () => {
     try {
       setLoading(true);
-      console.log('Fetching payment details (no email) for session:', sessionId);
       
-      const response = await fetch(`/api/get-session-details?session_id=${encodeURIComponent(sessionId)}`);
+      // First get the session details from Stripe
+      const sessionResponse = await fetch('/api/get-session-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error('Failed to retrieve payment session details');
+      }
+
+      const sessionData = await sessionResponse.json();
+      setPaymentDetails(sessionData);
+
+      // Extract booking details from session metadata
+      const metadata = sessionData.metadata || {};
+      const bookingData = {
+        clientName: metadata.clientName || sessionData.customer_details?.name || '',
+        email: metadata.email || sessionData.customer_details?.email || '',
+        eventType: metadata.eventType || 'Event',
+        eventDate: metadata.eventDate || '',
+        venueName: metadata.venueName || '',
+        venueLocation: metadata.venueLocation || '',
+        startTime: metadata.startTime || '',
+        endTime: metadata.endTime || '',
+        contactPhone: metadata.contactPhone || '',
+        guestCount: metadata.guestCount || '',
+        totalAmount: (sessionData.amount_total || 0) / 100,
+        paymentMethod: 'Stripe',
+        bookingId: metadata.bookingId || sessionId,
+        sessionId: sessionId,
+        lighting: metadata.lighting === 'true',
+        photography: metadata.photography === 'true',
+        videoVisuals: metadata.videoVisuals === 'true',
+        additionalHours: parseInt(metadata.additionalHours || '0'),
+        paymentAmount: metadata.paymentAmount || 'full',
+        isDeposit: metadata.isDeposit === 'true'
+      };
+
+      setBookingDetails(bookingData);
+
+      // Send confirmation email via payment-confirmation API
+      await sendPaymentConfirmation(bookingData);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error processing Stripe payment:', err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const processDirectBooking = async () => {
+    try {
+      setLoading(true);
+      
+      // For direct bookings (non-Stripe), fetch from Firestore
+      const response = await fetch(`/api/get-booking-details?bookingId=${bookingId}`);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error fetching session details:', response.status, errorText);
-        throw new Error(`Failed to fetch session details: ${errorText}`);
+        throw new Error('Failed to retrieve booking details');
       }
-      
-      const data = await response.json();
-      console.log('Session details retrieved (no email):', data);
-      setPaymentDetails(data);
-      
-      // Try to find the booking details in Firestore
-      if (data && data.payment_intent) {
-        await fetchBookingDetailsOnly(data.payment_intent);
-      } else if (data && data.metadata) {
-        const newBookingData = {
-          clientName: data.metadata.clientName,
-          email: data.metadata.email || data.customer_email,
-          eventType: data.metadata.eventType,
-          eventDate: data.metadata.eventDate,
-          venueName: data.metadata.venueName,
-          paymentId: sessionId,
-          amount: (data.amount_total || 0) / 100,
-          paymentMethod: 'Stripe',
-          status: 'confirmed'
-        };
-        setBookingDetails(newBookingData);
-        setEmailSent(true); // Assume email was already sent
-      }
+
+      const bookingData = await response.json();
+      setBookingDetails(bookingData);
+
+      // Send confirmation email
+      await sendPaymentConfirmation(bookingData);
       
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching payment details:', err);
-      setError(err.message || 'Failed to load payment details');
+      console.error('Error processing direct booking:', err);
+      setError(err.message);
       setLoading(false);
     }
   };
-  
-  // Handle non-Stripe payments without sending email (for already processed sessions)
-  const handleNonStripePaymentOnly = async () => {
+
+  const sendPaymentConfirmation = async (bookingData) => {
     try {
-      setLoading(true);
+      const response = await fetch('/api/payment-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          bookingId: bookingData.bookingId,
+          clientName: bookingData.clientName,
+          email: bookingData.email,
+          eventType: bookingData.eventType,
+          eventDate: bookingData.eventDate,
+          venueName: bookingData.venueName,
+          venueLocation: bookingData.venueLocation,
+          startTime: bookingData.startTime,
+          endTime: bookingData.endTime,
+          totalAmount: bookingData.totalAmount,
+          paymentMethod: bookingData.paymentMethod,
+          signerName: 'Bobby Martin',
+          hasSigned: true
+        })
+      });
+
+      const result = await response.json();
       
-      const alternativePaymentDetails = {
-        payment_method: paymentMethod,
-        amount_total: amount ? parseFloat(amount) * 100 : 0,
-        payment_intent: bookingId,
-        metadata: { bookingId }
-      };
-      
-      setPaymentDetails(alternativePaymentDetails);
-      await fetchBookingDetailsOnly(bookingId);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error processing alternative payment:', error);
-      setError(error.message || 'Failed to process payment');
-      setLoading(false);
-    }
-  };
-  
-  // Handle non-Stripe payments (Venmo, CashApp, PayPal)
-  const handleNonStripePayment = async () => {
-    try {
-      setLoading(true);
-      
-      // Create a payment details object
-      const alternativePaymentDetails = {
-        payment_method: paymentMethod,
-        amount_total: amount ? parseFloat(amount) * 100 : 0, // Convert to cents for consistency
-        payment_intent: bookingId,
-        metadata: {
-          bookingId
-        }
-      };
-      
-      setPaymentDetails(alternativePaymentDetails);
-      
-      // Fetch booking details from Firestore
-      await fetchBookingDetails(bookingId);
-      
-      // Update the booking to mark payment as confirmed
-      try {
-        await fetch('/api/payment-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            bookingId,
-            paymentMethod,
-            amount: amount || 0
-          })
-        });
-      } catch (updateError) {
-        console.error('Error updating payment status:', updateError);
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error processing alternative payment:', error);
-      setError(error.message || 'Failed to process payment');
-      setLoading(false);
-    }
-  };
-  
-  const getPaymentDetails = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching payment details for session:', sessionId);
-      
-      if (!sessionId) {
-        throw new Error('No session ID provided');
-      }
-      
-      const response = await fetch(`/api/get-session-details?session_id=${encodeURIComponent(sessionId)}`);
-      
-      console.log('Session details API response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error fetching session details:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          sessionId
-        });
-        throw new Error(`Failed to fetch session details (${response.status}): ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Session details retrieved successfully:', data);
-      setPaymentDetails(data);
-      
-      // Send payment confirmation email with Pro Event Checklist
-      try {
-        const confirmationResponse = await fetch('/api/payment-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sessionId: sessionId,
-            clientName: data.metadata?.clientName || '',
-            email: data.customer_email || data.metadata?.email || '',
-            eventType: data.metadata?.eventType || 'Event',
-            eventDate: data.metadata?.eventDate || '',
-            venueName: data.metadata?.venueName || '',
-            venueLocation: data.metadata?.venueLocation || '',
-            startTime: data.metadata?.startTime || '',
-            endTime: data.metadata?.endTime || '',
-            amount: (data.amount_total || 0) / 100,
-            paymentMethod: 'Stripe',
-            paymentId: sessionId,
-            isDeposit: data.metadata?.isDeposit === 'true' || false
-          })
-        });
-        
-        if (confirmationResponse.ok) {
-          const confirmationResult = await confirmationResponse.json();
-          console.log('Payment confirmation sent successfully:', confirmationResult);
-          setEmailSent(true);
-        } else {
-          const errorText = await confirmationResponse.text();
-          console.error('Error sending payment confirmation:', errorText);
-          setEmailError('Failed to send confirmation email');
-        }
-      } catch (emailError) {
-        console.error('Error sending confirmation email:', emailError);
-        setEmailError('Failed to send confirmation email');
-      }
-      
-      // Try to find the booking details in Firestore
-      if (data && data.payment_intent) {
-        await fetchBookingDetails(data.payment_intent);
-      } else {
-        console.warn('No payment_intent found in session data');
-        // Create booking from metadata
-        if (data && data.metadata) {
-          const newBookingData = {
-            clientName: data.metadata.clientName,
-            email: data.metadata.email || data.customer_email,
-            eventType: data.metadata.eventType,
-            eventDate: data.metadata.eventDate,
-            venueName: data.metadata.venueName,
-            venueLocation: data.metadata.venueLocation,
-            startTime: data.metadata.startTime,
-            endTime: data.metadata.endTime,
-            paymentId: sessionId,
-            amount: (data.amount_total || 0) / 100,
-            paymentMethod: 'Stripe',
-            status: 'confirmed',
-            isDeposit: data.metadata.isDeposit === 'true' || false
-          };
-          setBookingDetails(newBookingData);
-        }
-      }
-      
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching payment details:', err);
-      setError(err.message || 'Failed to load payment details');
-      setLoading(false);
-    }
-  };
-  
-  // Get booking details from Firestore without sending email
-  const fetchBookingDetailsOnly = async (paymentIdOrBookingId) => {
-    try {
-      console.log('Fetching booking details (no email) for ID:', paymentIdOrBookingId);
-      
-      // First try to find by paymentId in 'bookings' collection
-      let bookingsRef = collection(db, 'bookings');
-      let q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-      let querySnapshot = await getDocs(q);
-      
-      // If not found, try document ID in 'bookings'
-      if (querySnapshot.empty) {
-        try {
-          const bookingDoc = await getDoc(doc(db, 'bookings', paymentIdOrBookingId));
-          if (bookingDoc.exists()) {
-            querySnapshot = {
-              empty: false,
-              docs: [{ id: bookingDoc.id, data: () => bookingDoc.data() }]
-            };
-          }
-        } catch (docError) {
-          console.log('Error fetching by document ID:', docError);
-        }
-      }
-      
-      // If still not found, try 'djContracts' collection
-      if (querySnapshot.empty) {
-        bookingsRef = collection(db, 'djContracts');
-        q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-        querySnapshot = await getDocs(q);
-        
-        // If not found by payment ID, try document ID in 'djContracts'
-        if (querySnapshot.empty) {
-          try {
-            const contractDoc = await getDoc(doc(db, 'djContracts', paymentIdOrBookingId));
-            if (contractDoc.exists()) {
-              querySnapshot = {
-                empty: false,
-                docs: [{ id: contractDoc.id, data: () => contractDoc.data() }]
-              };
-            }
-          } catch (docError) {
-            console.log('Error fetching from djContracts by ID:', docError);
-          }
-        }
-      }
-      
-      if (!querySnapshot.empty) {
-        const bookingDoc = querySnapshot.docs[0];
-        const bookingData = { id: bookingDoc.id, ...bookingDoc.data() };
-        setBookingDetails(bookingData);
-        setEmailSent(true); // Assume email was already sent since this is a repeat visit
-      } else {
-        console.log('No booking found with ID:', paymentIdOrBookingId);
-      }
-    } catch (err) {
-      console.error('Error fetching booking details:', err);
-    }
-  };
-  
-  // Get booking details from Firestore
-  const fetchBookingDetails = async (paymentIdOrBookingId) => {
-    try {
-      console.log('Fetching booking details for ID:', paymentIdOrBookingId);
-      
-      // First try to find by paymentId in 'bookings' collection
-      let bookingsRef = collection(db, 'bookings');
-      let q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-      let querySnapshot = await getDocs(q);
-      
-      // If not found, try document ID in 'bookings'
-      if (querySnapshot.empty) {
-        try {
-          const bookingDoc = await getDoc(doc(db, 'bookings', paymentIdOrBookingId));
-          if (bookingDoc.exists()) {
-            querySnapshot = {
-              empty: false,
-              docs: [{ id: bookingDoc.id, data: () => bookingDoc.data() }]
-            };
-          }
-        } catch (docError) {
-          console.log('Error fetching by document ID:', docError);
-        }
-      }
-      
-      // If still not found, try 'djContracts' collection
-      if (querySnapshot.empty) {
-        bookingsRef = collection(db, 'djContracts');
-        q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-        querySnapshot = await getDocs(q);
-        
-        // If not found by payment ID, try document ID in 'djContracts'
-        if (querySnapshot.empty) {
-          try {
-            const contractDoc = await getDoc(doc(db, 'djContracts', paymentIdOrBookingId));
-            if (contractDoc.exists()) {
-              querySnapshot = {
-                empty: false,
-                docs: [{ id: contractDoc.id, data: () => contractDoc.data() }]
-              };
-            }
-          } catch (docError) {
-            console.log('Error fetching from djContracts by ID:', docError);
-          }
-        }
-      }
-      
-      if (!querySnapshot.empty) {
-        // Booking found
-        const bookingDoc = querySnapshot.docs[0];
-        const bookingData = { id: bookingDoc.id, ...bookingDoc.data() };
-        setBookingDetails(bookingData);
-        
-        // Send email only if not already sent
-        if (!bookingData.emailSent) {
-          await sendConfirmationEmail(bookingData);
-          
-          // Update booking to mark email as sent
-          try {
-            const collectionName = bookingData.id === paymentIdOrBookingId ? 'djContracts' : 'bookings';
-            const bookingRef = doc(db, collectionName, bookingDoc.id);
-            await updateDoc(bookingRef, { 
-              emailSent: true,
-              status: 'confirmed',
-              paymentStatus: 'paid'
-            });
-          } catch (updateError) {
-            console.error('Error updating booking after email sent:', updateError);
-          }
-        } else {
-          console.log('Email already sent for this booking, skipping');
-          setEmailSent(true);
-        }
-      } else {
-        console.log('No booking found with ID:', paymentIdOrBookingId);
-        
-        // If no booking found, see if we can create one from payment details
-        if (paymentDetails && paymentDetails.metadata) {
-          const { metadata, amount_total } = paymentDetails;
-          const newBookingData = {
-            clientName: metadata.clientName,
-            email: metadata.email,
-            eventType: metadata.eventType,
-            eventDate: metadata.eventDate,
-            venueName: metadata.venueName,
-            paymentId: paymentIdOrBookingId,
-            amount: (amount_total || 0) / 100,
-            paymentMethod: 'Stripe',
-            paymentStatus: 'paid',
-            status: 'confirmed',
-            createdAt: new Date()
-          };
-          
-          setBookingDetails(newBookingData);
-          await sendConfirmationEmail(newBookingData);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching booking details:', err);
-    }
-  };
-  
-  // Send confirmation email
-  const sendConfirmationEmail = async (bookingData) => {
-    if (!bookingData || !bookingData.email) {
-      setEmailError('Cannot send email - booking or email is missing');
-      return;
-    }
-    
-    try {
-      const result = await sendEmail(bookingData);
-      
-      if (result.success) {
+      if (result.success && result.emailSent) {
         setEmailSent(true);
-        console.log('Confirmation email sent successfully');
-        
-        // Clean up old processed sessions (keep only last 10)
-        cleanupProcessedSessions();
+        console.log('Payment confirmation email sent successfully');
       } else {
-        setEmailError('Email could not be sent. We will send it later.');
-        console.error('Email sending failed:', result.error);
+        setEmailError(result.emailError || 'Email could not be sent automatically. We will send it shortly.');
+        console.warn('Email sending issue:', result.emailError);
       }
     } catch (err) {
-      setEmailError('Email could not be sent. We will send it later.');
-      console.error('Error sending confirmation email:', err);
+      console.error('Error sending payment confirmation:', err);
+      setEmailError('Email could not be sent automatically. We will send it shortly.');
     }
   };
-  
-  // Clean up old processed sessions from localStorage
-  const cleanupProcessedSessions = () => {
-    try {
-      const processedKeys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('processed_')) {
-          processedKeys.push(key);
-        }
-      }
-      
-      // Keep only the most recent 10 processed sessions
-      if (processedKeys.length > 10) {
-        const keysToRemove = processedKeys.slice(0, processedKeys.length - 10);
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        console.log(`Cleaned up ${keysToRemove.length} old processed sessions`);
-      }
-    } catch (error) {
-      console.error('Error cleaning up processed sessions:', error);
+
+  const getPaymentMethodIcon = (method) => {
+    const methodLower = (method || '').toLowerCase();
+    switch (methodLower) {
+      case 'venmo':
+        return <SiVenmo className="text-blue-500 text-xl" />;
+      case 'cashapp':
+        return <SiCashapp className="text-green-500 text-xl" />;
+      case 'paypal':
+        return <FaPaypal className="text-blue-600 text-xl" />;
+      default:
+        return <FaCreditCard className="text-indigo-600 text-xl" />;
     }
   };
-  
-  // If there's a component error, show error state
-  if (componentError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
-          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Component Error</h2>
-          <p className="text-gray-600 mb-6">{componentError}</p>
-          <button 
-            onClick={() => {
-              setComponentError(null);
-              window.location.reload();
-            }} 
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center mx-auto"
-          >
-            <FaRedo className="mr-2" /> Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-lg text-gray-600">Loading payment details...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Processing Payment</h2>
+          <p className="text-gray-600">Confirming your booking details...</p>
+        </div>
       </div>
     );
   }
-  
+
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
-          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Payment Details</h2>
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Payment Error</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button 
-            onClick={() => {
-              // Clear the processed flag and retry
-              const processedKey = sessionId ? `processed_${sessionId}` : `processed_${paymentMethod}_${bookingId}`;
-              localStorage.removeItem(processedKey);
-              setHasProcessed(false);
-              setError('');
-              if (sessionId) {
-                getPaymentDetails();
-              } else {
-                handleNonStripePayment();
-              }
-            }} 
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
+            onClick={() => router.push('/')}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center mx-auto"
           >
-            <FaRedo className="mr-2" /> Retry
+            <FaArrowLeft className="mr-2" /> Return Home
           </button>
         </div>
       </div>
     );
   }
 
-  // --- SIMPLIFIED SUCCESS PAGE WITH ORANGE & TEAL PALETTE ---
-  const details = {
-    amount: ((paymentDetails?.amount_total || 0) / 100) || amount || 0,
-    method: (bookingDetails?.paymentMethod || paymentDetails?.payment_method_types?.[0] || paymentMethod || 'card'),
-    date: bookingDetails?.eventDate || paymentDetails?.metadata?.eventDate,
-    client: bookingDetails?.clientName || paymentDetails?.metadata?.clientName,
-    venue: bookingDetails?.venueName || paymentDetails?.metadata?.venueName,
-    email: bookingDetails?.email || paymentDetails?.customer_details?.email,
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
   };
-  const methodKey = (details.method || '').toLowerCase();
-  const color = PAYMENT_COLORS[methodKey] || PAYMENT_COLORS.card;
 
-  const methodDisplay = {
-    card: 'Credit Card',
-    stripe: 'Credit Card',
-    venmo: 'Venmo',
-    cashapp: 'CashApp',
-    paypal: 'PayPal',
-  };
-  const methodIcon = {
-    card: <FaCreditCard className="icon-method" />,
-    stripe: <FaCreditCard className="icon-method" />,
-    venmo: <SiVenmo className="icon-method" />,
-    cashapp: <SiCashapp className="icon-method" />,
-    paypal: <FaPaypal className="icon-method" />,
+  const formatDate = (dateString) => {
+    if (!dateString) return 'TBD';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{
+    <div className="min-h-screen" style={{
       backgroundImage: 'url(/party-theme-background.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     }}>
-      <div className="success-card">
-        <div className="success-icon-outer">
-          <div className="success-icon-inner">
-            <span className="party-horn-emoji">🎉</span>
-          </div>
-        </div>
-        <h1 className="success-title" style={{ color: color.main }}>Payment Successful!</h1>
-        <p className="success-subtitle" style={{ color: '#00C244' }}>
-          Your payment has been processed and your booking is confirmed.
-        </p>
-        <div className="success-details">
-          <div>
-            <span>Amount Paid</span>
-            <span className="success-amount" style={{ color: color.main }}>${Number(details.amount).toFixed(2)}</span>
-          </div>
-          <div>
-            <span>Payment Method</span>
-            <span className="success-method">
-              {methodIcon[methodKey] || null}
-              {methodDisplay[methodKey] || details.method}
-            </span>
-          </div>
-          {details.date && (
-            <div>
-              <span>Event Date</span>
-              <span>{details.date}</span>
+      {/* Success Header */}
+      <div className="pt-8 pb-4">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Logo and DJ Info */}
+          <div className="text-center mb-8">
+            <div className="w-24 h-24 mx-auto mb-4 relative">
+              <Image
+                src="/dj-bobby-drake-logo.png"
+                alt="DJ Bobby Drake"
+                width={96}
+                height={96}
+                className="rounded-full border-4 border-white shadow-lg"
+                priority
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div 
+                className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white text-2xl font-bold"
+                style={{ display: 'none' }}
+              >
+                DJ
+              </div>
             </div>
-          )}
-          {details.client && (
-            <div>
-              <span>Client Name</span>
-              <span>{details.client}</span>
-            </div>
-          )}
-          {details.venue && (
-            <div>
-              <span>Venue</span>
-              <span>{details.venue}</span>
-            </div>
-          )}
-        </div>
-        <div className="success-email">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <FaEnvelope className="icon-email" />
-            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Confirmation Email</span>
+            <h1 className="text-white text-2xl font-bold mb-2">DJ Bobby Drake</h1>
+            <p className="text-white/90">Professional DJ & Entertainment Services</p>
           </div>
-          {emailSent ? (
-            <>
-              <div style={{ fontSize: '0.9rem', lineHeight: '1.4', color: '#059669' }}>
-                ✓ Confirmation email sent to
-              </div>
-              <div style={{ fontWeight: '700', fontSize: '1rem', color: '#059669' }}>
-                {details.email || 'your email address'}
-              </div>
-            </>
-          ) : emailError ? (
-            <>
-              <div style={{ fontSize: '0.9rem', lineHeight: '1.4', color: '#dc2626' }}>
-                ⚠ {emailError}
-              </div>
-              <div style={{ fontWeight: '700', fontSize: '1rem', color: '#059669' }}>
-                {details.email || 'your email address'}
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
-                A confirmation email will be sent to
-              </div>
-              <div style={{ fontWeight: '700', fontSize: '1rem', color: '#059669' }}>
-                {details.email || 'your email address'}
-              </div>
-              <div style={{ fontSize: '0.9rem' }}>
-                shortly.
-              </div>
-            </>
-          )}
-        </div>
-        <div className="success-actions">
-          <Link href="/" className="success-btn success-btn-secondary" style={{ 
-            background: 'transparent', 
-            color: color.main, 
-            border: `2px solid ${color.main}`, 
-            borderRadius: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            whiteSpace: 'nowrap', 
-            minWidth: '160px',
-            padding: '14px 20px',
-            fontSize: '1rem',
-            fontWeight: '600',
-            textDecoration: 'none',
-            transition: 'all 0.2s ease'
-          }}>
-            <FaHome style={{ marginRight: '8px' }} /> Return Home
-          </Link>
-          <button 
-            onClick={() => window.print()} 
-            className="success-btn success-btn-tertiary" 
-            style={{ 
-              background: '#f8fafc', 
-              color: '#64748b', 
-              border: '2px solid #e2e8f0', 
-              borderRadius: '12px',
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              whiteSpace: 'nowrap', 
-              minWidth: '160px',
-              padding: '14px 20px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <FaReceipt style={{ marginRight: '8px' }} /> Print Receipt
-          </button>
         </div>
       </div>
-      <style jsx>{`
-        .success-card {
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(20px);
-          border-radius: 24px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-          padding: 3rem 2.5rem;
-          max-width: 480px;
-          width: 100%;
-          text-align: center;
-          position: relative;
-          border: 1px solid rgba(255,255,255,0.9);
-        }
-        .success-icon-outer {
-          width: 120px;
-          height: 120px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.5rem auto;
-        }
-        .success-icon-inner {
-          width: 100px;
-          height: 100px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .success-title {
-          font-size: 2.25rem;
-          font-weight: 800;
-          margin-bottom: 0.75rem;
-          letter-spacing: -0.025em;
-          color: #1e293b;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .success-subtitle {
-          color: #059669;
-          font-size: 1.125rem;
-          margin-bottom: 2.5rem;
-          font-weight: 600;
-          line-height: 1.5;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .success-details {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border-radius: 16px;
-          padding: 1.5rem;
-          margin-bottom: 2rem;
-          font-size: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.95);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        }
-        .success-details > div {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-          padding: 0.75rem 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.7);
-        }
-        .success-details > div:last-child {
-          margin-bottom: 0;
-        }
-        .success-details > div span:first-child {
-          color: #475569;
-          font-weight: 600;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .success-details > div span:last-child {
-          color: #1e293b;
-          font-weight: 700;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .success-amount {
-          font-weight: 800;
-          font-size: 1.25rem;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .success-method {
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          font-weight: 600;
-        }
-        .icon-method {
-          font-size: 1.25em;
-        }
-        .success-email {
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.9);
-          border-radius: 12px;
-          padding: 1rem 1.25rem;
-          margin-bottom: 2.5rem;
-          font-size: 0.95rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5em;
-          font-weight: 600;
-          line-height: 1.5;
-          text-align: center;
-          color: #1e293b;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .icon-email {
-          font-size: 1.1em;
-          flex-shrink: 0;
-        }
-        .success-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-        @media (min-width: 640px) {
-          .success-actions {
-            flex-direction: row;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-          }
-        }
-        .success-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        .success-btn-primary:hover {
-          filter: brightness(1.05);
-        }
-        .success-btn-secondary:hover {
-          background: rgba(99,102,241,0.05);
-        }
-        .success-btn-tertiary:hover {
-          background: #f1f5f9;
-          border-color: #cbd5e1;
-        }
-        @media (max-width: 640px) {
-          .success-card {
-            padding: 2rem 1.5rem;
-            margin: 1rem;
-          }
-          .success-title {
-            font-size: 1.875rem;
-          }
-          .success-subtitle {
-            font-size: 1rem;
-          }
-          .success-icon-outer {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 1.25rem;
-          }
-          .success-icon-inner {
-            width: 80px;
-            height: 80px;
-          }
-          .success-details {
-            padding: 1.25rem;
-          }
-          .success-actions {
-            gap: 0.75rem;
-          }
-        }
-        @media (max-width: 480px) {
-          .success-card {
-            padding: 1.5rem 1rem;
-          }
-          .success-title {
-            font-size: 1.5rem;
-          }
-          .success-details > div {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.25rem;
-          }
-          .success-details > div span:last-child {
-            align-self: flex-end;
-          }
-        }
-        .party-horn-emoji {
-          font-size: 4rem;
-          display: block;
-          text-align: center;
-          line-height: 1;
-        }
-        @media (max-width: 640px) {
-          .party-horn-emoji {
-            font-size: 3rem;
-          }
-        }
-      `}</style>
+
+      {/* Main Success Content */}
+      <div className="max-w-4xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Success Banner */}
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-8 px-6">
+            <div className="text-6xl mb-4">🎉</div>
+            <h1 className="text-3xl font-bold mb-2">Payment Successful!</h1>
+            <p className="text-green-100 text-lg">Your booking is confirmed and we&apos;re ready to rock your event!</p>
+          </div>
+
+          {/* Payment Details */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <FaReceipt className="text-indigo-600 mr-2" />
+                  Payment Details
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Amount Paid:</span>
+                    <span className="font-semibold text-xl text-green-600">
+                      {formatCurrency(bookingDetails?.totalAmount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Payment Method:</span>
+                    <div className="flex items-center">
+                      {getPaymentMethodIcon(bookingDetails?.paymentMethod)}
+                      <span className="ml-2 font-medium">
+                        {bookingDetails?.paymentMethod || 'Credit Card'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Payment Date:</span>
+                    <span className="font-medium">
+                      {new Date().toLocaleDateString('en-US')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Booking ID:</span>
+                    <span className="font-mono text-sm bg-gray-200 px-2 py-1 rounded">
+                      {(bookingDetails?.bookingId || sessionId || 'N/A').substring(0, 12)}...
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <FaCalendarCheck className="text-blue-600 mr-2" />
+                  Event Details
+                </h3>
+                <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                  <div>
+                    <span className="text-gray-600 block text-sm">Client Name:</span>
+                    <span className="font-semibold">{bookingDetails?.clientName || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Event Type:</span>
+                    <span className="font-semibold">{bookingDetails?.eventType || 'Event'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Event Date:</span>
+                    <span className="font-semibold">{formatDate(bookingDetails?.eventDate)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Time:</span>
+                    <span className="font-semibold">
+                      {bookingDetails?.startTime || 'TBD'} - {bookingDetails?.endTime || 'TBD'}
+                    </span>
+                  </div>
+                  {bookingDetails?.venueName && (
+                    <div>
+                      <span className="text-gray-600 block text-sm">Venue:</span>
+                      <span className="font-semibold">{bookingDetails.venueName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Email Confirmation Status */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <FaEnvelope className="text-blue-600 text-xl mr-3" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">Confirmation Email</h3>
+                  <p className="text-sm text-gray-600">
+                    {emailSent 
+                      ? `Sent to ${bookingDetails?.email || 'your email address'}`
+                      : emailError || 'Sending confirmation email...'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="text-2xl">
+                {emailSent ? '✅' : emailError ? '⚠️' : '📧'}
+              </div>
+            </div>
+          </div>
+
+          {/* What Happens Next */}
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <FaStar className="text-yellow-500 mr-2" />
+              What Happens Next
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaMusic className="text-purple-600 mr-2" />
+                  <span className="font-semibold text-purple-800">Music Planning</span>
+                </div>
+                <p className="text-sm text-purple-700">
+                  You&apos;ll receive a music preference form 4 weeks before your event to customize your playlist.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaPhone className="text-blue-600 mr-2" />
+                  <span className="font-semibold text-blue-800">Planning Call</span>
+                </div>
+                <p className="text-sm text-blue-700">
+                  I&apos;ll call you 2 weeks before your event to finalize all details and timeline.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaCalendarCheck className="text-green-600 mr-2" />
+                  <span className="font-semibold text-green-800">Venue Coordination</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  I&apos;ll coordinate with your venue one week prior to ensure smooth setup and logistics.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaCheckCircle className="text-orange-600 mr-2" />
+                  <span className="font-semibold text-orange-800">Event Day</span>
+                </div>
+                <p className="text-sm text-orange-700">
+                  I&apos;ll arrive 30 minutes early for setup and ensure your event runs perfectly from start to finish.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-6 bg-gray-50">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/"
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaHome className="mr-2" />
+                Return Home
+              </Link>
+              <Link
+                href="/wedding-agenda"
+                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaMusic className="mr-2" />
+                Plan Your Wedding
+              </Link>
+              <button
+                onClick={() => window.print()}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaReceipt className="mr-2" />
+                Print Receipt
+              </button>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center">
+            <h4 className="font-semibold mb-2">Questions? Contact DJ Bobby Drake</h4>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm">
+              <a href="tel:2038099414" className="hover:text-indigo-200 transition-colors">
+                📞 (203) 809-9414
+              </a>
+              <a href="mailto:therealdjbobbydrake@gmail.com" className="hover:text-indigo-200 transition-colors">
+                ✉️ therealdjbobbydrake@gmail.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Loading placeholder
+// Loading Component
 function LoadingPaymentSuccess() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Processing Payment</h2>
-        <p className="text-gray-600">Please wait while we confirm your payment...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-lg text-gray-600">Loading payment details...</p>
       </div>
     </div>
   );
 }
 
-// Error boundary component
+// Error Boundary
 class PaymentSuccessErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -1183,25 +670,26 @@ class PaymentSuccessErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('PaymentSuccess Error:', error, errorInfo);
+    console.error('Payment Success Error:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
+          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
             <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
             <p className="text-gray-600 mb-6">
-              {this.state.error?.message || 'An unexpected error occurred while loading the payment confirmation page.'}
+              We encountered an error while processing your payment confirmation.
             </p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center mx-auto"
+            <Link
+              href="/"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors inline-flex items-center"
             >
-              <FaRedo className="mr-2" /> Reload Page
-            </button>
+              <FaHome className="mr-2" />
+              Return Home
+            </Link>
           </div>
         </div>
       );
@@ -1211,20 +699,8 @@ class PaymentSuccessErrorBoundary extends React.Component {
   }
 }
 
-// Error handling in the main component
+// Main Export
 export default function PaymentSuccessPage() {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
-  // Return loading state for SSR
-  if (!isClient) {
-    return <LoadingPaymentSuccess />;
-  }
-  
-  // Client-side rendering with error boundary
   return (
     <PaymentSuccessErrorBoundary>
       <React.Suspense fallback={<LoadingPaymentSuccess />}>

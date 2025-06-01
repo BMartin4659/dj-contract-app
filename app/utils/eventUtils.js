@@ -1,16 +1,10 @@
 'use client';
 
-// List of all wedding-related event types - explicitly defined
+// List of wedding event types - only those with "wedding" in the title
 export const WEDDING_EVENT_TYPES = [
   'Wedding Ceremony',
   'Wedding Reception',
   'Wedding Ceremony & Reception',
-  'Engagement Party',
-  'Bridal Shower',
-  'Bachelor Party',
-  'Bachelorette Party',
-  'Anniversary Party',
-  'Vow Renewal',
 ];
 
 // Very specific wedding keywords - only used for exact matching
@@ -53,6 +47,12 @@ export function isWeddingEvent(eventType) {
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
+  // Special pricing for Wedding Ceremony & Reception
+  if (eventType === 'Wedding Ceremony & Reception') {
+    return 1500;
+  }
+  
+  // Other wedding events
   if (isWeddingEvent(eventType)) {
     return 1000;
   }

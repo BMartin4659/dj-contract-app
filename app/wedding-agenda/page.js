@@ -35,6 +35,7 @@ import ClientOnly from '../components/ClientOnly';
 import SuppressHydration from '../components/SuppressHydration';
 import { useRouter } from 'next/navigation';
 import { useFormContext } from '../contexts/FormContext';
+import { getBasePrice } from '../utils/eventUtils';
 
 // Song suggestions data
 const SONG_SUGGESTIONS = {
@@ -485,12 +486,13 @@ export default function WeddingAgendaForm() {
     }
   }, [formData.eventType, eventType]);
 
-  // Set base price based on event type (Wedding = $1000.00)
+  // Set base price based on event type using dynamic pricing
   useEffect(() => {
-    if (eventType && typeof eventType === 'string' && eventType.toLowerCase() === 'wedding') {
-      setBasePrice(1000);
+    if (eventType && typeof eventType === 'string') {
+      const newBasePrice = getBasePrice(eventType);
+      setBasePrice(newBasePrice);
     } else {
-      setBasePrice(400);
+      setBasePrice(400); // Default price for non-wedding events
     }
   }, [eventType]);
 
@@ -1370,6 +1372,7 @@ export default function WeddingAgendaForm() {
                         Bridesmaids
                       </span>
                     </label>
+                    <p className="text-sm text-blue-700 font-semibold mb-4">List Bridesmaids In Order Of Entrance</p>
                     <div className="space-y-10">
                       {formData.bridesmaids.map((bridesmaid, index) => (
                         <div key={`bridesmaid-${index}`} style={{ marginBottom: isMobile ? '16px' : '24px' }}>
@@ -1426,7 +1429,7 @@ export default function WeddingAgendaForm() {
                                 }}
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
-                                💃
+                                👩🏽
                               </button>
                               <span style={{ 
                                 fontSize: '14px',
@@ -1472,7 +1475,7 @@ export default function WeddingAgendaForm() {
                           }}
                           aria-label="Add bridesmaid"
                         >
-                          💃
+                          👩🏽
                         </button>
                         <span style={{ 
                           fontSize: '14px',
@@ -1484,7 +1487,6 @@ export default function WeddingAgendaForm() {
                           verticalAlign: 'middle'
                         }}>Add bridesmaid</span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">List bridesmaids in order of entrance</p>
                     </div>
                   </div>
                   <div>
@@ -1499,6 +1501,7 @@ export default function WeddingAgendaForm() {
                         Groomsmen
                       </span>
                     </label>
+                    <p className="text-sm text-blue-700 font-semibold mb-4">List Groomsmen In Order Of Entrance</p>
                     <div className="space-y-10">
                       {formData.groomsmen.map((groomsman, index) => (
                         <div key={`groomsman-${index}`} style={{ marginBottom: isMobile ? '16px' : '24px' }}>
@@ -1555,7 +1558,7 @@ export default function WeddingAgendaForm() {
                                 }}
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
-                                🤵
+                                🤵🏽
                               </button>
                               <span style={{ 
                                 fontSize: '14px',
@@ -1601,7 +1604,7 @@ export default function WeddingAgendaForm() {
                           }}
                           aria-label="Add groomsman"
                         >
-                          🤵
+                          🤵🏽
                         </button>
                         <span style={{ 
                           fontSize: '14px',
@@ -1613,7 +1616,6 @@ export default function WeddingAgendaForm() {
                           verticalAlign: 'middle'
                         }}>Add groomsman</span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">List groomsmen in order of entrance</p>
                     </div>
                   </div>
                 </div>
@@ -2288,7 +2290,7 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        💃 First Dance
+                        💃🏽<span style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🕺🏽</span> First Dance
                       </span>
                     </label>
                     <SongSelector
@@ -2311,7 +2313,7 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        👨‍👧 Father/Daughter Dance
+                        👨🏽‍👧🏽 Father/Daughter Dance
                       </span>
                     </label>
                     <SongSelector
@@ -2338,7 +2340,7 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        👩‍👦 Mother/Son Dance
+                        👩🏽‍👦🏽 Mother/Son Dance
                       </span>
                     </label>
                     <SongSelector
@@ -2388,7 +2390,7 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        👰‍♂️ Garter Toss
+                        👰🏽‍♂️ Garter Toss
                       </span>
                     </label>
                     <SongSelector

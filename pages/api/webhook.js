@@ -1,7 +1,7 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
 import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, doc } from 'firebase-admin/firestore';
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
 
@@ -110,6 +110,93 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Handle checkout.session.completed events (for new checkout flow)
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const { id, metadata, amount_total, customer_details } = session;
+
+    try {
+      initFirebase();
+      const db = getFirestore();
+      
+      console.log('Processing checkout session completed:', {
+        sessionId: id,
+        clientName: metadata?.clientName,
+        email: customer_details?.email || metadata?.email,
+        amount: amount_total
+      });
+
+      // Create booking data from session
+      const bookingData = {
+        sessionId: id,
+        clientName: metadata?.clientName || customer_details?.name || '',
+        email: metadata?.email || customer_details?.email || '',
+        eventType: metadata?.eventType || 'Event',
+        eventDate: metadata?.eventDate || '',
+        venueName: metadata?.venueName || '',
+        venueLocation: metadata?.venueLocation || '',
+        startTime: metadata?.startTime || '',
+        endTime: metadata?.endTime || '',
+        contactPhone: metadata?.contactPhone || '',
+        guestCount: metadata?.guestCount || '',
+        totalAmount: (amount_total || 0) / 100,
+        paymentMethod: 'Stripe',
+        bookingId: metadata?.bookingId || id,
+        lighting: metadata?.lighting === 'true',
+        photography: metadata?.photography === 'true',
+        videoVisuals: metadata?.videoVisuals === 'true',
+        additionalHours: parseInt(metadata?.additionalHours || '0'),
+        paymentAmount: metadata?.paymentAmount || 'full',
+        isDeposit: metadata?.isDeposit === 'true',
+        status: 'confirmed',
+        paymentStatus: 'paid',
+        paidAt: new Date(),
+        createdAt: new Date()
+      };
+
+      // Save to Firestore
+      const bookingRef = doc(db, 'djContracts', metadata?.bookingId || id);
+      await bookingRef.set(bookingData, { merge: true });
+
+      // Send payment confirmation email via our API
+      try {
+        const confirmationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/payment-confirmation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: id,
+            bookingId: metadata?.bookingId || id,
+            clientName: bookingData.clientName,
+            email: bookingData.email,
+            eventType: bookingData.eventType,
+            eventDate: bookingData.eventDate,
+            venueName: bookingData.venueName,
+            venueLocation: bookingData.venueLocation,
+            startTime: bookingData.startTime,
+            endTime: bookingData.endTime,
+            totalAmount: bookingData.totalAmount,
+            paymentMethod: 'Stripe',
+            signerName: 'Bobby Martin',
+            hasSigned: true
+          })
+        });
+
+        if (confirmationResponse.ok) {
+          console.log('✅ Payment confirmation email sent via webhook');
+        } else {
+          console.error('❌ Failed to send confirmation email via webhook');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending confirmation email via webhook:', emailError);
+      }
+
+      console.log(`✅ Updated Firestore for checkout session: ${id}`);
+    } catch (err) {
+      console.error('❌ Error during checkout session webhook handling:', err.message);
+    }
+  }
+
+  // Handle payment_intent.succeeded events (for legacy payment intent flow)
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object;
     const { id, metadata, amount, receipt_email } = paymentIntent;

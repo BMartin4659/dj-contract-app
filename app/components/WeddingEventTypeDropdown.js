@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WEDDING_EVENT_TYPES } from '../utils/eventUtils';
+import { WEDDING_EVENT_TYPES, getBasePrice } from '../utils/eventUtils';
 
 // Only wedding-related event types
 const WEDDING_EVENT_OPTIONS = [
@@ -25,7 +25,8 @@ export default function WeddingEventTypeDropdown({
   // Set initial price on mount if value is provided
   useEffect(() => {
     if (value && onPriceUpdate) {
-      onPriceUpdate(1000.0);
+      const initialPrice = getBasePrice(value);
+      onPriceUpdate(initialPrice);
     }
   }, [value, onPriceUpdate]);
   
@@ -46,9 +47,12 @@ export default function WeddingEventTypeDropdown({
       onChange(newValue);
     }
 
-    // All options are wedding-related, so always set to wedding price
-    if (onPriceUpdate) onPriceUpdate(1000.0);
-    setPriceNote('💰 Base price: $1000 for wedding services');
+    // Use dynamic pricing based on event type
+    if (onPriceUpdate && newValue) {
+      const dynamicPrice = getBasePrice(newValue);
+      onPriceUpdate(dynamicPrice);
+      setPriceNote(`💰 Base price: $${dynamicPrice.toLocaleString()} for ${newValue.toLowerCase()}`);
+    }
   };
 
   return (
