@@ -5,7 +5,12 @@ import { FaTimesCircle, FaArrowLeft } from 'react-icons/fa';
 
 export default function PaymentCancel() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{
+      backgroundImage: 'url(/party-theme-background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-auto text-center">
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-6">

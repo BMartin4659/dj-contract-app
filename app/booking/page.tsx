@@ -84,6 +84,44 @@ export default function BookingPage() {
     }
   }, [formData.eventDate, formData.startTime, formData.endTime, existingEvents]);
 
+  // Add effect to handle event type changes and ensure the UI updates properly
+  useEffect(() => {
+    console.log("Event type changed to:", formData.eventType);
+    
+    // Register event listener for custom event
+    const handleEventTypeProcessed = () => {
+      console.log("Event type processing complete, refreshing UI elements");
+      
+      // Manually force input fields to refresh
+      refreshFormElements();
+    };
+    
+    window.addEventListener('eventTypeProcessed', handleEventTypeProcessed);
+    
+    return () => {
+      window.removeEventListener('eventTypeProcessed', handleEventTypeProcessed);
+    };
+  }, [formData.eventType]);
+  
+  // Function to refresh form elements to ensure they remain interactive
+  const refreshFormElements = () => {
+    // Find all form elements that might need refreshing
+    const formElements = document.querySelectorAll('input, select, button, .service-card');
+    
+    formElements.forEach(element => {
+      // Force a refresh by manipulating the element
+      if (element instanceof HTMLElement) {
+        const currentDisplay = element.style.display;
+        element.style.display = 'none';
+        // This forces a reflow
+        void element.offsetHeight;
+        element.style.display = currentDisplay;
+      }
+    });
+    
+    console.log("Refreshed all form elements");
+  };
+
   // Add keyboard event handlers
   useEffect(() => {
     const handleFocus = () => {
@@ -114,8 +152,36 @@ export default function BookingPage() {
     };
   }, []);
 
+  // Event type change handler with specific focus on maintaining interactivity
+  const handleEventTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    // Update form data
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Log for debugging
+    console.log(`Event type changed to: ${value}`);
+    
+    // Force a re-render to ensure all components update properly
+    setTimeout(() => {
+      // This will help ensure the UI updates after the event type change
+      const event = new Event('eventTypeUpdated');
+      window.dispatchEvent(event);
+    }, 10);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Use special handler for event type to ensure proper updates
+    if (name === 'eventType') {
+      handleEventTypeChange(e as React.ChangeEvent<HTMLSelectElement>);
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -495,6 +561,18 @@ export default function BookingPage() {
                       onChange={handleChange}
                       className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      data-event-type-select="true"
+                      ref={(el) => {
+                        if (el) {
+                          // Setup event listener for this element
+                          window.addEventListener('eventTypeUpdated', () => {
+                            console.log('Event type update detected, refreshing UI state');
+                            // Force any dependent elements to update
+                            const event = new Event('change', { bubbles: true });
+                            el.dispatchEvent(event);
+                          });
+                        }
+                      }}
                     >
                       <option value="">Select Event Type</option>
                       <option value="Wedding">Wedding</option>

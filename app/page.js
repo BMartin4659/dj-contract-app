@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';import { useRouter } from 'next/navigation';import Image from 'next/image';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
@@ -66,7 +64,12 @@ import {
   FaClipboard,
   FaRegClipboard,
   FaRegCopy,
-  FaRedo
+  FaRedo,
+  FaClipboardList,
+  FaChevronRight,
+  FaStar,
+  FaVolumeUp,
+  FaRegCreditCard
 } from 'react-icons/fa';
 import { BsStripe } from 'react-icons/bs';
 import { SiVenmo, SiCashapp, SiSpotify, SiApplemusic, SiYoutubemusic } from 'react-icons/si';
@@ -89,6 +92,22 @@ import '@/app/styles/datepicker.css';
 
 // Import the new ReactDatePickerField component
 import ReactDatePickerField from './components/ReactDatePickerField';
+import EventTypeDropdown from './components/EventTypeDropdown';
+
+// Import the new SuppressHydration component
+import SuppressHydration from './components/SuppressHydration';
+
+// Import the event utilities
+import { isWeddingEvent } from './utils/eventUtils';
+
+// Import the form context
+import { useFormContext } from './contexts/FormContext';
+
+// Import the optimized address autocomplete component
+import AddressAutocomplete from './components/AddressAutocomplete';
+
+// Dynamic import for client-only component with no SSR
+import dynamic from 'next/dynamic';
 
 // Constants and Pricing
 const SERVICES = {
@@ -98,6 +117,9 @@ const SERVICES = {
   VIDEO_VISUALS: 100,
   ADDITIONAL_HOUR: 75,
 };
+
+// Dynamic import for client-only component with no SSR
+const WeddingAgendaCard = dynamic(() => import('./components/WeddingAgendaCard'), { ssr: false });
 
 // Payment confirmation banner component
 const PaymentConfirmation = ({ show, message }) => {
@@ -154,7 +176,7 @@ const PaymentConfirmationBanner = ({ paymentMethod, onClose }) => {
     <div className="payment-confirmation-banner" style={{
       position: 'fixed',
       top: '0',
-      left: '0',
+      left: 0,
       width: '100%',
       backgroundColor: 'rgba(255,255,255,0.95)',
       zIndex: '1000',
@@ -770,15 +792,53 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
   }, []);
   
   // Handle payment button click
-  const handlePaymentClick = () => {
+  const handlePaymentClick = async () => {
     if (formData.paymentMethod === 'Stripe') {
-      // For Stripe, use the stored URL from localStorage
-      const stripeUrl = localStorage.getItem('stripeCheckoutUrl');
-      if (stripeUrl) {
-        window.location.href = stripeUrl;
-      } else {
-        // Fallback if URL is not in localStorage
-        alert('Stripe checkout URL not found. Please contact support.');
+      try {
+        // Calculate the amount to charge (in cents for Stripe)
+        const amountInDollars = formData.paymentAmount === 'deposit' ? (formData.totalAmount / 2) : formData.totalAmount;
+        const amountInCents = Math.round(amountInDollars * 100);
+        
+        console.log('Creating Stripe checkout with amount:', {
+          amountInDollars,
+          amountInCents,
+          paymentAmount: formData.paymentAmount,
+          totalAmount: formData.totalAmount
+        });
+        
+        // Create Stripe checkout session
+        const response = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: amountInCents, // Amount in cents at root level
+            contractDetails: {
+              clientName: formData.clientName,
+              email: formData.email,
+              eventType: formData.eventType,
+              eventDate: formData.eventDate,
+              venueName: formData.venueName,
+              venueLocation: formData.venueLocation,
+              bookingId: formData.bookingId
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create checkout session');
+        }
+
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error) {
+        console.error('Error creating Stripe checkout:', error);
+        alert('Unable to process Stripe payment. Please try again or contact support.');
       }
     } else if (paymentDetails.url) {
       // For other payment methods, use their direct URLs
@@ -968,7 +1028,7 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
               </div>
             </div>
             
-            {paymentDetails.url && (
+            {(paymentDetails.url || formData.paymentMethod === 'Stripe') && (
               <button
                 onClick={handlePaymentClick}
                 style={{
@@ -1138,12 +1198,23 @@ const BookingConfirmationPage = ({ formData, onSendEmail, onBookAgain }) => {
 export default function DJContractForm() {
   const router = useRouter();
   
+  // Get form context (now returns default values if not available)
+  const { contractFormData, weddingAgendaData, updateContractFormData, isClient: contextIsClient } = useFormContext();
+  
+  // Debug: Log context values on every render
+  console.log('Contract form render - Context values:', {
+    contractFormData,
+    contextIsClient,
+    contractFormDataKeys: Object.keys(contractFormData),
+    hasUpdateFunction: typeof updateContractFormData === 'function'
+  });
+  
   // Initial form data with blank values
   const initialFormData = {
     clientName: '',
     email: '',
     contactPhone: '',
-    eventType: 'Wedding',
+    eventType: '',
     guestCount: '100',
     venueName: '',
     venueLocation: '',
@@ -1166,8 +1237,39 @@ export default function DJContractForm() {
     bookingId: '' // To store the booking ID when created
   };
 
-  // Initialize form data with the initial values
-  const [formData, setFormData] = useState(initialFormData);
+  // Initialize form data with the initial values, but check localStorage first
+  const [formData, setFormData] = useState(() => {
+    // Only check localStorage on client side
+    if (typeof window !== 'undefined') {
+      try {
+        const savedData = localStorage.getItem('djContractFormData');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          console.log('Initializing form with saved data:', parsedData);
+          // Ensure all string fields have string values (not undefined)
+          const sanitizedData = {};
+          Object.keys(initialFormData).forEach(key => {
+            if (typeof initialFormData[key] === 'string') {
+              sanitizedData[key] = parsedData[key] || initialFormData[key] || '';
+            } else if (typeof initialFormData[key] === 'boolean') {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            } else if (typeof initialFormData[key] === 'number') {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            } else if (Array.isArray(initialFormData[key])) {
+              sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : initialFormData[key];
+            } else {
+              sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : initialFormData[key];
+            }
+          });
+          return sanitizedData;
+        }
+      } catch (error) {
+        console.error('Error loading saved data during initialization:', error);
+      }
+    }
+    console.log('Initializing form with default data');
+    return initialFormData;
+  });
   
   // Terms and conditions text
   const termsAndConditionsText = `
@@ -1211,13 +1313,12 @@ Live City DJ Contract Terms and Conditions:
     { id: 'tidal', label: 'TIDAL', icon: 'https://tidal.com/img/tidal-share-image.jpg', placeholder: 'Paste your TIDAL playlist link' }
   ];
 
-  const venueLocationRef = useRef(null);
+
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [mapsLoaded, setMapsLoaded] = useState(false);
-  const [mapsError, setMapsError] = useState(null);
+  // Google Maps state is now handled by the AddressAutocomplete component
   const [isChangingPayment, setIsChangingPayment] = useState(false);
   const [hasSignature, setHasSignature] = useState(false); // Track signature status
   
@@ -1233,6 +1334,124 @@ Live City DJ Contract Terms and Conditions:
   const [showErrorMessage, setShowErrorMessage] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submitError, setSubmitError] = useState(null);
+  const [basePrice, setBasePrice] = useState(400); // Added setBasePrice state
+  
+  // Google Maps autocomplete is now handled by the AddressAutocomplete component
+  
+  // Debug function to manually reload form data
+  const debugReloadFormData = () => {
+    console.log('Manual reload triggered...');
+    try {
+      const savedData = localStorage.getItem('djContractFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        console.log('Manual reload found data:', parsedData);
+        
+        setFormData(prev => {
+          const mergedData = { ...prev, ...parsedData };
+          console.log('Manual reload merged data:', mergedData);
+          return mergedData;
+        });
+        
+        if (parsedData.eventType) {
+          const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+          setBasePrice(newBasePrice);
+        }
+      } else {
+        console.log('Manual reload: No data found in localStorage');
+      }
+    } catch (error) {
+      console.error('Manual reload error:', error);
+    }
+  };
+  
+  // Debug function to manually save test data
+  const debugSaveTestData = () => {
+    console.log('Saving test data...');
+    const testData = {
+      clientName: 'Test Client',
+      email: 'test@example.com',
+      contactPhone: '1234567890',
+      eventType: 'wedding'
+    };
+    
+    // Save via context
+    updateContractFormData(testData);
+    
+    // Also save directly to localStorage for comparison
+    localStorage.setItem('djContractFormData', JSON.stringify(testData));
+    
+    console.log('Test data saved:', testData);
+  };
+  
+  // Helper function to get base price for event type
+  const getBasePriceForEventType = useCallback((eventType) => {
+    if (isWeddingEvent(eventType)) {
+      return 1000;
+    }
+    
+    // Specific event types that should be $500
+    const fiveHundredDollarEvents = [
+      'Company Holiday Party',
+      'Engagement Party', 
+      'Bachelor Party',
+      'Bachelorette Party',
+      'Bachelor/Bachelorette Party',
+      'Prom',
+      'Homecoming'
+    ];
+    
+    if (fiveHundredDollarEvents.includes(eventType)) {
+      return 500;
+    }
+    
+    // Default for other events
+    return 400;
+  }, []);
+  
+  // Handler for event type changes
+  const handleEventTypeChange = useCallback((e) => {
+    const newEventType = e.target ? e.target.value : e;
+    console.log('Event type changed to:', newEventType);
+    
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        eventType: newEventType
+      };
+      
+      // Save to context for persistence
+      updateContractFormData(newData);
+      
+      return newData;
+    });
+    
+    // Update base price based on event type
+    const newBasePrice = getBasePriceForEventType(newEventType);
+    setBasePrice(newBasePrice);
+    console.log('Base price updated to:', newBasePrice, 'for event type:', newEventType);
+  }, [getBasePriceForEventType, updateContractFormData]);
+
+  // Handler for base price updates
+  const handleBasePriceUpdate = useCallback((price) => {
+    console.log('Base price update requested:', price);
+    setBasePrice(price);
+  }, []);
+  
+  // Memoized service card style function for better performance
+  const getServiceCardStyle = useCallback((serviceName) => {
+    const isSelected = formData[serviceName] === true;
+    return {
+      backgroundColor: isSelected ? '#e6f3ff' : 'white',
+      border: isSelected ? '2px solid #0070f3' : '1px solid #ddd',
+      borderRadius: '12px',
+      padding: 'clamp(16px, 3vw, 20px)',
+      transition: 'all 0.2s ease',
+      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+      transform: isSelected ? 'translateY(-2px)' : 'none',
+      position: 'relative'
+    };
+  }, [formData.lighting, formData.photography, formData.videoVisuals]);
   
   // Convert time to minutes for better comparison
   const convertToMinutes = useCallback((t) => {
@@ -1281,44 +1500,16 @@ Live City DJ Contract Terms and Conditions:
   }, [calculateHoursBetween]);
 
   const calculateTotal = () => {
-    console.log("Calculating total with services:", {
-      lighting: formData.lighting,
-      photography: formData.photography,
-      videoVisuals: formData.videoVisuals,
-      additionalHours: formData.additionalHours,
-      types: {
-        lighting: typeof formData.lighting,
-        photography: typeof formData.photography,
-        videoVisuals: typeof formData.videoVisuals,
-        additionalHours: typeof formData.additionalHours
-      }
-    });
+    let total = basePrice; // Use basePrice state instead of hardcoded value
     
-    let total = SERVICES.BASE;
+    // Add cost of additional hours
+    total += (formData.additionalHours || 0) * SERVICES.ADDITIONAL_HOUR;
     
-    // Use strict type checking with explicit logs
-    if (formData.lighting === true) {
-      console.log("Adding lighting cost:", SERVICES.LIGHTING);
-      total += SERVICES.LIGHTING;
-    }
+    // Add cost of additional services
+    if (formData.lighting) total += SERVICES.LIGHTING;
+    if (formData.photography) total += SERVICES.PHOTOGRAPHY;
+    if (formData.videoVisuals) total += SERVICES.VIDEO_VISUALS;
     
-    if (formData.photography === true) {
-      console.log("Adding photography cost:", SERVICES.PHOTOGRAPHY);
-      total += SERVICES.PHOTOGRAPHY;
-    }
-    
-    if (formData.videoVisuals === true) {
-      console.log("Adding video visuals cost:", SERVICES.VIDEO_VISUALS);
-      total += SERVICES.VIDEO_VISUALS;
-    }
-    
-    const additionalHoursCost = formData.additionalHours * SERVICES.ADDITIONAL_HOUR;
-    if (additionalHoursCost > 0) {
-      console.log("Adding additional hours cost:", additionalHoursCost);
-      total += additionalHoursCost;
-    }
-    
-    console.log("Calculated total:", total);
     return total;
   };
 
@@ -1347,356 +1538,369 @@ Live City DJ Contract Terms and Conditions:
     }));
   };
   
-  // Set isClient to true when running on client side
+  // Set isClient to true when running on client side and force reload context data
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  // Add this to manually load Google Maps API only if needed
-  useEffect(() => {
-    // Skip if already loaded or loading via layout.js
-    if (window.googleMapsLoaded || 
-        document.querySelector('script[src*="maps.googleapis.com"][src*="callback=initGoogleMapsCallback"]')) {
-      console.log('Google Maps already loading via layout.js - skipping manual load');
-      return;
-    }
     
-    if (isClient && !window.google?.maps?.places) {
-      console.log('Checking for existing Google Maps script...');
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    // Force reload context data when component mounts (user navigates back)
+    if (typeof window !== 'undefined') {
+      console.log('Component mounted, checking for saved form data...');
+      console.log('localStorage contents:', {
+        contractData: localStorage.getItem('djContractFormData'),
+        agendaData: localStorage.getItem('djWeddingAgendaData')
+      });
       
-      if (!existingScript) {
-        console.log('No existing Google Maps script found. Loading manually...');
-        
-        // First add the callback
-        window.initMapCallback = () => {
-          console.log('Google Maps API loaded manually via component callback!');
-          setMapsLoaded(true);
-          if (venueLocationRef.current) {
-            initializeGooglePlaces();
-          }
-          // Set the global flag to indicate it's loaded
-          window.googleMapsLoaded = true;
-        };
-        
-        // Then add the script
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMapCallback`;
-        script.async = true;
-        script.defer = true;
-        
-        script.onerror = (err) => {
-          console.error('Failed to load Google Maps API manually!', err);
-          setMapsError('Failed to load Google Maps API. Please check your connection.');
-        };
-        
-        document.head.appendChild(script);
-      } else {
-        console.log('Existing Google Maps script found. Waiting for it to load...');
-        
-        // Set up a check to see if Google Maps loads through the existing script
-        const checkGoogleMapsInterval = setInterval(() => {
-          if (window.google?.maps?.places || window.googleMapsLoaded) {
-            console.log('Google Maps loaded via existing script!');
-            clearInterval(checkGoogleMapsInterval);
-            setMapsLoaded(true);
-            if (venueLocationRef.current) {
-              initializeGooglePlaces();
-            }
-          }
-        }, 500);
-        
-        // Stop checking after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkGoogleMapsInterval);
-          if (!window.google?.maps?.places && !window.googleMapsLoaded) {
-            console.error('Google Maps failed to load after waiting');
-            setMapsError('Google Maps failed to load. Please try refreshing the page.');
-          }
-        }, 10000);
-      }
-    } else if (isClient && window.google?.maps?.places) {
-      console.log('Google Maps API already loaded!');
-      setMapsLoaded(true);
-    }
-  }, [isClient]);
-
-  // Add mobile viewport fix for proper display on mobile devices and Vercel
-  useEffect(() => {
-    if (isClient) {
-      // Create a style element to add CSS fix for mobile scrolling and display
-      const styleEl = document.createElement('style');
-      styleEl.textContent = `
-        html, body {
-          overflow-x: hidden !important;
-          position: relative;
-          width: 100% !important;
-          -webkit-overflow-scrolling: touch;
-          min-height: 100%;
-        }
-        body {
-          background-size: cover !important;
-          background-attachment: fixed !important;
-          background-position: center center !important;
-          height: auto !important;
-          min-height: 100vh !important;
-        }
-        .main-wrapper {
-          width: 100%;
-          min-height: 100vh;
-          padding-bottom: 50px;
-          position: relative;
-          z-index: 1;
-        }
-        @media (max-width: 767px) {
-          .main-content {
-            padding: 10px;
-            margin-bottom: 80px;
-          }
-          .form-container {
-            margin-bottom: 80px;
-          }
-          form {
-            margin-bottom: 30px;
-            padding: 1.5rem 1rem !important;
-            width: 96% !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-          }
-          .form-header h1 {
-            line-height: 1.3 !important;
-            margin-bottom: 1rem !important;
-          }
-          input, select, textarea {
-            font-size: 16px !important;
-          }
-          .payment-options {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-      `;
-      document.head.appendChild(styleEl);
-      
-      // Create and add a meta viewport tag to prevent scaling issues
-      const metaViewport = document.createElement('meta');
-      metaViewport.name = 'viewport';
-      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover';
-      
-      // Remove any existing viewport meta tags first to avoid conflicts
-      const existingMetaTags = document.querySelectorAll('meta[name="viewport"]');
-      existingMetaTags.forEach(tag => tag.remove());
-      
-      document.head.appendChild(metaViewport);
-      
-      // Add iOS-specific fixes
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // Create iOS specific style fixes
-        const iOSStyleEl = document.createElement('style');
-        iOSStyleEl.textContent = `
-          @supports (-webkit-touch-callout: none) {
-            body {
-              background-attachment: scroll !important;
-            }
+      // Small delay to ensure context is ready
+      setTimeout(() => {
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          console.log('Raw localStorage data:', savedData);
+          
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Found saved contract data on mount:', parsedData);
             
-            .ios-background-fix {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg');
-              background-size: cover;
-              background-position: center;
-              background-repeat: no-repeat;
-              z-index: -1;
+            // Force update the form data
+            setFormData(prev => {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Previous form data:', prev);
+              console.log('Parsed saved data:', parsedData);
+              console.log('Force updating form data on mount:', mergedData);
+              return mergedData;
+            });
+            
+            // Update base price if needed
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
+              console.log('Force updating base price on mount:', newBasePrice);
+            }
+          } else {
+            console.log('No saved data found in localStorage');
+          }
+        } catch (error) {
+          console.error('Error force loading data on mount:', error);
+        }
+      }, 100);
+    }
+  }, [getBasePriceForEventType]);
+  
+  // Listen for page visibility changes to reload data when user returns
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isClient) {
+        console.log('Page became visible, reloading form data...');
+        
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Reloading contract data on visibility change:', parsedData);
+            
+            setFormData(prev => {
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = parsedData[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+                } else {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                }
+              });
+              console.log('Updated form data on visibility change:', sanitizedData);
+              return sanitizedData;
+            });
+            
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
             }
           }
-        `;
-        document.head.appendChild(iOSStyleEl);
-        
-        // Add iOS background fix div
-        const iOSBackgroundFix = document.createElement('div');
-        iOSBackgroundFix.className = 'ios-background-fix';
-        document.body.prepend(iOSBackgroundFix);
+        } catch (error) {
+          console.error('Error reloading data on visibility change:', error);
+        }
       }
+    };
+    
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
-        if (document.head.contains(styleEl)) {
-          document.head.removeChild(styleEl);
-        }
-        if (document.head.contains(metaViewport)) {
-          document.head.removeChild(metaViewport);
-        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
-  }, [isClient]);
+  }, [isClient, getBasePriceForEventType]);
   
-  // Google Maps Places API initialization
+  // Listen for window focus to reload data when user navigates back
   useEffect(() => {
-    if (isClient && venueLocationRef.current) {
-      // First check if the API is loaded via the callback
-      if (window.googleMapsLoaded) {
-        console.log('Google Maps already loaded via callback - initializing Places...');
-        try {
-          initializeGooglePlaces();
-          setMapsLoaded(true);
-        } catch (error) {
-          console.error('Error initializing Google Places despite callback:', error);
-          setMapsError('Error initializing Google Places autocomplete');
-        }
-        return;
-      }
-      
-      // Fallback check if the API is loaded directly
-      if (window.google && window.google.maps && window.google.maps.places) {
-        console.log('Google Maps API detected - initializing Places...');
-        try {
-          initializeGooglePlaces();
-          setMapsLoaded(true);
-        } catch (error) {
-          console.error('Error initializing Google Places:', error);
-          setMapsError('Error initializing Google Places autocomplete');
-        }
-      } else {
-        console.log('Google Maps API not detected in initialization hook - waiting for load...');
-        // Wait for API to load with a timeout
-        let attempts = 0;
-        const checkGoogleMapsLoaded = setInterval(() => {
-          attempts++;
-          console.log(`Attempt ${attempts} to check if Google Maps API is loaded...`);
-          
-          // Check for callback flag first
-          if (window.googleMapsLoaded) {
-            clearInterval(checkGoogleMapsLoaded);
-            console.log('Google Maps loaded via callback!');
-            try {
-              initializeGooglePlaces();
-              setMapsLoaded(true);
-            } catch (error) {
-              console.error('Error initializing Google Places after callback:', error);
-              setMapsError('Error initializing Google Places autocomplete');
-            }
-            return;
-          }
-          
-          // Then check for direct API loading
-          if (window.google?.maps?.places) {
-            clearInterval(checkGoogleMapsLoaded);
-            console.log('Google Maps API loaded successfully after attempts!');
-            try {
-              initializeGooglePlaces();
-              setMapsLoaded(true);
-            } catch (error) {
-              console.error('Error initializing Google Places after waiting:', error);
-              setMapsError('Error initializing Google Places autocomplete');
-            }
-          } else if (attempts > 20) { // Increase timeout to 10 seconds
-            // After 10 seconds (20 attempts x 500ms), show error
-            clearInterval(checkGoogleMapsLoaded);
-            
-            // Log available Google object properties to help debug
-            if (window.google) {
-              console.log('Google object exists but not complete. Available properties:', Object.keys(window.google));
-              if (window.google.maps) {
-                console.log('Maps object exists. Available properties:', Object.keys(window.google.maps));
-              }
-            }
-            
-            const errorMsg = 'Google Maps API could not be loaded. Check browser console for details.';
-            setMapsError(errorMsg);
-            console.error(errorMsg);
-            
-            // Attempt to log API key details (without revealing the full key)
-            try {
-              const apiKeyPartial = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(0, 5) + '...' + 
-                                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.length - 4);
-              console.log(`API key being used (partial): ${apiKeyPartial}`);
-            } catch (e) {
-              console.error('Could not log API key info:', e);
-            }
-          }
-        }, 500);
+    const handleWindowFocus = () => {
+      if (isClient) {
+        console.log('Window focused, reloading form data...');
         
-        return () => clearInterval(checkGoogleMapsLoaded);
-      }
-    }
-  }, [isClient]);
-  
-  const initializeGooglePlaces = () => {
-    try {
-      console.log('Initializing Google Places Autocomplete...', venueLocationRef.current);
-      
-      // Check for DOM reference first
-      if (!venueLocationRef.current) {
-        console.error('Venue location reference is not available');
-        setMapsError('Cannot initialize address autocomplete: input reference not found');
-        return;
-      }
-      
-      // Check for Google Places API
-      if (!window.google || !window.google.maps || !window.google.maps.places) {
-        console.error('Google Maps API is not fully loaded:', window.google);
-        setMapsError('Google Maps API is not properly loaded');
-        return;
-      }
-      
-      // Create a new ID for the element to avoid any previous association issues
-      const uniqueId = `location-input-${Date.now()}`;
-      venueLocationRef.current.id = uniqueId;
-      
-      console.log('Creating autocomplete instance with options:', {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name']
-      });
-      
-      // Initialize autocomplete
-      const autocomplete = new window.google.maps.places.Autocomplete(venueLocationRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'geometry', 'name'],
-      });
-      
-      console.log('Autocomplete instance created:', autocomplete);
-      
-      // Add place_changed listener
-      autocomplete.addListener('place_changed', () => {
-        console.log('Place changed event fired');
         try {
-          const place = autocomplete.getPlace();
-          console.log('Place selected:', place);
-          
-          if (place && place.formatted_address) {
-            console.log('Selected place details:', place.formatted_address);
-            setFormData(prev => ({
-              ...prev,
-              venueLocation: place.formatted_address,
-            }));
-          } else {
-            console.warn('No place details available');
-            if (place) {
-              console.log('Place object returned without formatted_address. Available fields:', Object.keys(place));
+          const savedData = localStorage.getItem('djContractFormData');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            console.log('Reloading contract data on window focus:', parsedData);
+            
+            setFormData(prev => {
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = parsedData[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+                } else {
+                  sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+                }
+              });
+              console.log('Updated form data on window focus:', sanitizedData);
+              return sanitizedData;
+            });
+            
+            if (parsedData.eventType) {
+              const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+              setBasePrice(newBasePrice);
             }
           }
-        } catch (placeError) {
-          console.error('Error in place_changed handler:', placeError);
+        } catch (error) {
+          console.error('Error reloading data on window focus:', error);
         }
-      });
-      
-      // Store reference to autocomplete instance
-      window.googleAutocompleteInstance = autocomplete;
-      
-      console.log('Google Places Autocomplete initialized successfully!');
-    } catch (error) {
-      console.error('Error initializing Google Places Autocomplete:', error);
-      // More detailed error message
-      let errorMsg = 'Error initializing address autocomplete.';
-      if (error.message) {
-        errorMsg += ` Error: ${error.message}`;
       }
-      setMapsError(errorMsg);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleWindowFocus);
+      
+      return () => {
+        window.removeEventListener('focus', handleWindowFocus);
+      };
     }
-  };
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Listen for localStorage changes from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'djContractFormData' && e.newValue && isClient) {
+        console.log('localStorage changed from another tab, reloading form data...');
+        
+        try {
+          const parsedData = JSON.parse(e.newValue);
+          console.log('Reloading contract data from storage event:', parsedData);
+          
+          setFormData(prev => {
+            // Sanitize the data to prevent undefined values
+            const sanitizedData = {};
+            Object.keys(initialFormData).forEach(key => {
+              if (typeof initialFormData[key] === 'string') {
+                sanitizedData[key] = parsedData[key] || prev[key] || '';
+              } else if (typeof initialFormData[key] === 'boolean') {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              } else if (typeof initialFormData[key] === 'number') {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              } else if (Array.isArray(initialFormData[key])) {
+                sanitizedData[key] = Array.isArray(parsedData[key]) ? parsedData[key] : prev[key];
+              } else {
+                sanitizedData[key] = parsedData[key] !== undefined ? parsedData[key] : prev[key];
+              }
+            });
+            console.log('Updated form data from storage event:', sanitizedData);
+            return sanitizedData;
+          });
+          
+          if (parsedData.eventType) {
+            const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+            setBasePrice(newBasePrice);
+          }
+        } catch (error) {
+          console.error('Error reloading data from storage event:', error);
+        }
+      }
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Sync with context data on mount and when context data changes
+  useEffect(() => {
+    console.log('Context sync effect triggered:', { contextIsClient, contractFormData });
+    
+    if (contextIsClient) {
+      // Add a small delay to ensure localStorage has been loaded by the context
+      setTimeout(() => {
+        // Check localStorage directly as a fallback
+        try {
+          const savedData = localStorage.getItem('djContractFormData');
+          console.log('Direct localStorage check:', savedData);
+          
+          let dataToMerge = contractFormData;
+          
+          // If context data is empty but localStorage has data, use localStorage data
+          if ((!contractFormData || Object.keys(contractFormData).length === 0) && savedData) {
+            dataToMerge = JSON.parse(savedData);
+            console.log('Using localStorage data as fallback:', dataToMerge);
+          }
+          
+          if (dataToMerge && Object.keys(dataToMerge).length > 0) {
+            console.log('Syncing contract form with data:', dataToMerge);
+            setFormData(prev => {
+              // Sanitize the data to prevent undefined values
+              const sanitizedData = {};
+              Object.keys(initialFormData).forEach(key => {
+                if (typeof initialFormData[key] === 'string') {
+                  sanitizedData[key] = dataToMerge[key] || prev[key] || '';
+                } else if (typeof initialFormData[key] === 'boolean') {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                } else if (typeof initialFormData[key] === 'number') {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                } else if (Array.isArray(initialFormData[key])) {
+                  sanitizedData[key] = Array.isArray(dataToMerge[key]) ? dataToMerge[key] : prev[key];
+                } else {
+                  sanitizedData[key] = dataToMerge[key] !== undefined ? dataToMerge[key] : prev[key];
+                }
+              });
+              console.log('Previous form data:', prev);
+              console.log('Data to merge:', dataToMerge);
+              console.log('Sanitized merged data:', sanitizedData);
+              return sanitizedData;
+            });
+            
+            // Update base price if event type is loaded
+            if (dataToMerge.eventType) {
+              const newBasePrice = getBasePriceForEventType(dataToMerge.eventType);
+              setBasePrice(newBasePrice);
+              console.log('Base price updated to:', newBasePrice, 'for event type:', dataToMerge.eventType);
+            }
+          } else {
+            console.log('No contract form data available in context or localStorage');
+          }
+        } catch (error) {
+          console.error('Error in context sync effect:', error);
+        }
+      }, 100); // Small delay to ensure context has loaded localStorage data
+    } else {
+      console.log('Context not yet client-side ready');
+    }
+  }, [contextIsClient, contractFormData, getBasePriceForEventType]);
+
+  // Sync with wedding agenda data when available (for shared fields)
+  useEffect(() => {
+    if (contextIsClient && weddingAgendaData && Object.keys(weddingAgendaData).length > 0) {
+      console.log('Contract form syncing with wedding agenda data:', weddingAgendaData);
+      
+      setFormData(prev => {
+        const updatedData = { ...prev };
+        let hasChanges = false;
+        
+        // Sync email if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.email && !prev.email) {
+          updatedData.email = weddingAgendaData.email;
+          hasChanges = true;
+        }
+        
+        // Sync phone if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.phone && !prev.contactPhone) {
+          updatedData.contactPhone = weddingAgendaData.phone;
+          hasChanges = true;
+        }
+        
+        // Sync event date if not set in contract form but available in wedding agenda
+        if (weddingAgendaData.weddingDate && !prev.eventDate) {
+          updatedData.eventDate = weddingAgendaData.weddingDate;
+          hasChanges = true;
+        }
+        
+        // Sync client name from bride/groom names if not set in contract form
+        if ((weddingAgendaData.brideName || weddingAgendaData.groomName) && !prev.clientName) {
+          const brideName = weddingAgendaData.brideName || '';
+          const groomName = weddingAgendaData.groomName || '';
+          updatedData.clientName = `${brideName} ${groomName}`.trim();
+          hasChanges = true;
+        }
+        
+        // If we made changes, save to context
+        if (hasChanges) {
+          console.log('Contract form updated with wedding agenda data:', updatedData);
+          updateContractFormData(updatedData);
+        }
+        
+        return hasChanges ? updatedData : prev;
+      });
+    }
+  }, [contextIsClient, weddingAgendaData, updateContractFormData]);
+  
+  // Force reload data when component mounts (for navigation scenarios)
+  useEffect(() => {
+    if (isClient) {
+      console.log('Component mounted, forcing data reload...');
+      
+      // Force reload from localStorage on mount
+      try {
+        const savedData = localStorage.getItem('djContractFormData');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          console.log('Force reload on mount found data:', parsedData);
+          
+          setFormData(prev => {
+            // Only merge if the saved data has more information than current form
+            const hasMoreData = Object.keys(parsedData).some(key => 
+              parsedData[key] && parsedData[key] !== '' && 
+              (!prev[key] || prev[key] === '')
+            );
+            
+            if (hasMoreData) {
+              const mergedData = { ...prev, ...parsedData };
+              console.log('Force merging data on mount:', mergedData);
+              return mergedData;
+            } else {
+              console.log('Current form data is more complete, not overriding');
+              return prev;
+            }
+          });
+          
+          if (parsedData.eventType) {
+            const newBasePrice = getBasePriceForEventType(parsedData.eventType);
+            setBasePrice(newBasePrice);
+            console.log('Force updated base price on mount:', newBasePrice);
+          }
+        }
+      } catch (error) {
+        console.error('Error in force reload on mount:', error);
+      }
+    }
+  }, [isClient, getBasePriceForEventType]);
+  
+  // Update base price when event type changes
+  useEffect(() => {
+    if (formData.eventType) {
+      const newBasePrice = getBasePriceForEventType(formData.eventType);
+      if (newBasePrice !== basePrice) {
+        setBasePrice(newBasePrice);
+        console.log('Base price updated to:', newBasePrice, 'for event type:', formData.eventType);
+      }
+    }
+  }, [formData.eventType, basePrice, getBasePriceForEventType]);
+
+  // Google Maps autocomplete is now handled by the AddressAutocomplete component
+  // Removed duplicate initialization code to prevent conflicts
+
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -1706,6 +1910,8 @@ Live City DJ Contract Terms and Conditions:
     }
     
     setFormData((prev) => {
+      let newData;
+      
       // Special handler for musicPreferences checkboxes
       if (name.startsWith('music_')) {
         const genreId = name.replace('music_', '');
@@ -1721,19 +1927,33 @@ Live City DJ Contract Terms and Conditions:
           updatedPreferences = updatedPreferences.filter(id => id !== genreId);
         }
         
-        return {
+        newData = {
           ...prev,
           musicPreferences: updatedPreferences
         };
+      } else {
+        // Default handler for other form fields
+        newData = {
+          ...prev,
+          [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
+        };
       }
       
-      // Default handler for other form fields
-      const newData = {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
-      };
-      
       console.log(`Updated formData ${name}:`, newData[name]);
+      console.log('Full form data being saved to context:', newData);
+      
+      // Defer context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
+      
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+      
       return newData;
     });
   };
@@ -2228,8 +2448,10 @@ Live City DJ Contract Terms and Conditions:
         flexWrap: 'wrap',
         gap: '0.5rem',
       }}>
-        <span style={{ flex: '1 1 auto' }}>🎶 Base Package</span>
-        <span style={{ whiteSpace: 'nowrap' }}>${SERVICES.BASE}</span>
+        <span style={{ flex: '1 1 auto' }}>
+          {isWeddingEvent(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
+        </span>
+        <span style={{ whiteSpace: 'nowrap' }}>${basePrice}</span>
       </div>
       {formData.lighting && <li>💡 Lighting: ${SERVICES.LIGHTING}</li>}
       {formData.photography && <li>📸 Event Photography: ${SERVICES.PHOTOGRAPHY}</li>}
@@ -2474,7 +2696,22 @@ Live City DJ Contract Terms and Conditions:
     });
     
     // Update form data immediately to avoid state update issues
-    setFormData(prev => ({ ...prev, paymentMethod: method }));
+    setFormData(prev => {
+      const newData = { ...prev, paymentMethod: method };
+      
+      // Defer context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
+      
+      // Also save to localStorage as backup
+      try {
+        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Error saving payment method to localStorage:', error);
+      }
+      return newData;
+    });
     
     // Clear any payment method error when a selection is made
     if (formErrors.paymentMethod) {
@@ -2484,7 +2721,7 @@ Live City DJ Contract Terms and Conditions:
         return newErrors;
       });
     }
-  }, [formErrors]);
+  }, [formErrors, updateContractFormData]);
 
   // Memoize the payment method option styles to reduce recalculations
   const getPaymentOptionStyle = useCallback((method) => {
@@ -2505,25 +2742,7 @@ Live City DJ Contract Terms and Conditions:
     };
   }, [formData.paymentMethod, isChangingPayment]);
 
-  // Create a service card style generator
-  const getServiceCardStyle = useCallback((name) => {
-    const isSelected = formData[name] === true;
-    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
-    
-    return {
-      border: `2px solid ${isSelected ? '#0070f3' : '#ddd'}`,
-      borderRadius: '12px',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      cursor: 'pointer',
-      backgroundColor: isSelected ? 'rgba(0, 112, 243, 0.05)' : 'white',
-      transition: 'all 0.2s ease',
-      boxShadow: isSelected ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-      position: 'relative',
-      overflow: 'hidden'
-    };
-  }, [formData]);
+
 
   // Memoize common styles to avoid recreation on each render
   const paymentIconStyle = useMemo(() => ({ 
@@ -2559,49 +2778,7 @@ Live City DJ Contract Terms and Conditions:
     });
   }, []);
 
-  // Add this to manually load Google Maps API if other methods fail
-  useEffect(() => {
-    if (isClient && mapsError) {
-      console.log('Attempting to reload Google Maps API after error...');
-      
-      // Remove any existing Google Maps scripts
-      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
-      existingScripts.forEach(script => script.remove());
-      
-      // Reset Google object
-      if (window.google && window.google.maps) {
-        try {
-          // This is a best-effort attempt to clear the Google object
-          window.google.maps = undefined;
-        } catch (e) {
-          console.error('Error clearing Google maps object:', e);
-        }
-      }
-      
-      // Create and add new script
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsCallback`;
-      script.async = true;
-      script.defer = true;
-      
-      // Define callback function
-      window.initGoogleMapsCallback = () => {
-        console.log('Google Maps API reloaded successfully!');
-        setMapsError(null);
-        setMapsLoaded(true);
-        if (venueLocationRef.current) {
-          initializeGooglePlaces();
-        }
-      };
-      
-      script.onerror = (err) => {
-        console.error('Failed to reload Google Maps API:', err);
-        setMapsError('Failed to load Google Maps API. Please try refreshing the page.');
-      };
-      
-      document.head.appendChild(script);
-    }
-  }, [mapsError, isClient]);
+
 
   // GenreSelectionModal component for selecting music genres
   function GenreSelectionModal({ onClose }) {
@@ -2617,11 +2794,18 @@ Live City DJ Contract Terms and Conditions:
     
     // Apply changes and close the modal
     const applyChanges = () => {
-      setFormData(prev => ({
-        ...prev,
+      const newData = {
+        ...formData,
         musicPreferences: selectedGenres,
         otherMusicPreference: selectedGenres.includes('other') ? otherGenre : ''
-      }));
+      };
+      setFormData(newData);
+      
+      // Use setTimeout to defer the context update to avoid setState during render
+      setTimeout(() => {
+        updateContractFormData(newData);
+      }, 0);
+      
       onClose();
     };
     
@@ -3065,1256 +3249,1454 @@ Live City DJ Contract Terms and Conditions:
   };
 
   return (
-    <div className="main-wrapper" style={{ 
-      width: '100%', 
-      position: 'relative',
-      minHeight: '100vh',
-      overflowX: 'hidden',
-      paddingBottom: '2rem'
-    }}>
-      <ToastContainer position="top-center" autoClose={5000} />
-      {showConfirmation && (
-        <PaymentConfirmationBanner 
-          paymentMethod={formData.paymentMethod} 
-          onClose={() => setShowConfirmation(false)} 
-        />
-      )}
-      {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
-      {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
-      {modalText && <PaymentModal htmlContent={modalText} onClose={() => setModalText(null)} />}
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center',
-        width: '100%',
-        overflow: 'visible',
-        minHeight: '100vh'
+    <SuppressHydration>
+      <div className="main-wrapper" style={{ 
+        width: '100%', 
+        position: 'relative',
+        minHeight: '100vh',
+        overflowX: 'hidden',
+        paddingBottom: '2rem'
       }}>
-        {submitted && (
-          <BookingConfirmationPage 
-            formData={{
-              ...formData,
-              totalAmount: calculateTotal()
-            }}
-            onSendEmail={sendConfirmationEmail}
-            onBookAgain={() => {
-              setFormData(initialFormData);
-              setSubmitted(false);
-            }}
+        <style jsx global>{`
+          body {
+            background: url('/dj-background-new.jpg') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+            min-height: 100vh;
+          }
+          
+          /* Mobile-specific background fix */
+          @media (max-width: 768px) {
+            body {
+              background-attachment: scroll !important;
+            }
+            
+            .mobile-background-fix {
+              display: block;
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-image: url('/dj-background-new.jpg') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+              z-index: -1;
+            }
+          }
+          
+          /* iOS-specific background fix */
+          @supports (-webkit-touch-callout: none) {
+            body {
+              background-attachment: scroll !important;
+            }
+            
+            .ios-background-fix {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-image: url('/dj-background-new.jpg') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+              z-index: -1;
+            }
+          }
+        `}</style>
+        
+        {/* Mobile background fix element */}
+        <div className="mobile-background-fix"></div>
+        
+        {/* iOS background fix element */}
+        <div className="ios-background-fix"></div>
+        
+        <ToastContainer position="top-center" autoClose={5000} />
+        {showConfirmation && (
+          <PaymentConfirmationBanner 
+            paymentMethod={formData.paymentMethod} 
+            onClose={() => setShowConfirmation(false)} 
           />
         )}
-        {!submitted && (
-          <div style={{ 
-            maxWidth: '800px',
-            width: '96%',
-            margin: '2rem auto 3rem auto'
-          }}>
-            <form onSubmit={handleSubmit} style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.85)',
-              padding: '2.5rem',
-              borderRadius: '20px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-              width: '100%',
-              marginBottom: '50px',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
+        {infoPopup && <InfoModal text={infoPopup} onClose={() => setInfoPopup(null)} />}
+        {showTerms && <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />}
+        {modalText && <PaymentModal htmlContent={modalText} onClose={() => setModalText(null)} />}
+        
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center',
+          width: '100%',
+          overflow: 'visible',
+          minHeight: '100vh'
+        }}>
+          {submitted && (
+            <BookingConfirmationPage 
+              formData={{
+                ...formData,
+                totalAmount: calculateTotal()
+              }}
+              onSendEmail={sendConfirmationEmail}
+              onBookAgain={() => {
+                setFormData(initialFormData);
+                setSubmitted(false);
+              }}
+            />
+          )}
+          {!submitted && (
+            <div style={{ 
+              maxWidth: '800px',
+              width: '96%',
+              margin: '2rem auto 3rem auto'
             }}>
-              {/* Form Header with Logo */}
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '30px',
-                position: 'relative',
-                maxWidth: '100%',
-                padding: '0 10px'
+              <form onSubmit={handleSubmit} style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                padding: '2.5rem',
+                borderRadius: '20px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                width: '100%',
+                marginBottom: '50px',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
               }}>
+                {/* Form Header with Logo */}
                 <div style={{
-                  width: '150px',
-                  height: '150px',
-                  margin: '0 auto 15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Image
-                    src="/logo.png"
-                    alt="DJ Bobby Drake Logo"
-                    width={150}
-                    height={150}
-                    priority
-                    unoptimized={false}
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      objectFit: 'contain'
-                    }}
-                  />
-                </div>
-                
-                <h1 style={{
-                  fontSize: 'clamp(28px, 4vw, 36px)',
-                  fontWeight: 'bold',
-                  margin: '10px auto',
-                  color: '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  lineHeight: '1.2',
-                  maxWidth: '100%',
                   textAlign: 'center',
-                  flexWrap: 'nowrap',
-                  whiteSpace: 'nowrap'
+                  marginBottom: '30px',
+                  position: 'relative',
+                  maxWidth: '100%',
+                  padding: '0 10px'
                 }}>
-                  <span style={{ 
-                    fontSize: 'clamp(28px, 4vw, 36px)'
-                  }}>📝</span>
-                  <span>EVENT CONTRACT</span>
-                </h1>
-              </div>
-              
-              {/* Spacer div between email address and client name */}
-              <div style={{ 
-                height: '20px', 
-                marginBottom: '20px', 
-                borderBottom: '1px solid #e0e0e0',
-                opacity: 0.5
-              }} className="section-divider"></div>
-              
-              {/* Client Information Section */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={{
-                    ...labelStyle,
-                    fontSize: 'clamp(16px, 2.5vw, 18px)'
-                  }} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['clientName']} Client Name *
-                    </span>
-                  </label>
-                  <input
-                    name="clientName"
-                    type="text"
-                    required
-                    style={{
-                      ...inputStyle,
-                      fontSize: 'clamp(16px, 2.5vw, 18px)',
-                      padding: 'clamp(12px, 2vw, 16px)'
-                    }}
-                    className="field-input"
-                    value={formData.clientName}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['email']} Email:
-                    </span>
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['contactPhone']} Contact Phone *
-                    </span>
-                  </label>
-                  <input
-                    name="contactPhone"
-                    type="tel"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.contactPhone}
-                    onChange={handleChange}
-                    placeholder="(123) 456-7890"
-                  />
-                  {formErrors.contactPhone && (
-                    <p className="text-red-500 text-xs italic">{formErrors.contactPhone}</p>
+                  <div style={{
+                    width: '150px',
+                    height: '150px',
+                    margin: '0 auto 15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Image
+                      src="/dj-bobby-drake-logo.png"
+                      alt="DJ Bobby Drake Logo"
+                      width={150}
+                      height={150}
+                      priority
+                      unoptimized={false}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
+                  
+                  <h1 style={{
+                    fontSize: 'clamp(28px, 4vw, 36px)',
+                    fontWeight: 'bold',
+                    margin: '10px auto',
+                    color: '#000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    lineHeight: '1.2',
+                    maxWidth: '100%',
+                    textAlign: 'center',
+                    flexWrap: 'nowrap',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <span style={{ 
+                      fontSize: 'clamp(28px, 4vw, 36px)'
+                    }}>📝</span>
+                    <span>EVENT CONTRACT</span>
+                  </h1>
+                  
+                  {/* Debug section - temporary for testing */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#fef3c7',
+                      borderRadius: '8px',
+                      border: '1px solid #f59e0b'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={debugReloadFormData}
+                        style={{
+                          backgroundColor: '#f59e0b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 16px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          marginBottom: '10px',
+                          marginRight: '10px'
+                        }}
+                      >
+                        🔄 Debug: Reload Form Data
+                      </button>
+                      <button
+                        type="button"
+                        onClick={debugSaveTestData}
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 16px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          marginBottom: '10px'
+                        }}
+                      >
+                        💾 Save Test Data
+                      </button>
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>
+                        <div>Client Name: {formData.clientName || 'empty'}</div>
+                        <div>Email: {formData.email || 'empty'}</div>
+                        <div>Event Type: {formData.eventType || 'empty'}</div>
+                        <div>Context Client: {contextIsClient ? 'true' : 'false'}</div>
+                        <div>Context Data Keys: {Object.keys(contractFormData).length}</div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-
-              {/* Two-column grid for event details - changed to single column */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['eventType']} Event Type:
-                    </span>
-                  </label>
-                  <input
-                    name="eventType"
-                    type="text"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.eventType}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['guestCount']} Guest Count:
-                    </span>
-                  </label>
-                  <input
-                    name="guestCount"
-                    type="number"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.guestCount}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              {/* Two-column grid for venue information - changed to single column */}
-              <div className="form-grid-1col">
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {fieldIcons['venueName']} Venue Name:
-                    </span>
-                  </label>
-                  <input
-                    name="venueName"
-                    type="text"
-                    required
-                    style={inputStyle}
-                    className="field-input"
-                    value={formData.venueName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {venueLocationIcon} Venue Location:
-                    </span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
+                
+                {/* Spacer div between email address and client name */}
+                <div style={{ 
+                  height: '20px', 
+                  marginBottom: '20px', 
+                  borderBottom: '1px solid #e0e0e0',
+                  opacity: 0.5
+                }} className="section-divider"></div>
+                
+                {/* Client Information Section */}
+                <div className="form-grid-1col">
+                  <div>
+                    <label style={{
+                      ...labelStyle,
+                      fontSize: 'clamp(16px, 2.5vw, 18px)'
+                    }} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['clientName']} Client Name *
+                      </span>
+                    </label>
                     <input
-                      ref={venueLocationRef}
-                      name="venueLocation"
+                      name="clientName"
                       type="text"
-                      value={formData.venueLocation}
-                      onChange={handleChange}
                       required
-                      placeholder="Enter venue address"
-                      style={{ 
-                        backgroundColor: 'white', 
-                        width: '100%', 
-                        padding: 'clamp(12px, 2vw, 16px)', 
-                        marginBottom: '1rem', 
-                        borderRadius: '8px', 
-                        border: `1px solid ${mapsError ? '#e53e3e' : '#ccc'}`, 
-                        color: 'black',
-                        transition: 'all 0.2s ease',
-                        fontSize: 'clamp(16px, 2.5vw, 18px)'
+                      style={{
+                        ...inputStyle,
+                        fontSize: 'clamp(16px, 2.5vw, 18px)',
+                        padding: 'clamp(12px, 2vw, 16px)'
                       }}
                       className="field-input"
+                      value={formData.clientName || ''}
+                      onChange={handleChange}
+                      placeholder="Enter your full name"
                     />
-                    <div style={{ 
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      color: '#888',
-                      fontSize: '14px'
-                    }}>
-                      <FaMapMarkerAlt style={{ color: mapsError ? '#e53e3e' : '#0070f3' }} />
-                    </div>
-                    <p style={{ 
-                      fontSize: '0.75rem', 
-                      color: mapsError ? '#e53e3e' : '#666', 
-                      marginTop: '-0.75rem',
-                      marginBottom: '1rem'
-                    }}>
-                      {mapsError || (mapsLoaded ? 'Address suggestions powered by Google Maps' : 'Loading Google Maps...')}
-                    </p>
+                  </div>
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['email']} Email:
+                      </span>
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                      value={formData.email || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['contactPhone']} Contact Phone *
+                      </span>
+                    </label>
+                    <input
+                      name="contactPhone"
+                      type="tel"
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                      value={formData.contactPhone || ''}
+                      onChange={handleChange}
+                      placeholder="(123) 456-7890"
+                    />
+                    {formErrors.contactPhone && (
+                      <p className="text-red-500 text-xs italic">{formErrors.contactPhone}</p>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Two-column grid for date and time selection - changed to single column */}
-              <div className="form-grid-1col">
-                {/* Event Date */}
-                <div>
-                  <label style={labelStyle} className="field-label">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
-                    </span>
-                  </label>
-                  
-                  {/* Replace CustomDatePicker with ReactDatePickerField */}
-                  <ReactDatePickerField
-                    selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
-                    onChange={(date) => {
-                      handleChange({
-                        target: {
-                          name: 'eventDate',
-                          value: date ? date.toISOString().split('T')[0] : ''
-                        }
-                      });
-                    }}
-                    errorMessage={formErrors.eventDate}
-                    minDate={new Date()}
-                  />
+                {/* Two-column grid for event details - changed to single column */}
+                <div className="form-grid-1col">
+                  <div>
+                    <label style={{
+                      ...labelStyle,
+                      fontSize: 'clamp(16px, 2.5vw, 18px)'
+                    }} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['eventType']} Event Type *
+                      </span>
+                    </label>
+                    <EventTypeDropdown
+                      value={formData.eventType}
+                      onChange={handleEventTypeChange}
+                      onPriceUpdate={handleBasePriceUpdate}
+                      showWeddingAgendaLink={true}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['guestCount']} Guest Count:
+                      </span>
+                    </label>
+                    <input
+                      name="guestCount"
+                      type="number"
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                      value={formData.guestCount || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
 
-                {/* Start Time */}
+                {/* Two-column grid for venue information - changed to single column */}
+                <div className="form-grid-1col">
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {fieldIcons['venueName']} Venue Name:
+                      </span>
+                    </label>
+                    <input
+                      name="venueName"
+                      type="text"
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                      value={formData.venueName || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {venueLocationIcon} Venue Location:
+                      </span>
+                    </label>
+                    <AddressAutocomplete
+                      value={formData.venueLocation || ''}
+                      onChange={handleChange}
+                      name="venueLocation"
+                      placeholder="Enter venue address"
+                      required={true}
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Two-column grid for date and time selection - changed to single column */}
+                <div className="form-grid-1col">
+                  {/* Event Date */}
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
+                      </span>
+                    </label>
+                    
+                    {/* Replace CustomDatePicker with ReactDatePickerField */}
+                    <ReactDatePickerField
+                      key={`date-picker-${formData.eventType}`}
+                      selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
+                      onChange={(date) => {
+                        handleChange({
+                          target: {
+                            name: 'eventDate',
+                            value: date ? date.toISOString().split('T')[0] : ''
+                          }
+                        });
+                      }}
+                      errorMessage={formErrors.eventDate}
+                      minDate={new Date()}
+                    />
+                  </div>
+
+                  {/* Start Time */}
+                  <div>
+                    <label style={labelStyle} className="field-label">
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {timeIcons['startTime']} Start Time:
+                      </span>
+                    </label>
+                    <select
+                      name="startTime"
+                      value={formData.startTime || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        
+                        if (formData.endTime) {
+                          // If end time already exists, calculate new additional hours
+                          const additionalHours = calculateAdditionalHours(value, formData.endTime);
+                          const newData = {
+                            ...formData,
+                            startTime: value,
+                            additionalHours
+                          };
+                          setFormData(newData);
+                          updateContractFormData(newData);
+                        } else {
+                          // If no end time yet, just update start time
+                          const newData = {
+                            ...formData,
+                            startTime: value,
+                            endTime: '' // reset endTime on startTime change
+                          };
+                          setFormData(newData);
+                          updateContractFormData(newData);
+                        }
+                      }}
+                      required
+                      style={inputStyle}
+                      className="field-input"
+                    >
+                      <option value="">Select start time</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* End Time */}
                 <div>
                   <label style={labelStyle} className="field-label">
                     <span style={{ display: 'flex', alignItems: 'center' }}>
-                      {timeIcons['startTime']} Start Time:
+                      {timeIcons['endTime']} End Time:
                     </span>
                   </label>
                   <select
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      
-                      if (formData.endTime) {
-                        // If end time already exists, calculate new additional hours
-                        const additionalHours = calculateAdditionalHours(value, formData.endTime);
-                        setFormData((prev) => ({
-                          ...prev,
-                          startTime: value,
-                          additionalHours
-                        }));
-                      } else {
-                        // If no end time yet, just update start time
-                        setFormData((prev) => ({
-                          ...prev,
-                          startTime: value,
-                          endTime: '' // reset endTime on startTime change
-                        }));
-                      }
-                    }}
+                    name="endTime"
+                    value={formData.endTime || ''}
+                    onChange={(e) => handleEndTimeChange(e.target.value)}
                     required
+                    disabled={!formData.startTime}
                     style={inputStyle}
                     className="field-input"
                   >
-                    <option value="">Select start time</option>
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
+                    <option value="">Select end time</option>
+                    {formData.startTime &&
+                      timeOptions
+                        .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
+                        .map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
                   </select>
+                  {formData.startTime && formData.endTime && (
+                    <div style={{
+                      fontSize: '0.9rem',
+                      color: formData.additionalHours > 0 ? '#0070f3' : '#666',
+                      marginTop: '0.5rem',
+                      fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
+                    }}>
+                      {formData.additionalHours > 0 
+                        ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
+                        : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {/* End Time */}
-              <div>
-                <label style={labelStyle} className="field-label">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {timeIcons['endTime']} End Time:
-                  </span>
-                </label>
-                <select
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={(e) => handleEndTimeChange(e.target.value)}
-                  required
-                  disabled={!formData.startTime}
-                  style={inputStyle}
-                  className="field-input"
-                >
-                  <option value="">Select end time</option>
-                  {formData.startTime &&
-                    timeOptions
-                      .filter((t) => convertToMinutes(t) > convertToMinutes(formData.startTime))
-                      .map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                </select>
-                {formData.startTime && formData.endTime && (
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: formData.additionalHours > 0 ? '#0070f3' : '#666',
-                    marginTop: '0.5rem',
-                    fontWeight: formData.additionalHours > 0 ? '500' : 'normal'
+                {/* Additional Services Header */}
+                <div style={{
+                  marginTop: '2.5rem',
+                  marginBottom: '1.5rem',
+                  borderBottom: '2px solid #e2e8f0',
+                  position: 'relative',
+                  paddingBottom: '0.5rem'
+                }} className="section-header">
+                  <h3 style={{
+                    color: '#2d3748',
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '0'
                   }}>
-                    {formData.additionalHours > 0 
-                      ? `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (+${formData.additionalHours} additional hours)`
-                      : `${calculateHoursBetween(formData.startTime, formData.endTime).toFixed(1)} hour event (base package)`}
-                  </div>
-                )}
-              </div>
+                    <FaPlus style={{ color: '#0070f3', fontSize: '0.9rem' }} />
+                    Additional Services
+                  </h3>
+                </div>
 
-              {/* Additional Services Header */}
-              <div style={{
-                marginTop: '2.5rem',
-                marginBottom: '1.5rem',
-                borderBottom: '2px solid #e2e8f0',
-                position: 'relative',
-                paddingBottom: '0.5rem'
-              }} className="section-header">
-                <h3 style={{
-                  color: '#2d3748',
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  backgroundColor: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '0'
-                }}>
-                  <FaPlus style={{ color: '#0070f3', fontSize: '0.9rem' }} />
-                  Additional Services
-                </h3>
-              </div>
-
-              {/* Redesigned Card-Style Additional Services */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '20px',
-                marginBottom: '2rem'
-              }} className="service-options">
-                {[
-                  {
-                    name: 'lighting',
-                    label: 'Event Lighting',
-                    price: '$100',
-                    description: 'Transform your venue with dynamic light shows that pulse to the music! Professional setup includes state-of-the-art strobes & LED effects.',
-                    icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
-                  },
-                  {
-                    name: 'photography',
-                    label: 'Event Photography',
-                    price: '$150',
-                    description: 'Capture all your perfect moments! 50+ professionally edited high-resolution photos delivered within 48 hours of your event.',
-                    icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
-                  },
-                  {
-                    name: 'videoVisuals',
-                    label: 'Video Visuals',
-                    price: '$100',
-                    description: 'Add immersive visuals to your event! Custom HD projection including music videos, slideshows, and interactive displays.',
-                    icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
-                  }
-                ].map(({ name, label, price, description, icon }) => {
-                  // Debug the current item's selection status
-                  const isSelected = formData[name] === true;
-                  console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
-                  
-                  return (
-                    <div 
-                      key={name}
-                      onClick={() => {
-                        console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
-                        // Use direct state update with explicit true/false values
-                        setFormData(prev => {
-                          const newValue = prev[name] === true ? false : true;
-                          console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
-                          return {
-                            ...prev,
-                            [name]: newValue
-                          };
-                        });
-                      }}
-                      className="service-card"
-                      style={getServiceCardStyle(name)}
-                    >
-                      {formData[name] === true && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          backgroundColor: '#0070f3',
-                          borderRadius: '50%',
-                          width: '24px',
-                          height: '24px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 2
-                        }}>
-                          <FaCheck color="white" size={12} />
-                        </div>
-                      )}
+                {/* Redesigned Card-Style Additional Services */}
+                <div 
+                  key={`service-options-${formData.eventType}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '2rem'
+                  }} 
+                  className="service-options"
+                >
+                  {[
+                    {
+                      name: 'lighting',
+                      label: 'Event Lighting',
+                      price: '$100',
+                      description: 'Transform your venue with dynamic light shows that pulse to the music! Professional setup includes state-of-the-art strobes & LED effects.',
+                      icon: <FaLightbulb style={{ fontSize: '24px', color: '#ECC94B' }} />
+                    },
+                    {
+                      name: 'photography',
+                      label: 'Event Photography',
+                      price: '$150',
+                      description: 'Capture all your perfect moments! 50+ professionally edited high-resolution photos delivered within 48 hours of your event.',
+                      icon: <FaCamera style={{ fontSize: '24px', color: '#4FD1C5' }} />
+                    },
+                    {
+                      name: 'videoVisuals',
+                      label: 'Video Visuals',
+                      price: '$100',
+                      description: 'Add immersive visuals to your event! Custom HD projection including music videos, slideshows, and interactive displays.',
+                      icon: <FaVideo style={{ fontSize: '24px', color: '#F687B3' }} />
+                    }
+                  ].map(({ name, label, price, description, icon }) => {
+                    // Debug the current item's selection status
+                    const isSelected = formData[name] === true;
+                    console.log(`Service Card ${name}: isSelected=${isSelected}, value=${formData[name]}, type=${typeof formData[name]}`);
+                    
+                    const handleServiceToggle = (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log(`Toggling ${name} from ${formData[name]} to ${!formData[name]}`);
                       
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                        <div style={{ 
-                          marginRight: '12px',
-                          padding: '10px',
-                          borderRadius: '8px',
-                          backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
-                        }}>
-                          {icon}
-                        </div>
-                        <div>
-                          <h4 style={{ 
-                            margin: '0 0 4px 0',
-                            color: '#333',
-                            fontWeight: formData[name] ? '600' : '500'
+                      // Use direct state update with explicit true/false values
+                      const newValue = formData[name] === true ? false : true;
+                      console.log(`Setting ${name} to ${newValue} (explicit boolean)`);
+                      
+                      const newData = {
+                        ...formData,
+                        [name]: newValue
+                      };
+                      
+                      setFormData(newData);
+                      
+                      // Defer context update to avoid setState during render
+                      setTimeout(() => {
+                        updateContractFormData(newData);
+                      }, 0);
+                      
+                      // Also save directly to localStorage as backup
+                      try {
+                        localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        console.log(`Saved ${name} service selection to localStorage:`, newValue);
+                      } catch (error) {
+                        console.error('Error saving service selection to localStorage:', error);
+                      }
+                    };
+                    
+                    return (
+                      <div 
+                        key={name}
+                        onClick={handleServiceToggle}
+                        className="service-card"
+                        style={{
+                          ...getServiceCardStyle(name),
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          touchAction: 'manipulation'
+                        }}
+                      >
+                        {formData[name] === true && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            backgroundColor: '#0070f3',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 2
                           }}>
-                            {label}
-                          </h4>
+                            <FaCheck color="white" size={12} />
+                          </div>
+                        )}
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
                           <div style={{ 
-                            fontSize: '1rem', 
-                            fontWeight: 'bold',
-                            color: formData[name] ? '#0070f3' : '#666'
+                            marginRight: '12px',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            backgroundColor: formData[name] ? 'rgba(0, 112, 243, 0.1)' : '#f5f5f5'
                           }}>
-                            {price}
+                            {icon}
+                          </div>
+                          <div>
+                            <h4 style={{ 
+                              margin: '0 0 4px 0',
+                              color: '#333',
+                              fontWeight: formData[name] ? '600' : '500'
+                            }}>
+                              {label}
+                            </h4>
+                            <div style={{ 
+                              fontSize: '1rem', 
+                              fontWeight: 'bold',
+                              color: formData[name] ? '#0070f3' : '#666'
+                            }}>
+                              {price}
+                            </div>
                           </div>
                         </div>
+                        
+                        <p style={{ 
+                          fontSize: '0.85rem', 
+                          color: '#666', 
+                          margin: '0',
+                          lineHeight: '1.4'
+                        }}>
+                          {description}
+                        </p>
+                        
+                        <input
+                          type="checkbox"
+                          name={name}
+                          checked={formData[name]}
+                          onChange={handleChange}
+                          style={{ position: 'absolute', opacity: 0 }}
+                        />
                       </div>
-                      
+                    );
+                  })}
+                  
+                  {/* Wedding Agenda Card - Using client-only component */}
+                  {formData.eventType && isWeddingEvent(formData.eventType) ? (
+                    <div>
+                      <WeddingAgendaCard 
+                        key={`wedding-agenda-${formData.eventType}`}
+                        eventType={formData.eventType} 
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Music Preferences Section - Revamped with Tick Boxes */}
+                <div style={{
+                  marginTop: '2rem',
+                  marginBottom: '1.5rem',
+                  borderBottom: '2px solid #e0e0e0',
+                  position: 'relative'
+                }} className="section-header">
+                  <h3 style={{
+                    color: '#333',
+                    fontSize: 'clamp(20px, 3vw, 24px)',
+                    fontWeight: '600',
+                    backgroundColor: 'rgba(255,255,255,0.92)',
+                    display: 'inline-block',
+                    padding: '0 1rem 0.5rem 0',
+                    position: 'relative',
+                    marginBottom: '0',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <span className="music-icon" style={{ 
+                      color: '#0070f3', 
+                      marginRight: '10px', 
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>🎵</span>
+                    What&apos;s On Your Playlist?
+                  </h3>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  {/* Genre selection card that opens the modal */}
+                  <div 
+                    onClick={() => setShowGenreModal(true)}
+                    style={{
+                      padding: '15px 20px',
+                      borderRadius: '12px',
+                      border: '2px solid #e0e0e0',
+                      backgroundColor: 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      marginBottom: '1.5rem',
+                      ':hover': {
+                        borderColor: '#0070f3',
+                        boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)'
+                      }
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '10px'
+                    }}>
                       <p style={{ 
-                        fontSize: '0.85rem', 
-                        color: '#666', 
-                        margin: '0',
-                        lineHeight: '1.4'
+                        fontWeight: '500', 
+                        fontSize: '1.05rem', 
+                        color: '#333',
+                        margin: 0
                       }}>
-                        {description}
+                        Choose your preferred music genres
                       </p>
                       
+                      <span style={{ 
+                        backgroundColor: '#0070f3', 
+                        color: 'white',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        padding: '5px 10px',
+                        borderRadius: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: '70px'
+                      }}>
+                        Select
+                      </span>
+                    </div>
+                    
+                    {formData.musicPreferences.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {musicGenres
+                          .filter(genre => formData.musicPreferences.includes(genre.id))
+                          .map(genre => (
+                            <span key={genre.id} style={{
+                              backgroundColor: 'rgba(0, 112, 243, 0.1)',
+                              color: '#0070f3',
+                              padding: '5px 12px',
+                              borderRadius: '30px',
+                              fontSize: '0.9rem',
+                              fontWeight: '500'
+                            }}>
+                              {genre.label}
+                            </span>
+                          ))
+                        }
+                      </div>
+                    ) : (
+                      <p style={{ 
+                        color: '#666', 
+                        fontStyle: 'italic', 
+                        margin: 0 
+                      }}>
+                        No genres selected yet. Click to choose your preferences
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Streaming Service Integration */}
+                  <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      marginBottom: '0.75rem',
+                      gap: '8px'
+                    }}>
+                      <p style={{ 
+                        color: '#333', 
+                        fontSize: '1rem', 
+                        fontWeight: '500',
+                        margin: 0,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ marginRight: '8px' }}>📱</span>
+                        Share your playlist (optional)
+                      </p>
+                      <FaInfoCircle
+                        style={{ 
+                          color: '#0070f3',
+                          cursor: 'pointer',
+                          fontSize: '1rem'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPlaylistHelp(true);
+                        }}
+                        title="Click for help sharing your playlist"
+                      />
+                    </div>
+                    
+                    <div style={{ 
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                      marginBottom: '1rem'
+                    }}>
+                      {streamingServices.map(service => (
+                        <div 
+                          key={service.id}
+                          onClick={() => {
+                            const newData = { ...formData, streamingService: service.id };
+                            setFormData(newData);
+                            
+                            // Defer context update to avoid setState during render
+                            setTimeout(() => {
+                              updateContractFormData(newData);
+                            }, 0);
+                            
+                            // Also save to localStorage as backup
+                            try {
+                              localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                            } catch (error) {
+                              console.error('Error saving streaming service to localStorage:', error);
+                            }
+                          }}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: formData.streamingService === service.id 
+                              ? '2px solid #0070f3' 
+                              : '1px solid #e0e0e0',
+                            backgroundColor: formData.streamingService === service.id 
+                              ? 'rgba(0, 112, 243, 0.05)' 
+                              : 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            flex: '1 0 150px',
+                            maxWidth: '200px'
+                          }}
+                        >
+                          <div 
+                            style={{ 
+                              width: '24px', 
+                              height: '24px', 
+                              backgroundImage: `url(${service.icon})`,
+                              backgroundSize: 'contain',
+                              backgroundPosition: 'center',
+                              backgroundRepeat: 'no-repeat',
+                              marginRight: '10px'
+                            }} 
+                          />
+                          <span style={{
+                            fontWeight: formData.streamingService === service.id ? '500' : 'normal',
+                            color: formData.streamingService === service.id ? '#0070f3' : '#333',
+                          }}>
+                            {service.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {formData.streamingService && (
+                      <div style={{ marginBottom: '1rem' }}>
+                        <input
+                          type="text"
+                          name="playlistLink"
+                          value={formData.playlistLink || ''}
+                          onChange={handleChange}
+                          placeholder={streamingServices.find(s => s.id === formData.streamingService)?.placeholder || 'Paste your playlist link'}
+                          style={{
+                            ...inputStyle,
+                            borderColor: '#0070f3',
+                            borderWidth: '1px'
+                          }}
+                        />
+                        <p style={{ 
+                          fontSize: '0.8rem', 
+                          color: '#666', 
+                          marginTop: '0.5rem',
+                          fontStyle: 'italic'
+                        }}>
+                          This helps us prepare the right music for your event. We&apos;ll review your playlist and incorporate your favorites.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Compact Additional Hours Selector */}
+                <div>
+                  <label style={labelStyle} className="field-label">
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
+                      Additional Hours ($75/hr):
+                    </span>
+                    {formData.additionalHours > 0 && (
+                      <span style={{
+                        fontSize: '0.8rem',
+                        color: '#0070f3',
+                        fontWeight: '500'
+                      }}>
+                        Auto-calculated from your time selection
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ 
+                    marginTop: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }} className="hours-selector">
+                      {[0, 1, 2, 3, 4].map(num => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => {
+                            console.log(`Setting additionalHours to ${num}`);
+                            const newData = { ...formData, additionalHours: num };
+                            setFormData(newData);
+                            
+                            // Defer context update to avoid setState during render
+                            setTimeout(() => {
+                              updateContractFormData(newData);
+                            }, 0);
+                            
+                            // Also save to localStorage as backup
+                            try {
+                              localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                            } catch (error) {
+                              console.error('Error saving additional hours to localStorage:', error);
+                            }
+                          }}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: formData.additionalHours === num ? '#0070f3' : '#f5f5f5',
+                            color: formData.additionalHours === num ? 'white' : '#333',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+                          }}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {formData.additionalHours > 0 && (
+                      <div style={{
+                        backgroundColor: 'rgba(0, 112, 243, 0.05)',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        marginTop: '12px',
+                        border: '1px solid rgba(0, 112, 243, 0.2)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between'
+                        }}>
+                          <span style={{
+                            fontSize: '0.9rem',
+                            color: '#333',
+                            fontWeight: '500'
+                          }}>
+                            <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
+                            {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
+                          </span>
+                          <span style={{
+                            fontSize: '0.9rem',
+                            color: '#0070f3',
+                            fontWeight: 'bold'
+                          }}>
+                            +${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}
+                          </span>
+                        </div>
+                        <div style={{
+                          fontSize: '0.8rem',
+                          color: '#666'
+                        }}>
+                          Auto-calculated from {formData.startTime} to {formData.endTime}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Payment Amount Selection */}
+                <div className="payment-amount-section" style={{ marginBottom: '2rem' }}>
+                  <label style={{
+                    ...labelStyle,
+                    fontSize: '1.1rem',
+                    marginBottom: '1rem'
+                  }}>
+                    Payment Option:
+                  </label>
+                  <div className="payment-amount-options" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '15px',
+                    marginBottom: '1rem'
+                  }}>
+                    {/* Deposit Option */}
+                    <div 
+                      className="payment-amount-option"
+                      onClick={() => {
+                        const newData = { ...formData, paymentAmount: 'deposit' };
+                        setFormData(newData);
+                        updateContractFormData(newData);
+                        // Also save to localStorage as backup
+                        try {
+                          localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        } catch (error) {
+                          console.error('Error saving payment amount to localStorage:', error);
+                        }
+                      }}
+                      style={{
+                        border: `2px solid ${formData.paymentAmount === 'deposit' ? '#0070f3' : '#ddd'}`,
+                        borderRadius: '12px',
+                        padding: '20px 15px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: formData.paymentAmount === 'deposit' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                        transition: 'all 0.2s ease',
+                        boxShadow: formData.paymentAmount === 'deposit' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div style={{ 
+                        fontSize: '28px', 
+                        color: '#0070f3',
+                        marginBottom: '10px' 
+                      }}>
+                        💵
+                      </div>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        marginBottom: '5px'
+                      }}>
+                        Pay Deposit
+                      </div>
+                      <div style={{
+                        fontSize: '0.9rem',
+                        color: '#666',
+                        textAlign: 'center'
+                      }}>
+                        50% now, 50% on event day
+                      </div>
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        color: '#0070f3'
+                      }}>
+                        ${calculateDepositAmount()}
+                      </div>
                       <input
-                        type="checkbox"
-                        name={name}
-                        checked={formData[name]}
-                        onChange={handleChange}
+                        type="radio"
+                        name="paymentAmount"
+                        value="deposit"
+                        checked={formData.paymentAmount === 'deposit'}
+                        onChange={(e) => {
+                          const newData = { ...formData, paymentAmount: e.target.value };
+                          setFormData(newData);
+                          
+                          // Defer context update to avoid setState during render
+                          setTimeout(() => {
+                            updateContractFormData(newData);
+                          }, 0);
+                          
+                          // Also save to localStorage as backup
+                          try {
+                            localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                          } catch (error) {
+                            console.error('Error saving payment amount to localStorage:', error);
+                          }
+                        }}
                         style={{ position: 'absolute', opacity: 0 }}
                       />
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Music Preferences Section - Revamped with Tick Boxes */}
-              <div style={{
-                marginTop: '2rem',
-                marginBottom: '1.5rem',
-                borderBottom: '2px solid #e0e0e0',
-                position: 'relative'
-              }} className="section-header">
-                <h3 style={{
-                  color: '#333',
-                  fontSize: 'clamp(20px, 3vw, 24px)',
-                  fontWeight: '600',
-                  backgroundColor: 'rgba(255,255,255,0.92)',
-                  display: 'inline-block',
-                  padding: '0 1rem 0.5rem 0',
-                  position: 'relative',
-                  marginBottom: '0',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  <span className="music-icon" style={{ 
-                    color: '#0070f3', 
-                    marginRight: '10px', 
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>🎵</span>
-                  What&apos;s On Your Playlist?
-                </h3>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                {/* Genre selection card that opens the modal */}
-                <div 
-                  onClick={() => setShowGenreModal(true)}
-                  style={{
-                    padding: '15px 20px',
-                    borderRadius: '12px',
-                    border: '2px solid #e0e0e0',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginBottom: '1.5rem',
-                    ':hover': {
-                      borderColor: '#0070f3',
-                      boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)'
-                    }
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '10px'
-                  }}>
-                    <p style={{ 
-                      fontWeight: '500', 
-                      fontSize: '1.05rem', 
-                      color: '#333',
-                      margin: 0
-                    }}>
-                      Choose your preferred music genres
-                    </p>
                     
-                    <span style={{ 
-                      backgroundColor: '#0070f3', 
-                      color: 'white',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      padding: '5px 10px',
-                      borderRadius: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minWidth: '70px'
-                    }}>
-                      Select
-                    </span>
-                  </div>
-                  
-                  {formData.musicPreferences.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {musicGenres
-                        .filter(genre => formData.musicPreferences.includes(genre.id))
-                        .map(genre => (
-                          <span key={genre.id} style={{
-                            backgroundColor: 'rgba(0, 112, 243, 0.1)',
-                            color: '#0070f3',
-                            padding: '5px 12px',
-                            borderRadius: '30px',
-                            fontSize: '0.9rem',
-                            fontWeight: '500'
-                          }}>
-                            {genre.label}
-                          </span>
-                        ))
-                      }
+                    {/* Full Payment Option */}
+                    <div 
+                      className="payment-amount-option"
+                      onClick={() => {
+                        const newData = { ...formData, paymentAmount: 'full' };
+                        setFormData(newData);
+                        
+                        // Defer context update to avoid setState during render
+                        setTimeout(() => {
+                          updateContractFormData(newData);
+                        }, 0);
+                        
+                        // Also save to localStorage as backup
+                        try {
+                          localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                        } catch (error) {
+                          console.error('Error saving payment amount to localStorage:', error);
+                        }
+                      }}
+                      style={{
+                        border: `2px solid ${formData.paymentAmount === 'full' ? '#0070f3' : '#ddd'}`,
+                        borderRadius: '12px',
+                        padding: '20px 15px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: formData.paymentAmount === 'full' ? 'rgba(0, 112, 243, 0.05)' : 'white',
+                        transition: 'all 0.2s ease',
+                        boxShadow: formData.paymentAmount === 'full' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div style={{ 
+                        fontSize: '28px', 
+                        color: '#0070f3',
+                        marginBottom: '10px' 
+                      }}>
+                        💰
+                      </div>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        marginBottom: '5px'
+                      }}>
+                        Pay in Full
+                      </div>
+                      <div style={{
+                        fontSize: '0.9rem',
+                        color: '#666',
+                        textAlign: 'center'
+                      }}>
+                        Pay the full amount now
+                      </div>
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        color: '#0070f3'
+                      }}>
+                        ${calculateTotal()}
+                      </div>
+                      <input
+                        type="radio"
+                        name="paymentAmount"
+                        value="full"
+                        checked={formData.paymentAmount === 'full'}
+                        onChange={(e) => {
+                          const newData = { ...formData, paymentAmount: e.target.value };
+                          setFormData(newData);
+                          
+                          // Defer context update to avoid setState during render
+                          setTimeout(() => {
+                            updateContractFormData(newData);
+                          }, 0);
+                          
+                          // Also save to localStorage as backup
+                          try {
+                            localStorage.setItem('djContractFormData', JSON.stringify(newData));
+                          } catch (error) {
+                            console.error('Error saving payment amount to localStorage:', error);
+                          }
+                        }}
+                        style={{ position: 'absolute', opacity: 0 }}
+                      />
                     </div>
-                  ) : (
-                    <p style={{ 
-                      color: '#666', 
-                      fontStyle: 'italic', 
-                      margin: 0 
-                    }}>
-                      No genres selected yet. Click to choose your preferences
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <label style={{
+                    ...labelStyle,
+                    fontSize: '1.1rem',
+                    marginBottom: '1rem'
+                  }}>
+                    Payment Method:
+                  </label>
+                  <div className="payment-options" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: '12px',
+                  }}>
+                    {/* Stripe Payment Option */}
+                    <div 
+                      className="payment-option"
+                      data-method="Stripe"
+                      onClick={() => handlePaymentMethodSelect('Stripe')}
+                      style={getPaymentOptionStyle('Stripe')}
+                    >
+                      <div className="payment-icon" style={{ 
+                        ...paymentIconStyle,
+                        color: paymentIconColors.Stripe
+                      }}>
+                        <FaCreditCard />
+                      </div>
+                      <div className="payment-method-label" style={{ 
+                        fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
+                        fontSize: '1rem'
+                      }}>
+                        Stripe
+                      </div>
+                    </div>
+                    
+                    {/* Venmo Payment Option */}
+                    <div 
+                      className="payment-option"
+                      data-method="Venmo"
+                      onClick={() => handlePaymentMethodSelect('Venmo')}
+                      style={getPaymentOptionStyle('Venmo')}
+                    >
+                      <div className="payment-icon" style={{ 
+                        ...paymentIconStyle,
+                        color: paymentIconColors.Venmo
+                      }}>
+                        <SiVenmo />
+                      </div>
+                      <div className="payment-method-label" style={{ 
+                        fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
+                        fontSize: '1rem'
+                      }}>
+                        Venmo
+                      </div>
+                    </div>
+                    
+                    {/* Cash App Payment Option */}
+                    <div 
+                      className="payment-option"
+                      data-method="CashApp"
+                      onClick={() => handlePaymentMethodSelect('CashApp')}
+                      style={getPaymentOptionStyle('CashApp')}
+                    >
+                      <div className="payment-icon" style={{ 
+                        ...paymentIconStyle,
+                        color: paymentIconColors.CashApp
+                      }}>
+                        <SiCashapp />
+                      </div>
+                      <div className="payment-method-label" style={{ 
+                        fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
+                        fontSize: '1rem'
+                      }}>
+                        CashApp
+                      </div>
+                    </div>
+                    
+                    {/* PayPal Payment Option */}
+                    <div 
+                      className="payment-option"
+                      data-method="PayPal"
+                      onClick={() => handlePaymentMethodSelect('PayPal')}
+                      style={getPaymentOptionStyle('PayPal')}
+                    >
+                      <div className="payment-icon" style={{ 
+                        ...paymentIconStyle,
+                        color: paymentIconColors.PayPal
+                      }}>
+                        <FaPaypal />
+                      </div>
+                      <div className="payment-method-label" style={{ 
+                        fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
+                        fontSize: '1rem'
+                      }}>
+                        PayPal
+                      </div>
+                    </div>
+                  </div>
+                  {formErrors.paymentMethod && (
+                    <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                      {formErrors.paymentMethod}
+                    </p>
+                  )}
+                </div>
+
+                {/* Itemized Total */}
+                <div className="event-summary" style={{
+                  backgroundColor: '#f8f9fa',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem',
+                }}>
+                  <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
+                  {itemizedTotal()}
+                </div>
+                
+                {/* Signature Section Header with Agreement Message - simplified */}
+                                <div style={{                background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',                color: 'white',                borderRadius: '10px',                padding: '18px 24px',                display: 'flex',                alignItems: 'center',                fontSize: '1rem',                fontWeight: 500,                marginBottom: '18px',                borderBottom: 'none',                justifyContent: 'center',                width: '100%',                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',              }}>                <div style={{ display: 'flex', alignItems: 'center' }}>                  By entering your name below, you agree to the terms and conditions.                  <button                    onClick={(e) => {                      e.preventDefault();                      e.stopPropagation();                      setShowTerms(true);                    }}                    style={{                      background: 'none',                      border: 'none',                      display: 'inline-flex',                      alignItems: 'center',                      justifyContent: 'center',                      marginLeft: '10px',                      cursor: 'pointer',                      padding: 0                    }}                    title="View terms and conditions"                    type="button"                  >                    <FaFileAlt                       size={20}                       color="#ffffff"                     />                  </button>                </div>              </div>
+                {/* Signature Input Field with Script Font */}
+                <div style={{
+                  backgroundColor: '#f8f9fa',
+                  padding: '1.5rem 1rem 1rem 1rem',
+                  borderRadius: '10px',
+                  marginBottom: '1.5rem',
+                  border: formErrors.signerName ? '1px solid red' : '1px solid #e0e0e0',
+                  borderTop: 'none',
+                }}>
+                  <h3 style={{ marginBottom: '1rem', color: '#333' }}>Sign here</h3>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <input
+                      name="signerName"
+                      type="text"
+                      value={formData.signerName || ''}
+                      onChange={(e) => {
+                        // Capitalize the first letter and letters after spaces
+                        const input = e.target.value;
+                        const capitalized = input.replace(/(^\w|\s\w)/g, match => match.toUpperCase());
+                        handleChange({
+                          target: {
+                            name: 'signerName',
+                            value: capitalized
+                          }
+                        });
+                      }}
+                      placeholder="Type your full name here"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        border: '2px solid #0070f3',
+                        fontFamily: 'Brush Script MT, Snell Roundhand, Comic Sans MS, cursive',
+                        fontSize: '2rem',
+                        letterSpacing: '0.05em',
+                        fontWeight: '500',
+                        color: '#222',
+                        background: 'white',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        outline: 'none',
+                        marginBottom: '0.5rem',
+                      }}
+                      autoCapitalize="words"
+                      required
+                    />
+                  </div>
+                  <p style={{
+                    color: '#666',
+                    fontSize: '0.9rem',
+                    fontStyle: 'italic',
+                    textAlign: 'right'
+                  }}>
+                    Your legal signature
+                  </p>
+                  {formErrors.signerName && (
+                    <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                      {formErrors.signerName}
                     </p>
                   )}
                 </div>
                 
-                {/* Streaming Service Integration */}
-                <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    marginBottom: '0.75rem',
-                    gap: '8px'
-                  }}>
-                    <p style={{ 
-                      color: '#333', 
-                      fontSize: '1rem', 
-                      fontWeight: '500',
-                      margin: 0,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ marginRight: '8px' }}>📱</span>
-                      Share your playlist (optional)
-                    </p>
-                    <FaInfoCircle
-                      style={{ 
-                        color: '#0070f3',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowPlaylistHelp(true);
-                      }}
-                      title="Click for help sharing your playlist"
-                    />
-                  </div>
-                  
-                  <div style={{ 
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    marginBottom: '1rem'
-                  }}>
-                    {streamingServices.map(service => (
-                      <div 
-                        key={service.id}
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          streamingService: service.id
-                        }))}
-                        style={{
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          border: formData.streamingService === service.id 
-                            ? '2px solid #0070f3' 
-                            : '1px solid #e0e0e0',
-                          backgroundColor: formData.streamingService === service.id 
-                            ? 'rgba(0, 112, 243, 0.05)' 
-                            : 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          flex: '1 0 150px',
-                          maxWidth: '200px'
-                        }}
-                      >
-                        <div 
-                          style={{ 
-                            width: '24px', 
-                            height: '24px', 
-                            backgroundImage: `url(${service.icon})`,
-                            backgroundSize: 'contain',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat',
-                            marginRight: '10px'
-                          }} 
-                        />
-                        <span style={{
-                          fontWeight: formData.streamingService === service.id ? '500' : 'normal',
-                          color: formData.streamingService === service.id ? '#0070f3' : '#333',
-                        }}>
-                          {service.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.streamingService && (
-                    <div style={{ marginBottom: '1rem' }}>
-                      <input
-                        type="text"
-                        name="playlistLink"
-                        value={formData.playlistLink}
-                        onChange={handleChange}
-                        placeholder={streamingServices.find(s => s.id === formData.streamingService)?.placeholder || 'Paste your playlist link'}
-                        style={{
-                          ...inputStyle,
-                          borderColor: '#0070f3',
-                          borderWidth: '1px'
-                        }}
-                      />
-                      <p style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#666', 
-                        marginTop: '0.5rem',
-                        fontStyle: 'italic'
-                      }}>
-                        This helps us prepare the right music for your event. We&apos;ll review your playlist and incorporate your favorites.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Compact Additional Hours Selector */}
-              <div>
-                <label style={labelStyle} className="field-label">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaClock style={{ marginRight: '8px', color: '#68D391', fontSize: '18px' }} />
-                    Additional Hours ($75/hr):
-                  </span>
-                  {formData.additionalHours > 0 && (
-                    <span style={{
-                      fontSize: '0.8rem',
-                      color: '#0070f3',
-                      fontWeight: '500'
-                    }}>
-                      Auto-calculated from your time selection
-                    </span>
-                  )}
-                </label>
-                <div style={{ 
-                  marginTop: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
-                }}>
+                {/* Submit Error Message */}
+                {submitError && (
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }} className="hours-selector">
-                    {[0, 1, 2, 3, 4].map(num => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => {
-                          console.log(`Setting additionalHours to ${num}`);
-                          // Direct state update for hours
-                          setFormData(prev => {
-                            console.log(`Setting additionalHours from ${prev.additionalHours} to ${num}`);
-                            return {
-                              ...prev,
-                              additionalHours: num
-                            };
-                          });
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: formData.additionalHours === num ? '#0070f3' : '#f5f5f5',
-                          color: formData.additionalHours === num ? 'white' : '#333',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                          fontSize: '16px',
-                          boxShadow: formData.additionalHours === num ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
-                        }}
-                      >
-                        {num}
-                      </button>
-                    ))}
+                    color: '#e53e3e',
+                    padding: '0.75rem',
+                    marginBottom: '1rem',
+                    backgroundColor: '#fee2e2',
+                    borderRadius: '0.25rem',
+                    borderLeft: '4px solid #e53e3e',
+                  }}>
+                    {submitError}
                   </div>
-                  
-                  {formData.additionalHours > 0 && (
-                    <div style={{
-                      backgroundColor: 'rgba(0, 112, 243, 0.05)',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      marginTop: '12px',
-                      border: '1px solid rgba(0, 112, 243, 0.2)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}>
-                        <span style={{
-                          fontSize: '0.9rem',
-                          color: '#333',
-                          fontWeight: '500'
-                        }}>
-                          <FaClock style={{ marginRight: '6px', color: '#0070f3', fontSize: '14px' }} />
-                          {formData.additionalHours} additional {formData.additionalHours === 1 ? 'hour' : 'hours'}
-                        </span>
-                        <span style={{
-                          fontSize: '0.9rem',
-                          color: '#0070f3',
-                          fontWeight: 'bold'
-                        }}>
-                          +${formData.additionalHours * SERVICES.ADDITIONAL_HOUR}
-                        </span>
-                      </div>
-                      <div style={{
-                        fontSize: '0.8rem',
-                        color: '#666'
-                      }}>
-                        Auto-calculated from {formData.startTime} to {formData.endTime}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment Amount Selection */}
-              <div className="payment-amount-section" style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  ...labelStyle,
-                  fontSize: '1.1rem',
-                  marginBottom: '1rem'
-                }}>
-                  Payment Option:
-                </label>
-                <div className="payment-amount-options" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '15px',
-                  marginBottom: '1rem'
-                }}>
-                  {/* Deposit Option */}
-                  <div 
-                    className="payment-amount-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'deposit' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentAmount === 'deposit' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '20px 15px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentAmount === 'deposit' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentAmount === 'deposit' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div style={{ 
-                      fontSize: '28px', 
-                      color: '#0070f3',
-                      marginBottom: '10px' 
-                    }}>
-                      💵
-                    </div>
-                    <div style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem',
-                      marginBottom: '5px'
-                    }}>
-                      Pay Deposit
-                    </div>
-                    <div style={{
-                      fontSize: '0.9rem',
-                      color: '#666',
-                      textAlign: 'center'
-                    }}>
-                      50% now, 50% on event day
-                    </div>
-                    <div style={{
-                      marginTop: '8px',
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      color: '#0070f3'
-                    }}>
-                      ${calculateDepositAmount()}
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentAmount"
-                      value="deposit"
-                      checked={formData.paymentAmount === 'deposit'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
-                  
-                  {/* Full Payment Option */}
-                  <div 
-                    className="payment-amount-option"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentAmount: 'full' }))}
-                    style={{
-                      border: `2px solid ${formData.paymentAmount === 'full' ? '#0070f3' : '#ddd'}`,
-                      borderRadius: '12px',
-                      padding: '20px 15px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: formData.paymentAmount === 'full' ? 'rgba(0, 112, 243, 0.05)' : 'white',
-                      transition: 'all 0.2s ease',
-                      boxShadow: formData.paymentAmount === 'full' ? '0 4px 12px rgba(0, 112, 243, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div style={{ 
-                      fontSize: '28px', 
-                      color: '#0070f3',
-                      marginBottom: '10px' 
-                    }}>
-                      💰
-                    </div>
-                    <div style={{ 
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem',
-                      marginBottom: '5px'
-                    }}>
-                      Pay in Full
-                    </div>
-                    <div style={{
-                      fontSize: '0.9rem',
-                      color: '#666',
-                      textAlign: 'center'
-                    }}>
-                      Pay the full amount now
-                    </div>
-                    <div style={{
-                      marginTop: '8px',
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      color: '#0070f3'
-                    }}>
-                      ${calculateTotal()}
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentAmount"
-                      value="full"
-                      checked={formData.paymentAmount === 'full'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
-                      style={{ position: 'absolute', opacity: 0 }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  ...labelStyle,
-                  fontSize: '1.1rem',
-                  marginBottom: '1rem'
-                }}>
-                  Payment Method:
-                </label>
-                <div className="payment-options" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                  gap: '12px',
-                }}>
-                  {/* Stripe Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="Stripe"
-                    onClick={() => handlePaymentMethodSelect('Stripe')}
-                    style={getPaymentOptionStyle('Stripe')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Stripe
-                    }}>
-                      <FaCreditCard />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Stripe' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      Stripe
-                    </div>
-                  </div>
-                  
-                  {/* Venmo Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="Venmo"
-                    onClick={() => handlePaymentMethodSelect('Venmo')}
-                    style={getPaymentOptionStyle('Venmo')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.Venmo
-                    }}>
-                      <SiVenmo />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'Venmo' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      Venmo
-                    </div>
-                  </div>
-                  
-                  {/* Cash App Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="CashApp"
-                    onClick={() => handlePaymentMethodSelect('CashApp')}
-                    style={getPaymentOptionStyle('CashApp')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.CashApp
-                    }}>
-                      <SiCashapp />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'CashApp' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      CashApp
-                    </div>
-                  </div>
-                  
-                  {/* PayPal Payment Option */}
-                  <div 
-                    className="payment-option"
-                    data-method="PayPal"
-                    onClick={() => handlePaymentMethodSelect('PayPal')}
-                    style={getPaymentOptionStyle('PayPal')}
-                  >
-                    <div className="payment-icon" style={{ 
-                      ...paymentIconStyle,
-                      color: paymentIconColors.PayPal
-                    }}>
-                      <FaPaypal />
-                    </div>
-                    <div className="payment-method-label" style={{ 
-                      fontWeight: formData.paymentMethod === 'PayPal' ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }}>
-                      PayPal
-                    </div>
-                  </div>
-                </div>
-                {formErrors.paymentMethod && (
-                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                    {formErrors.paymentMethod}
-                  </p>
                 )}
-              </div>
 
-              {/* Itemized Total */}
-              <div className="event-summary" style={{
-                backgroundColor: '#f8f9fa',
-                padding: '1rem',
-                borderRadius: '8px',
-                marginBottom: '1.5rem',
-              }}>
-                <h3 style={{ marginBottom: '0.5rem', color: '#000' }}>Event Package Summary:</h3>
-                {itemizedTotal()}
-              </div>
-              
-              {/* Signature Section Header with Agreement Message - simplified */}
-                            <div style={{                background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',                color: 'white',                borderRadius: '10px',                padding: '18px 24px',                display: 'flex',                alignItems: 'center',                fontSize: '1rem',                fontWeight: 500,                marginBottom: '18px',                borderBottom: 'none',                justifyContent: 'center',                width: '100%',                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',              }}>                <div style={{ display: 'flex', alignItems: 'center' }}>                  By entering your name below, you agree to the terms and conditions.                  <button                    onClick={(e) => {                      e.preventDefault();                      e.stopPropagation();                      setShowTerms(true);                    }}                    style={{                      background: 'none',                      border: 'none',                      display: 'inline-flex',                      alignItems: 'center',                      justifyContent: 'center',                      marginLeft: '10px',                      cursor: 'pointer',                      padding: 0                    }}                    title="View terms and conditions"                    type="button"                  >                    <FaFileAlt                       size={20}                       color="#ffffff"                     />                  </button>                </div>              </div>
-              {/* Signature Input Field with Script Font */}
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '1.5rem 1rem 1rem 1rem',
-                borderRadius: '10px',
-                marginBottom: '1.5rem',
-                border: formErrors.signerName ? '1px solid red' : '1px solid #e0e0e0',
-                borderTop: 'none',
-              }}>
-                <h3 style={{ marginBottom: '1rem', color: '#333' }}>Sign here</h3>
-                <div style={{ marginBottom: '1rem' }}>
-                  <input
-                    name="signerName"
-                    type="text"
-                    value={formData.signerName}
-                    onChange={(e) => {
-                      // Capitalize the first letter and letters after spaces
-                      const input = e.target.value;
-                      const capitalized = input.replace(/(^\w|\s\w)/g, match => match.toUpperCase());
-                      handleChange({
-                        target: {
-                          name: 'signerName',
-                          value: capitalized
-                        }
-                      });
-                    }}
-                    placeholder="Type your full name here"
+                {/* Submit Button with dynamic text based on payment method */}
+                <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+                  <button 
+                    type={formData.paymentMethod === 'Stripe' ? 'button' : 'submit'}
+                    onClick={formData.paymentMethod === 'Stripe' ? handleStripeButtonClick : undefined}
                     style={{
                       width: '100%',
-                      padding: '12px 16px',
+                      padding: '15px 20px',
+                      border: 'none',
                       borderRadius: '8px',
-                      border: '2px solid #0070f3',
-                      fontFamily: 'Brush Script MT, Snell Roundhand, Comic Sans MS, cursive',
-                      fontSize: '2rem',
-                      letterSpacing: '0.05em',
-                      fontWeight: '500',
-                      color: '#222',
-                      background: 'white',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                      outline: 'none',
-                      marginBottom: '0.5rem',
+                      fontSize: '18px',
+                      backgroundColor: '#0070f3',
+                      color: 'white',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      fontWeight: 'bold',
+                      boxShadow: '0 4px 14px 0 rgba(0,118,255,0.39)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s ease'
                     }}
-                    autoCapitalize="words"
-                    required
-                  />
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="spin"></div> Processing...
+                      </>
+                    ) : (
+                      <>
+                        {formData.paymentMethod === 'Stripe' ? (
+                          <>
+                            <FaCreditCard /> Proceed to Payment
+                          </>
+                        ) : (
+                          <>
+                            <FaPaperPlane /> Submit Contract
+                          </>
+                        )}
+                      </>
+                    )}
+                  </button>
                 </div>
-                <p style={{
-                  color: '#666',
-                  fontSize: '0.9rem',
-                  fontStyle: 'italic',
-                  textAlign: 'right'
-                }}>
-                  Your legal signature
-                </p>
-                {formErrors.signerName && (
-                  <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                    {formErrors.signerName}
-                  </p>
-                )}
-              </div>
-              
-              {/* Submit Error Message */}
-              {submitError && (
-                <div style={{
-                  color: '#e53e3e',
-                  padding: '0.75rem',
-                  marginBottom: '1rem',
-                  backgroundColor: '#fee2e2',
-                  borderRadius: '0.25rem',
-                  borderLeft: '4px solid #e53e3e',
-                }}>
-                  {submitError}
-                </div>
-              )}
-
-              {/* Submit Button with dynamic text based on payment method */}
-              <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
-                <button 
-                  type={formData.paymentMethod === 'Stripe' ? 'button' : 'submit'}
-                  onClick={formData.paymentMethod === 'Stripe' ? handleStripeButtonClick : undefined}
-                  style={{
-                    width: '100%',
-                    padding: '15px 20px',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '18px',
-                    backgroundColor: '#0070f3',
-                    color: 'white',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 14px 0 rgba(0,118,255,0.39)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="spin"></div> Processing...
-                    </>
-                  ) : (
-                    <>
-                      {formData.paymentMethod === 'Stripe' ? (
-                        <>
-                          <FaCreditCard /> Proceed to Payment
-                        </>
-                      ) : (
-                        <>
-                          <FaPaperPlane /> Submit Contract
-                        </>
-                      )}
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
-      
-      <PaymentConfirmation 
-        show={showConfirmation} 
-        message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
-      />
-      {/* Render the genre selection modal */}
-      {showGenreModal && (
-        <GenreSelectionModal onClose={() => setShowGenreModal(false)} />
-      )}
-      {/* Other modals */}
-      {modalText && <InfoModal text={modalText} onClose={() => setModalText(null)} />}
-      {showTerms && (
-        <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
-      )}
-      {showPlaylistHelp && (
-        <PlaylistHelpModal
-          streamingService={formData.streamingService}
-          onClose={() => setShowPlaylistHelp(false)}
+              </form>
+            </div>
+          )}
+        </div>
+        
+        <PaymentConfirmation 
+          show={showConfirmation} 
+          message={confirmationMessage || `${formData.paymentMethod} payment initiated. Please complete the transaction.`}
         />
-      )}
-      {showSuccessMessage && <SuccessMessage />}
-      {showErrorMessage && <ErrorMessage message={showErrorMessage} />}
-      {/* Confirmation page handles payment instructions */}
-    </div>
+        {/* Render the genre selection modal */}
+        {showGenreModal && (
+          <GenreSelectionModal onClose={() => setShowGenreModal(false)} />
+        )}
+        {/* Other modals */}
+        {modalText && <InfoModal text={modalText} onClose={() => setModalText(null)} />}
+        {showTerms && (
+          <InfoModal text={termsAndConditionsText} onClose={() => setShowTerms(false)} />
+        )}
+        {showPlaylistHelp && (
+          <PlaylistHelpModal
+            streamingService={formData.streamingService}
+            onClose={() => setShowPlaylistHelp(false)}
+          />
+        )}
+        {showSuccessMessage && <SuccessMessage />}
+        {showErrorMessage && <ErrorMessage message={showErrorMessage} />}
+        {/* Confirmation page handles payment instructions */}
+      </div>
+    </SuppressHydration>
   );
 }
 

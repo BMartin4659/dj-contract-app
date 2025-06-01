@@ -74,7 +74,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800">Loading booking details...</h2>
@@ -86,7 +91,12 @@ function PaymentConfirmationContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FaExclamationTriangle className="text-3xl text-red-500" />
@@ -105,7 +115,12 @@ function PaymentConfirmationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{
+      backgroundImage: 'url(/party-theme-background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       {/* Green Header */}
       <div className="bg-green-500 text-white px-4 pb-10 pt-6 relative shadow-md">
         <div className="max-w-2xl mx-auto relative">
@@ -152,6 +167,22 @@ function PaymentConfirmationContent() {
               DJ will arrive 30 mins before your event start time.
             </p>
           </div>
+        </div>
+
+        {/* Payment Button - Made more prominent */}
+        <div className="mt-8 mx-4">
+          <h3 className="text-xs uppercase text-gray-500 font-semibold tracking-wider mb-3 text-center">
+            COMPLETE YOUR BOOKING
+          </h3>
+          <Link href={`/payment?bookingId=${bookingData?.id}`}>
+            <button 
+              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-colors text-lg flex items-center justify-center"
+              style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
+            >
+              <span className="mr-2">💳</span> Proceed to Payment
+            </button>
+          </Link>
+          <p className="text-xs text-center text-gray-500 mt-2">Secure payment processing by Stripe</p>
         </div>
 
         {/* Reservation Details */}

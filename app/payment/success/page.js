@@ -2,14 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft, FaExclamationCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaHome, FaEnvelope, FaRedo, FaReceipt, FaArrowLeft, FaExclamationCircle, FaCalendarCheck, FaMusic, FaPhone, FaStar } from 'react-icons/fa';
 import { SiVenmo, SiCashapp } from 'react-icons/si';
 import { FaPaypal, FaCreditCard } from 'react-icons/fa';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import Image from 'next/image';
+
 
 // Inline implementation of sendEmail to avoid import issues
 const sendEmail = async (bookingData) => {
@@ -191,529 +192,520 @@ const PAYMENT_COLORS = {
   paypal:  { main: '#003087', dark: '#001f4c' },
 };
 
-// --- Redesigned Payment Success Page ---
-
+// Payment Success Page Component
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams ? searchParams.get('session_id') : null;
-  const paymentMethod = searchParams ? searchParams.get('payment_method') : null;
-  const bookingId = searchParams ? searchParams.get('booking_id') : null;
-  const amount = searchParams ? searchParams.get('amount') : null;
-
-  const [paymentDetails, setPaymentDetails] = useState(null);
-  const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
 
+  // Extract parameters from URL
+  const sessionId = searchParams.get('session_id');
+  const bookingId = searchParams.get('booking_id');
+
   useEffect(() => {
     if (sessionId) {
-      getPaymentDetails();
-    } else if (paymentMethod && bookingId) {
-      handleNonStripePayment();
+      processStripePayment();
+    } else if (bookingId) {
+      processDirectBooking();
     } else {
+      setError('Invalid payment session. Missing payment information.');
       setLoading(false);
-      setError('No payment information provided');
     }
-  }, [sessionId, paymentMethod, bookingId]);
-  
-  // Handle non-Stripe payments (Venmo, CashApp, PayPal)
-  const handleNonStripePayment = async () => {
+  }, [sessionId, bookingId]);
+
+  const processStripePayment = async () => {
     try {
       setLoading(true);
       
-      // Create a payment details object
-      const alternativePaymentDetails = {
-        payment_method: paymentMethod,
-        amount_total: amount ? parseFloat(amount) * 100 : 0, // Convert to cents for consistency
-        payment_intent: bookingId,
-        metadata: {
-          bookingId
-        }
-      };
-      
-      setPaymentDetails(alternativePaymentDetails);
-      
-      // Fetch booking details from Firestore
-      await fetchBookingDetails(bookingId);
-      
-      // Update the booking to mark payment as confirmed
-      try {
-        await fetch('/api/payment-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            bookingId,
-            paymentMethod,
-            amount: amount || 0
-          })
-        });
-      } catch (updateError) {
-        console.error('Error updating payment status:', updateError);
+      // First get the session details from Stripe
+      const sessionResponse = await fetch('/api/get-session-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error('Failed to retrieve payment session details');
       }
+
+      const sessionData = await sessionResponse.json();
+      setPaymentDetails(sessionData);
+
+      // Extract booking details from session metadata
+      const metadata = sessionData.metadata || {};
+      const bookingData = {
+        clientName: metadata.clientName || sessionData.customer_details?.name || '',
+        email: metadata.email || sessionData.customer_details?.email || '',
+        eventType: metadata.eventType || 'Event',
+        eventDate: metadata.eventDate || '',
+        venueName: metadata.venueName || '',
+        venueLocation: metadata.venueLocation || '',
+        startTime: metadata.startTime || '',
+        endTime: metadata.endTime || '',
+        contactPhone: metadata.contactPhone || '',
+        guestCount: metadata.guestCount || '',
+        totalAmount: (sessionData.amount_total || 0) / 100,
+        paymentMethod: 'Stripe',
+        bookingId: metadata.bookingId || sessionId,
+        sessionId: sessionId,
+        lighting: metadata.lighting === 'true',
+        photography: metadata.photography === 'true',
+        videoVisuals: metadata.videoVisuals === 'true',
+        additionalHours: parseInt(metadata.additionalHours || '0'),
+        paymentAmount: metadata.paymentAmount || 'full',
+        isDeposit: metadata.isDeposit === 'true'
+      };
+
+      setBookingDetails(bookingData);
+
+      // Send confirmation email via payment-confirmation API
+      await sendPaymentConfirmation(bookingData);
       
       setLoading(false);
-    } catch (error) {
-      console.error('Error processing alternative payment:', error);
-      setError(error.message || 'Failed to process payment');
+    } catch (err) {
+      console.error('Error processing Stripe payment:', err);
+      setError(err.message);
       setLoading(false);
     }
   };
-  
-  const getPaymentDetails = async () => {
+
+  const processDirectBooking = async () => {
     try {
       setLoading(true);
-      console.log('Fetching payment details for session:', sessionId);
       
-      const response = await fetch(`/api/get-session-details?session_id=${encodeURIComponent(sessionId)}`);
+      // For direct bookings (non-Stripe), fetch from Firestore
+      const response = await fetch(`/api/get-booking-details?bookingId=${bookingId}`);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error fetching session details:', response.status, errorText);
-        throw new Error(`Failed to fetch session details: ${errorText}`);
+        throw new Error('Failed to retrieve booking details');
       }
-      
-      const data = await response.json();
-      console.log('Session details retrieved:', data);
-      setPaymentDetails(data);
-      
-      // Try to find the booking details in Firestore
-      if (data && data.payment_intent) {
-        await fetchBookingDetails(data.payment_intent);
-      } else {
-        console.warn('No payment_intent found in session data');
-        // Try to create booking from metadata
-        if (data && data.metadata) {
-          const newBookingData = {
-            clientName: data.metadata.clientName,
-            email: data.metadata.email || data.customer_email,
-            eventType: data.metadata.eventType,
-            eventDate: data.metadata.eventDate,
-            venueName: data.metadata.venueName,
-            paymentId: sessionId,
-            amount: (data.amount_total || 0) / 100,
-            paymentMethod: 'Stripe',
-            status: 'confirmed'
-          };
-          setBookingDetails(newBookingData);
-          await sendConfirmationEmail(newBookingData);
-        }
-      }
+
+      const bookingData = await response.json();
+      setBookingDetails(bookingData);
+
+      // Send confirmation email
+      await sendPaymentConfirmation(bookingData);
       
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching payment details:', err);
-      setError(err.message || 'Failed to load payment details');
+      console.error('Error processing direct booking:', err);
+      setError(err.message);
       setLoading(false);
     }
   };
-  
-  // Get booking details from Firestore
-  const fetchBookingDetails = async (paymentIdOrBookingId) => {
+
+  const sendPaymentConfirmation = async (bookingData) => {
     try {
-      console.log('Fetching booking details for ID:', paymentIdOrBookingId);
+      const response = await fetch('/api/payment-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          bookingId: bookingData.bookingId,
+          clientName: bookingData.clientName,
+          email: bookingData.email,
+          eventType: bookingData.eventType,
+          eventDate: bookingData.eventDate,
+          venueName: bookingData.venueName,
+          venueLocation: bookingData.venueLocation,
+          startTime: bookingData.startTime,
+          endTime: bookingData.endTime,
+          totalAmount: bookingData.totalAmount,
+          paymentMethod: bookingData.paymentMethod,
+          signerName: 'Bobby Martin',
+          hasSigned: true
+        })
+      });
+
+      const result = await response.json();
       
-      // First try to find by paymentId in 'bookings' collection
-      let bookingsRef = collection(db, 'bookings');
-      let q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-      let querySnapshot = await getDocs(q);
-      
-      // If not found, try document ID in 'bookings'
-      if (querySnapshot.empty) {
-        try {
-          const bookingDoc = await getDoc(doc(db, 'bookings', paymentIdOrBookingId));
-          if (bookingDoc.exists()) {
-            querySnapshot = {
-              empty: false,
-              docs: [{ id: bookingDoc.id, data: () => bookingDoc.data() }]
-            };
-          }
-        } catch (docError) {
-          console.log('Error fetching by document ID:', docError);
-        }
-      }
-      
-      // If still not found, try 'djContracts' collection
-      if (querySnapshot.empty) {
-        bookingsRef = collection(db, 'djContracts');
-        q = query(bookingsRef, where('paymentId', '==', paymentIdOrBookingId));
-        querySnapshot = await getDocs(q);
-        
-        // If not found by payment ID, try document ID in 'djContracts'
-        if (querySnapshot.empty) {
-          try {
-            const contractDoc = await getDoc(doc(db, 'djContracts', paymentIdOrBookingId));
-            if (contractDoc.exists()) {
-              querySnapshot = {
-                empty: false,
-                docs: [{ id: contractDoc.id, data: () => contractDoc.data() }]
-              };
-            }
-          } catch (docError) {
-            console.log('Error fetching from djContracts by ID:', docError);
-          }
-        }
-      }
-      
-      if (!querySnapshot.empty) {
-        // Booking found
-        const bookingDoc = querySnapshot.docs[0];
-        const bookingData = { id: bookingDoc.id, ...bookingDoc.data() };
-        setBookingDetails(bookingData);
-        
-        // Send email if not already sent
-        if (!bookingData.emailSent) {
-          await sendConfirmationEmail(bookingData);
-          
-          // Update booking to mark email as sent
-          try {
-            const collectionName = bookingData.id === paymentIdOrBookingId ? 'djContracts' : 'bookings';
-            const bookingRef = doc(db, collectionName, bookingDoc.id);
-            await updateDoc(bookingRef, { 
-              emailSent: true,
-              status: 'confirmed',
-              paymentStatus: 'paid'
-            });
-          } catch (updateError) {
-            console.error('Error updating booking after email sent:', updateError);
-          }
-        }
-      } else {
-        console.log('No booking found with ID:', paymentIdOrBookingId);
-        
-        // If no booking found, see if we can create one from payment details
-        if (paymentDetails && paymentDetails.metadata) {
-          const { metadata, amount_total } = paymentDetails;
-          const newBookingData = {
-            clientName: metadata.clientName,
-            email: metadata.email,
-            eventType: metadata.eventType,
-            eventDate: metadata.eventDate,
-            venueName: metadata.venueName,
-            paymentId: paymentIdOrBookingId,
-            amount: amount_total / 100, // Convert from cents to dollars
-            paymentMethod: paymentMethod || 'Stripe',
-            paymentStatus: 'paid',
-            status: 'confirmed',
-            createdAt: new Date()
-          };
-          
-          setBookingDetails(newBookingData);
-          await sendConfirmationEmail(newBookingData);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching booking details:', err);
-    }
-  };
-  
-  // Send confirmation email
-  const sendConfirmationEmail = async (bookingData) => {
-    if (!bookingData || !bookingData.email) {
-      setEmailError('Cannot send email - booking or email is missing');
-      return;
-    }
-    
-    try {
-      const result = await sendEmail(bookingData);
-      
-      if (result.success) {
+      if (result.success && result.emailSent) {
         setEmailSent(true);
-        console.log('Confirmation email sent successfully');
+        console.log('Payment confirmation email sent successfully');
       } else {
-        setEmailError('Email could not be sent. We will send it later.');
-        console.error('Email sending failed:', result.error);
+        setEmailError(result.emailError || 'Email could not be sent automatically. We will send it shortly.');
+        console.warn('Email sending issue:', result.emailError);
       }
     } catch (err) {
-      setEmailError('Email could not be sent. We will send it later.');
-      console.error('Error sending confirmation email:', err);
+      console.error('Error sending payment confirmation:', err);
+      setEmailError('Email could not be sent automatically. We will send it shortly.');
     }
   };
-  
+
+  const getPaymentMethodIcon = (method) => {
+    const methodLower = (method || '').toLowerCase();
+    switch (methodLower) {
+      case 'venmo':
+        return <SiVenmo className="text-blue-500 text-xl" />;
+      case 'cashapp':
+        return <SiCashapp className="text-green-500 text-xl" />;
+      case 'paypal':
+        return <FaPaypal className="text-blue-600 text-xl" />;
+      default:
+        return <FaCreditCard className="text-indigo-600 text-xl" />;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-lg text-gray-600">Loading payment details...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Processing Payment</h2>
+          <p className="text-gray-600">Confirming your booking details...</p>
+        </div>
       </div>
     );
   }
-  
+
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
-          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Payment Details</h2>
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/party-theme-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+          <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Payment Error</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button 
-            onClick={() => sessionId ? getPaymentDetails() : handleNonStripePayment()} 
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md flex items-center justify-center"
+            onClick={() => router.push('/')}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center mx-auto"
           >
-            <FaRedo className="mr-2" /> Retry
+            <FaArrowLeft className="mr-2" /> Return Home
           </button>
         </div>
       </div>
     );
   }
 
-  // --- SIMPLIFIED SUCCESS PAGE WITH ORANGE & TEAL PALETTE ---
-  const details = {
-    amount: ((paymentDetails?.amount_total || 0) / 100) || amount || 0,
-    method: (bookingDetails?.paymentMethod || paymentDetails?.payment_method_types?.[0] || paymentMethod || 'card'),
-    date: bookingDetails?.eventDate || paymentDetails?.metadata?.eventDate,
-    client: bookingDetails?.clientName || paymentDetails?.metadata?.clientName,
-    venue: bookingDetails?.venueName || paymentDetails?.metadata?.venueName,
-    email: bookingDetails?.email || paymentDetails?.customer_details?.email,
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
   };
-  const methodKey = (details.method || '').toLowerCase();
-  const color = PAYMENT_COLORS[methodKey] || PAYMENT_COLORS.card;
 
-  const methodDisplay = {
-    card: 'Credit Card',
-    stripe: 'Credit Card',
-    venmo: 'Venmo',
-    cashapp: 'CashApp',
-    paypal: 'PayPal',
-  };
-  const methodIcon = {
-    card: <FaCreditCard className="icon-method" />,
-    stripe: <FaCreditCard className="icon-method" />,
-    venmo: <SiVenmo className="icon-method" />,
-    cashapp: <SiCashapp className="icon-method" />,
-    paypal: <FaPaypal className="icon-method" />,
+  const formatDate = (dateString) => {
+    if (!dateString) return 'TBD';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   return (
-    <div className="success-bg">
-      <div className="success-card">
-        <div className="success-icon-outer" style={{ background: `linear-gradient(135deg, ${color.main} 0%, #fff 100%)` }}>
-          <div className="success-icon-inner" style={{ background: color.main, padding: 0 }}>
-            <Image src="/dj-bobby-drake-logo.png" alt="DJ Bobby Drake Logo" width={70} height={70} className="logo-img-circle" unoptimized priority style={{ borderRadius: '50%', width: '70px', height: '70px', objectFit: 'cover' }} />
-          </div>
-        </div>
-        <h1 className="success-title" style={{ color: color.main }}>Payment Successful!</h1>
-        <p className="success-subtitle" style={{ color: '#00C244' }}>
-          Your payment has been processed and your booking is confirmed.
-        </p>
-        <div className="success-details">
-          <div>
-            <span>Amount Paid</span>
-            <span className="success-amount" style={{ color: color.main }}>${Number(details.amount).toFixed(2)}</span>
-          </div>
-          <div>
-            <span>Payment Method</span>
-            <span className="success-method">
-              {methodIcon[methodKey] || null}
-              {methodDisplay[methodKey] || details.method}
-            </span>
-          </div>
-          {details.date && (
-            <div>
-              <span>Event Date</span>
-              <span>{details.date}</span>
+    <div className="min-h-screen" style={{
+      backgroundImage: 'url(/party-theme-background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
+      {/* Success Header */}
+      <div className="pt-8 pb-4">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Logo and DJ Info */}
+          <div className="text-center mb-8">
+            <div className="w-24 h-24 mx-auto mb-4 relative">
+              <Image
+                src="/dj-bobby-drake-logo.png"
+                alt="DJ Bobby Drake"
+                width={96}
+                height={96}
+                className="rounded-full border-4 border-white shadow-lg"
+                priority
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div 
+                className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white text-2xl font-bold"
+                style={{ display: 'none' }}
+              >
+                DJ
+              </div>
             </div>
-          )}
-          {details.client && (
-            <div>
-              <span>Client Name</span>
-              <span>{details.client}</span>
-            </div>
-          )}
-          {details.venue && (
-            <div>
-              <span>Venue</span>
-              <span>{details.venue}</span>
-            </div>
-          )}
-        </div>
-        <div className="success-email" style={{ background: `${color.main}22`, color: color.dark }}>
-          <FaEnvelope className="icon-email" />
-          <span>
-            A confirmation email will be sent to <b>{details.email || 'your email address'}</b> shortly.
-          </span>
-        </div>
-        <div className="success-actions">
-          <Link href="/" className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', minWidth: '140px' }}>
-            <FaHome /> <span style={{marginLeft: '0.5em', fontWeight: 600}}>Return Home</span>
-          </Link>
-          <button onClick={() => window.print()} className="success-btn success-btn-alt" style={{ background: color.main, color: '#fff', border: 'none' }}>
-            <FaReceipt /> Print Receipt
-          </button>
+            <h1 className="text-white text-2xl font-bold mb-2">DJ Bobby Drake</h1>
+            <p className="text-white/90">Professional DJ & Entertainment Services</p>
+          </div>
         </div>
       </div>
-      <style jsx>{`
-        .success-bg {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .success-card {
-          background: #fff;
-          border-radius: 22px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-          padding: 2.5rem 2rem 2rem 2rem;
-          max-width: 410px;
-          width: 100%;
-          text-align: center;
-          position: relative;
-        }
-        .success-icon-outer {
-          border-radius: 50%;
-          width: 86px;
-          height: 86px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.2rem auto;
-          box-shadow: 0 2px 12px rgba(32,191,169,0.13);
-        }
-        .success-icon-inner {
-          border-radius: 50%;
-          width: 70px;
-          height: 70px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-        }
-        .success-title {
-          font-size: 2rem;
-          font-weight: 700;
-          margin-bottom: 0.5rem;
-        }
-        .success-subtitle {
-          color: #ff7e29;
-          font-size: 1.1rem;
-          margin-bottom: 2rem;
-        }
-        .success-details {
-          background: #f3f4f6;
-          border-radius: 12px;
-          padding: 1.2rem 1rem;
-          margin-bottom: 1.5rem;
-          font-size: 1rem;
-        }
-        .success-details > div {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.7rem;
-        }
-        .success-details > div:last-child {
-          margin-bottom: 0;
-        }
-        .success-amount {
-          font-weight: 700;
-        }
-        .success-method {
-          display: flex;
-          align-items: center;
-          gap: 0.4em;
-          font-weight: 500;
-        }
-        .icon-method {
-          font-size: 1.2em;
-        }
-        .success-email {
-          border-radius: 8px;
-          padding: 0.7rem 1rem;
-          margin-bottom: 1.7rem;
-          font-size: 1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5em;
-          font-weight: 500;
-        }
-        .icon-email {
-          font-size: 1.1em;
-        }
-        .success-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-          margin-top: 0.5rem;
-        }
-        .success-btn {
-          border-radius: 8px;
-          padding: 0.7em 1.2em;
-          font-size: 1rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          cursor: pointer;
-          transition: background 0.18s, color 0.18s, border 0.18s;
-          border: 2px solid transparent;
-        }
-        .success-btn-main {
-          background: #fff;
-        }
-        .success-btn-main:hover {
-          background: #f3f4f6;
-        }
-        .success-btn-alt {
-          background: #6366f1;
-        }
-        .success-btn-alt:hover {
-          filter: brightness(0.92);
-        }
-        @media (max-width: 500px) {
-          .success-card {
-            padding: 1.2rem 0.5rem 1.2rem 0.5rem;
-          }
-          .success-title {
-            font-size: 1.3rem;
-          }
-        }
-        .logo-img-circle {
-          border-radius: 50%;
-          width: 70px;
-          height: 70px;
-          object-fit: cover;
-          display: block;
-        }
-      `}</style>
+
+      {/* Main Success Content */}
+      <div className="max-w-4xl mx-auto px-4 pb-8">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Success Banner */}
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-8 px-6">
+            <div className="text-6xl mb-4">🎉</div>
+            <h1 className="text-3xl font-bold mb-2">Payment Successful!</h1>
+            <p className="text-green-100 text-lg">Your booking is confirmed and we&apos;re ready to rock your event!</p>
+          </div>
+
+          {/* Payment Details */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <FaReceipt className="text-indigo-600 mr-2" />
+                  Payment Details
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Amount Paid:</span>
+                    <span className="font-semibold text-xl text-green-600">
+                      {formatCurrency(bookingDetails?.totalAmount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Payment Method:</span>
+                    <div className="flex items-center">
+                      {getPaymentMethodIcon(bookingDetails?.paymentMethod)}
+                      <span className="ml-2 font-medium">
+                        {bookingDetails?.paymentMethod || 'Credit Card'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Payment Date:</span>
+                    <span className="font-medium">
+                      {new Date().toLocaleDateString('en-US')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Booking ID:</span>
+                    <span className="font-mono text-sm bg-gray-200 px-2 py-1 rounded">
+                      {(bookingDetails?.bookingId || sessionId || 'N/A').substring(0, 12)}...
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <FaCalendarCheck className="text-blue-600 mr-2" />
+                  Event Details
+                </h3>
+                <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                  <div>
+                    <span className="text-gray-600 block text-sm">Client Name:</span>
+                    <span className="font-semibold">{bookingDetails?.clientName || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Event Type:</span>
+                    <span className="font-semibold">{bookingDetails?.eventType || 'Event'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Event Date:</span>
+                    <span className="font-semibold">{formatDate(bookingDetails?.eventDate)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 block text-sm">Time:</span>
+                    <span className="font-semibold">
+                      {bookingDetails?.startTime || 'TBD'} - {bookingDetails?.endTime || 'TBD'}
+                    </span>
+                  </div>
+                  {bookingDetails?.venueName && (
+                    <div>
+                      <span className="text-gray-600 block text-sm">Venue:</span>
+                      <span className="font-semibold">{bookingDetails.venueName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Email Confirmation Status */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <FaEnvelope className="text-blue-600 text-xl mr-3" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">Confirmation Email</h3>
+                  <p className="text-sm text-gray-600">
+                    {emailSent 
+                      ? `Sent to ${bookingDetails?.email || 'your email address'}`
+                      : emailError || 'Sending confirmation email...'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="text-2xl">
+                {emailSent ? '✅' : emailError ? '⚠️' : '📧'}
+              </div>
+            </div>
+          </div>
+
+          {/* What Happens Next */}
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <FaStar className="text-yellow-500 mr-2" />
+              What Happens Next
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaMusic className="text-purple-600 mr-2" />
+                  <span className="font-semibold text-purple-800">Music Planning</span>
+                </div>
+                <p className="text-sm text-purple-700">
+                  You&apos;ll receive a music preference form 4 weeks before your event to customize your playlist.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaPhone className="text-blue-600 mr-2" />
+                  <span className="font-semibold text-blue-800">Planning Call</span>
+                </div>
+                <p className="text-sm text-blue-700">
+                  I&apos;ll call you 2 weeks before your event to finalize all details and timeline.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaCalendarCheck className="text-green-600 mr-2" />
+                  <span className="font-semibold text-green-800">Venue Coordination</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  I&apos;ll coordinate with your venue one week prior to ensure smooth setup and logistics.
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaCheckCircle className="text-orange-600 mr-2" />
+                  <span className="font-semibold text-orange-800">Event Day</span>
+                </div>
+                <p className="text-sm text-orange-700">
+                  I&apos;ll arrive 30 minutes early for setup and ensure your event runs perfectly from start to finish.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-6 bg-gray-50">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/"
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaHome className="mr-2" />
+                Return Home
+              </Link>
+              <Link
+                href="/wedding-agenda"
+                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaMusic className="mr-2" />
+                Plan Your Wedding
+              </Link>
+              <button
+                onClick={() => window.print()}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center font-medium"
+              >
+                <FaReceipt className="mr-2" />
+                Print Receipt
+              </button>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center">
+            <h4 className="font-semibold mb-2">Questions? Contact DJ Bobby Drake</h4>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm">
+              <a href="tel:2038099414" className="hover:text-indigo-200 transition-colors">
+                📞 (203) 809-9414
+              </a>
+              <a href="mailto:therealdjbobbydrake@gmail.com" className="hover:text-indigo-200 transition-colors">
+                ✉️ therealdjbobbydrake@gmail.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Loading placeholder
+// Loading Component
 function LoadingPaymentSuccess() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Processing Payment</h2>
-        <p className="text-gray-600">Please wait while we confirm your payment...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-lg text-gray-600">Loading payment details...</p>
       </div>
     </div>
   );
 }
 
-// Error handling in the main component
-export default function PaymentSuccessPage() {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
-  // Return loading state for SSR
-  if (!isClient) {
-    return <LoadingPaymentSuccess />;
+// Error Boundary
+class PaymentSuccessErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
-  
-  // Client-side rendering
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Payment Success Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
+            <FaExclamationCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">
+              We encountered an error while processing your payment confirmation.
+            </p>
+            <Link
+              href="/"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors inline-flex items-center"
+            >
+              <FaHome className="mr-2" />
+              Return Home
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Main Export
+export default function PaymentSuccessPage() {
   return (
-    <React.Suspense fallback={<LoadingPaymentSuccess />}>
-      <PaymentSuccessContent />
-    </React.Suspense>
+    <PaymentSuccessErrorBoundary>
+      <React.Suspense fallback={<LoadingPaymentSuccess />}>
+        <PaymentSuccessContent />
+      </React.Suspense>
+    </PaymentSuccessErrorBoundary>
   );
 } 
