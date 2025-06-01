@@ -36,6 +36,90 @@ import SuppressHydration from '../components/SuppressHydration';
 import { useRouter } from 'next/navigation';
 import { useFormContext } from '../contexts/FormContext';
 
+// Song suggestions data
+const SONG_SUGGESTIONS = {
+  firstDance: [
+    "Perfect – Ed Sheeran (2017)",
+    "Lover – Taylor Swift (2019)",
+    "All of Me – John Legend (2013)",
+    "Say You Won't Let Go – James Arthur (2016)",
+    "Beyond – Leon Bridges (2018)",
+    "Falling Like the Stars – James Arthur (2019)",
+    "Love Someone – Lukas Graham (2018)",
+    "First Time – Kygo & Ellie Goulding (2022)"
+  ],
+  fatherDaughter: [
+    "Yours – Post Malone (2024)",
+    "My Little Girl – Tim McGraw (2006)",
+    "Gracie – Ben Folds (2005)",
+    "Daughters – John Mayer (2003)",
+    "My Girl – The Temptations (1965)",
+    "I Loved Her First – Heartland (2006)",
+    "When You Wish Upon a Star – Cliff Edwards (1940)",
+    "You're My Best Friend – Queen (1975)"
+  ],
+  motherSon: [
+    "What a Wonderful World – Louis Armstrong (1967)",
+    "My Wish – Rascal Flatts (2006)",
+    "A Song for Mama – Boyz II Men (1997)",
+    "You'll Be in My Heart – Phil Collins (1999)",
+    "Humble and Kind – Tim McGraw (2015)",
+    "Simple Man – Shinedown (2003)",
+    "Landslide – Fleetwood Mac (1975)",
+    "Unforgettable – Nat King Cole & Natalie Cole (1991)"
+  ],
+  bouquetToss: [
+    "Single Ladies (Put a Ring on It) – Beyoncé (2008)",
+    "Dear Future Husband – Meghan Trainor (2015)",
+    "Love On Top – Beyoncé (2011)",
+    "That's What I Like – Bruno Mars (2016)",
+    "Blinding Lights – The Weeknd (2019)",
+    "Girls Just Want to Have Fun – Cyndi Lauper (1983)",
+    "Levitating – Dua Lipa (2020)",
+    "Juice – Lizzo (2019)"
+  ],
+  garterToss: [
+    "Pony – Ginuwine (1996)",
+    "Hot in Herre – Nelly (2002)",
+    "Let's Get It On – Marvin Gaye (1973)",
+    "Rock Your Body – Justin Timberlake (2002)",
+    "SexyBack – Justin Timberlake (2006)",
+    "Drunk in Love – Beyoncé ft. Jay-Z (2013)",
+    "Savage – Megan Thee Stallion (2020)",
+    "Dangerous – Kardinal Offishall ft. Akon (2008)"
+  ],
+  partyEntrance: [
+    "24K Magic – Bruno Mars (2016)",
+    "Crazy in Love – Beyoncé ft. Jay-Z (2003)",
+    "I Ain't Worried – OneRepublic (2022)",
+    "Blinding Lights – The Weeknd (2019)",
+    "As It Was – Harry Styles (2022)",
+    "The Giver – Chappell Roan (2023)",
+    "Bring Em Out – T.I. (2004)",
+    "On Top of the World – Imagine Dragons (2012)"
+  ],
+  coupleEntrance: [
+    "Can't Help Falling in Love – Kina Grannis (2015)",
+    "Perfect – Ed Sheeran (2017)",
+    "Can You Feel the Love Tonight – Elton John (1994)",
+    "Time of Our Lives – Pitbull & Ne-Yo (2014)",
+    "Sugar – Maroon 5 (2015)",
+    "Signed, Sealed, Delivered (I'm Yours) – Stevie Wonder (1970)",
+    "Marry You – Bruno Mars (2010)",
+    "This Will Be (An Everlasting Love) – Natalie Cole (1975)"
+  ],
+  lastDance: [
+    "Last Dance – Donna Summer (1978)",
+    "(I've Had) The Time of My Life – Bill Medley & Jennifer Warnes (1987)",
+    "Sweet Caroline – Neil Diamond (1969)",
+    "All You Need is Love – The Beatles (1967)",
+    "Don't Stop Believin' – Journey (1981)",
+    "Closing Time – Semisonic (1998)",
+    "Bye Bye Bye – NSYNC (2000)",
+    "Lover – Taylor Swift (2019)"
+  ]
+};
+
 // SectionHeader component for consistent styling
 const SectionHeader = ({ icon, label, color = 'text-blue-500' }) => (
   <h2 className="flex items-center gap-2 text-xl font-semibold mb-3" style={{ color: '#333' }}>
@@ -43,6 +127,143 @@ const SectionHeader = ({ icon, label, color = 'text-blue-500' }) => (
     {label}
   </h2>
 );
+
+// SongSelector component for song suggestions
+const SongSelector = ({ 
+  songValue, 
+  artistValue, 
+  onSongChange, 
+  onArtistChange, 
+  songName, 
+  artistName, 
+  suggestions, 
+  placeholder = "Song title",
+  isMobile = false,
+  singleField = false,
+  singleFieldName,
+  singleFieldValue,
+  onSingleFieldChange
+}) => {
+  if (singleField) {
+    return (
+      <div className="space-y-2">
+        <select
+          name={singleFieldName}
+          value={singleFieldValue}
+          onChange={(e) => {
+            if (e.target.value && e.target.value !== 'custom') {
+              onSingleFieldChange(e);
+            } else if (e.target.value === 'custom') {
+              // Clear the field for custom entry
+              onSingleFieldChange({ target: { name: singleFieldName, value: '' } });
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: 'clamp(12px, 2vw, 16px)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
+            backgroundColor: 'white',
+            marginBottom: '0.5rem',
+            minHeight: isMobile ? '44px' : 'auto'
+          }}
+        >
+          <option value="">Choose from popular songs...</option>
+          {suggestions?.map((song, index) => (
+            <option key={index} value={song}>{song}</option>
+          ))}
+          <option value="custom">🎵 Enter custom song...</option>
+        </select>
+        
+        <input
+          type="text"
+          name={singleFieldName}
+          value={singleFieldValue}
+          onChange={onSingleFieldChange}
+          style={{
+            width: '100%',
+            padding: 'clamp(12px, 2vw, 16px)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
+            backgroundColor: 'white',
+            minHeight: isMobile ? '44px' : 'auto'
+          }}
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <select
+          value=""
+          onChange={(e) => {
+            if (e.target.value) {
+              const [title, artist] = e.target.value.split(' – ');
+              onSongChange({ target: { name: songName, value: title || '' } });
+              onArtistChange({ target: { name: artistName, value: artist || '' } });
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: 'clamp(12px, 2vw, 16px)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
+            backgroundColor: 'white',
+            marginBottom: '0.5rem',
+            minHeight: isMobile ? '44px' : 'auto'
+          }}
+        >
+          <option value="">Choose from popular songs...</option>
+          {suggestions?.map((song, index) => (
+            <option key={index} value={song}>{song}</option>
+          ))}
+        </select>
+      </div>
+      
+      <div>
+        <input
+          type="text"
+          name={songName}
+          value={songValue}
+          onChange={onSongChange}
+          style={{
+            width: '100%',
+            padding: 'clamp(12px, 2vw, 16px)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
+            backgroundColor: 'white',
+            marginBottom: '1.2rem',
+            minHeight: isMobile ? '44px' : 'auto'
+          }}
+          placeholder="Song title"
+        />
+        <input
+          type="text"
+          name={artistName}
+          value={artistValue}
+          onChange={onArtistChange}
+          style={{
+            width: '100%',
+            padding: 'clamp(12px, 2vw, 16px)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
+            backgroundColor: 'white',
+            minHeight: isMobile ? '44px' : 'auto'
+          }}
+          placeholder="Artist"
+        />
+      </div>
+    </div>
+  );
+};
 
 // Add CSS for animation
 const animationStyles = `
@@ -78,9 +299,11 @@ export default function WeddingAgendaForm() {
     groomsmen: ['', '', ''],
     flowerGirl: '',
     ringBearer: '',
-    // Existing fields
-    entranceMusic: '',
+    // Existing fields - updated to separate song and artist
+    entranceSong: '',
+    entranceArtist: '',
     coupleEntranceSong: '',
+    coupleEntranceArtist: '',
     welcome: 'Yes',
     blessing: 'Yes',
     timeline: '',
@@ -148,6 +371,28 @@ export default function WeddingAgendaForm() {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
+  // Sync form data to context when form data changes (in useEffect to avoid render-time updates)
+  useEffect(() => {
+    if (contextIsClient && formData && Object.keys(formData).length > 0) {
+      // Only update context if there are actual differences to avoid infinite loops
+      const currentContextData = weddingAgendaData || {};
+      const hasChanges = Object.keys(formData).some(key => 
+        formData[key] !== currentContextData[key]
+      );
+      
+      if (hasChanges) {
+        updateWeddingAgendaData(formData);
+        
+        // Also save to localStorage as backup
+        try {
+          localStorage.setItem('djWeddingAgendaData', JSON.stringify(formData));
+        } catch (error) {
+          console.error('Error saving wedding agenda to localStorage:', error);
+        }
+      }
+    }
+  }, [formData, updateWeddingAgendaData, contextIsClient, weddingAgendaData]);
+
   // Sync with contract form data whenever it changes
   useEffect(() => {
     if (contextIsClient && contractFormData && Object.keys(contractFormData).length > 0) {
@@ -193,16 +438,10 @@ export default function WeddingAgendaForm() {
           hasChanges = true;
         }
         
-        // If we made changes, save to context
-        if (hasChanges) {
-          console.log('Wedding agenda updated with contract data:', updatedData);
-          updateWeddingAgendaData(updatedData);
-        }
-        
         return hasChanges ? updatedData : prev;
       });
     }
-  }, [contextIsClient, contractFormData, updateWeddingAgendaData]);
+  }, [contextIsClient, contractFormData]);
 
   // Check for mobile device
   useEffect(() => {
@@ -280,17 +519,6 @@ export default function WeddingAgendaForm() {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
-      // Save to context for persistence across navigation
-      updateWeddingAgendaData(newData);
-      
-      // Also save directly to localStorage as backup
-      try {
-        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
-      } catch (error) {
-        console.error('Error saving wedding agenda to localStorage:', error);
-      }
-      
       return newData;
     });
     
@@ -309,17 +537,6 @@ export default function WeddingAgendaForm() {
       const updatedArray = [...prev[group]];
       updatedArray[index] = value;
       const newData = { ...prev, [group]: updatedArray };
-      
-      // Save to context for persistence across navigation
-      updateWeddingAgendaData(newData);
-      
-      // Also save directly to localStorage as backup
-      try {
-        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
-      } catch (error) {
-        console.error('Error saving wedding agenda to localStorage:', error);
-      }
-      
       return newData;
     });
   };
@@ -331,17 +548,6 @@ export default function WeddingAgendaForm() {
         ...prev, 
         [group]: [...prev[group], ''] 
       };
-      
-      // Save to context for persistence across navigation
-      updateWeddingAgendaData(newData);
-      
-      // Also save directly to localStorage as backup
-      try {
-        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
-      } catch (error) {
-        console.error('Error saving wedding agenda to localStorage:', error);
-      }
-      
       return newData;
     });
   };
@@ -357,17 +563,6 @@ export default function WeddingAgendaForm() {
         ...prev, 
         [group]: updatedArray 
       };
-      
-      // Save to context for persistence across navigation
-      updateWeddingAgendaData(newData);
-      
-      // Also save directly to localStorage as backup
-      try {
-        localStorage.setItem('djWeddingAgendaData', JSON.stringify(newData));
-      } catch (error) {
-        console.error('Error saving wedding agenda to localStorage:', error);
-      }
-      
       return newData;
     });
   };
@@ -386,7 +581,7 @@ export default function WeddingAgendaForm() {
     // Phone is now optional - removed the requirement
     
     // Make entrance music optional
-    if (formData.entranceMusic === undefined) formData.entranceMusic = '';
+    if (formData.entranceSong === undefined) formData.entranceSong = '';
     
     // Very flexible timeline validation - just check that at least one timeline element is specified
     const hasAnyTimelineEvent = formData.cocktailHourTime || 
@@ -502,9 +697,11 @@ export default function WeddingAgendaForm() {
       groomsmen: ['', '', ''],
       flowerGirl: '',
       ringBearer: '',
-      // Rest of the fields
-      entranceMusic: '',
+      // Reset entrance music to separate fields
+      entranceSong: '',
+      entranceArtist: '',
       coupleEntranceSong: '',
+      coupleEntranceArtist: '',
       welcome: 'Yes',
       blessing: 'Yes',
       timeline: '',
@@ -834,7 +1031,7 @@ export default function WeddingAgendaForm() {
                 }} className="section-divider"></div>
                 
                 {/* Event Type and Wedding Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   {/* Event Type */}
                   <div>
                     <label style={{
@@ -888,8 +1085,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Contact Information */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -910,7 +1107,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -979,8 +1176,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Couple Information */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1001,7 +1198,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Couple Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1068,8 +1265,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Wedding Party */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1090,7 +1287,7 @@ export default function WeddingAgendaForm() {
                 </div>
                
                 {/* Maid of Honor and Best Man */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1159,7 +1356,7 @@ export default function WeddingAgendaForm() {
                   gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: isMobile ? '2.5rem' : '3.5rem',
                   marginTop: '2rem',
-                  marginBottom: '2.5rem'
+                  marginBottom: '3rem'
                 }}>
                   <div>
                     <label style={{
@@ -1192,11 +1389,24 @@ export default function WeddingAgendaForm() {
                             }}
                             placeholder={`Bridesmaid #${index + 1}`}
                           />
-                          {index >= 3 && (
-                            <div className="flex justify-end items-center" style={{ marginLeft: '2px' }}>
+                        </div>
+                      ))}
+                      
+                      {/* Remove buttons section - only show if there are more than 3 bridesmaids */}
+                      {formData.bridesmaids.length > 3 && (
+                        <div style={{ 
+                          marginTop: '8px',
+                          marginBottom: '8px'
+                        }}>
+                          {formData.bridesmaids.slice(3).map((_, removeIndex) => (
+                            <div key={`remove-${removeIndex + 3}`} style={{ 
+                              marginBottom: '8px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}>
                               <button 
                                 type="button"
-                                onClick={() => removePartyMember('bridesmaids', index)}
+                                onClick={() => removePartyMember('bridesmaids', removeIndex + 3)}
                                 style={{
                                   backgroundColor: 'transparent',
                                   color: '#ef4444',
@@ -1207,25 +1417,45 @@ export default function WeddingAgendaForm() {
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  marginRight: '4px',
-                                  width: '14px'
+                                  justifyContent: 'center',
+                                  width: '20px',
+                                  height: '16px',
+                                  lineHeight: '16px',
+                                  margin: '0',
+                                  verticalAlign: 'middle'
                                 }}
-                                aria-label="Remove bridesmaid"
+                                aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
-                                -
+                                💃
                               </button>
-                              <span className="text-sm text-gray-600" style={{ lineHeight: '1' }}>Remove</span>
+                              <span style={{ 
+                                fontSize: '14px',
+                                color: '#ef4444', // Red color for remove text
+                                lineHeight: '16px',
+                                whiteSpace: 'nowrap',
+                                marginLeft: '6px',
+                                display: 'inline-block',
+                                verticalAlign: 'middle'
+                              }}>Remove Bridesmaid #{removeIndex + 4}</span>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                      <div className="mt-4 flex items-center" style={{ marginLeft: '2px' }}>
+                      )}
+                      
+                      <div style={{ 
+                        marginTop: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginLeft: '2px',
+                        minHeight: '20px',
+                        marginBottom: '0'
+                      }}>
                         <button 
                           type="button"
                           onClick={() => addPartyMember('bridesmaids')}
                           style={{
                             backgroundColor: 'transparent',
-                            color: '#4F46E5',
+                            color: '#22c55e', // Green color for add text
                             border: 'none',
                             padding: '0',
                             fontSize: '16px',
@@ -1233,14 +1463,26 @@ export default function WeddingAgendaForm() {
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            marginRight: '4px',
-                            width: '14px'
+                            justifyContent: 'center',
+                            width: '20px',
+                            height: '16px',
+                            lineHeight: '16px',
+                            margin: '0',
+                            verticalAlign: 'middle'
                           }}
                           aria-label="Add bridesmaid"
                         >
-                          +
+                          💃
                         </button>
-                        <span className="text-sm text-gray-600" style={{ lineHeight: '1' }}>Add bridesmaid</span>
+                        <span style={{ 
+                          fontSize: '14px',
+                          color: '#22c55e', // Green color for add text
+                          lineHeight: '16px',
+                          whiteSpace: 'nowrap',
+                          marginLeft: '6px',
+                          display: 'inline-block',
+                          verticalAlign: 'middle'
+                        }}>Add bridesmaid</span>
                       </div>
                       <p className="text-sm text-gray-600 mt-2">List bridesmaids in order of entrance</p>
                     </div>
@@ -1276,11 +1518,24 @@ export default function WeddingAgendaForm() {
                             }}
                             placeholder={`Groomsman #${index + 1}`}
                           />
-                          {index >= 3 && (
-                            <div className="flex justify-end items-center" style={{ marginLeft: '2px' }}>
+                        </div>
+                      ))}
+                      
+                      {/* Remove buttons section - only show if there are more than 3 groomsmen */}
+                      {formData.groomsmen.length > 3 && (
+                        <div style={{ 
+                          marginTop: '8px',
+                          marginBottom: '8px'
+                        }}>
+                          {formData.groomsmen.slice(3).map((_, removeIndex) => (
+                            <div key={`remove-${removeIndex + 3}`} style={{ 
+                              marginBottom: '8px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}>
                               <button 
                                 type="button"
-                                onClick={() => removePartyMember('groomsmen', index)}
+                                onClick={() => removePartyMember('groomsmen', removeIndex + 3)}
                                 style={{
                                   backgroundColor: 'transparent',
                                   color: '#ef4444',
@@ -1291,25 +1546,45 @@ export default function WeddingAgendaForm() {
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  marginRight: '4px',
-                                  width: '14px'
+                                  justifyContent: 'center',
+                                  width: '20px',
+                                  height: '16px',
+                                  lineHeight: '16px',
+                                  margin: '0',
+                                  verticalAlign: 'middle'
                                 }}
-                                aria-label="Remove groomsman"
+                                aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
-                                -
+                                🤵
                               </button>
-                              <span className="text-sm text-gray-600" style={{ lineHeight: '1' }}>Remove</span>
+                              <span style={{ 
+                                fontSize: '14px',
+                                color: '#ef4444', // Red color for remove text
+                                lineHeight: '16px',
+                                whiteSpace: 'nowrap',
+                                marginLeft: '6px',
+                                display: 'inline-block',
+                                verticalAlign: 'middle'
+                              }}>Remove Groomsman #{removeIndex + 4}</span>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                      <div className="mt-4 flex items-center" style={{ marginLeft: '2px' }}>
+                      )}
+                      
+                      <div style={{ 
+                        marginTop: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginLeft: '2px',
+                        minHeight: '20px',
+                        marginBottom: '0'
+                      }}>
                         <button 
                           type="button"
                           onClick={() => addPartyMember('groomsmen')}
                           style={{
                             backgroundColor: 'transparent',
-                            color: '#4F46E5',
+                            color: '#22c55e', // Green color for add button
                             border: 'none',
                             padding: '0',
                             fontSize: '16px',
@@ -1317,14 +1592,26 @@ export default function WeddingAgendaForm() {
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            marginRight: '4px',
-                            width: '14px'
+                            justifyContent: 'center',
+                            width: '20px',
+                            height: '16px',
+                            lineHeight: '16px',
+                            margin: '0',
+                            verticalAlign: 'middle'
                           }}
                           aria-label="Add groomsman"
                         >
-                          +
+                          🤵
                         </button>
-                        <span className="text-sm text-gray-600" style={{ lineHeight: '1' }}>Add groomsman</span>
+                        <span style={{ 
+                          fontSize: '14px',
+                          color: '#22c55e', // Green color for add text
+                          lineHeight: '16px',
+                          whiteSpace: 'nowrap',
+                          marginLeft: '6px',
+                          display: 'inline-block',
+                          verticalAlign: 'middle'
+                        }}>Add groomsman</span>
                       </div>
                       <p className="text-sm text-gray-600 mt-2">List groomsmen in order of entrance</p>
                     </div>
@@ -1332,7 +1619,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Flower Girl and Ring Bearer */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1397,8 +1684,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Entrance Music */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1419,7 +1706,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Entrance Music */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1429,25 +1716,18 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Wedding Party Entrance Music *
+                        🎉 Wedding Party Entrance Music *
                       </span>
                     </label>
-                    <input
-                      id="entranceMusic"
-                      type="text"
-                      name="entranceMusic"
-                      value={formData.entranceMusic}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: 'clamp(12px, 2vw, 16px)',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
-                        fontSize: 'clamp(16px, 2.5vw, 18px)',
-                        backgroundColor: 'white',
-                        marginBottom: '1rem'
-                      }}
-                      placeholder="Song title and artist"
+                    <SongSelector
+                      songValue={formData.entranceSong}
+                      artistValue={formData.entranceArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="entranceSong"
+                      artistName="entranceArtist"
+                      suggestions={SONG_SUGGESTIONS.partyEntrance}
+                      isMobile={isMobile}
                     />
                     {errors.entranceMusic && <p className="mt-1 text-xs text-red-500">{errors.entranceMusic}</p>}
                   </div>
@@ -1460,33 +1740,26 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Bride & Groom Entrance Song
+                        💑 Bride & Groom Entrance Song
                       </span>
                     </label>
-                    <input
-                      id="coupleEntranceSong"
-                      type="text"
-                      name="coupleEntranceSong"
-                      value={formData.coupleEntranceSong}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: 'clamp(12px, 2vw, 16px)',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
-                        fontSize: 'clamp(16px, 2.5vw, 18px)',
-                        backgroundColor: 'white',
-                        marginBottom: '1rem'
-                      }}
-                      placeholder="Song title and artist (if different)"
+                    <SongSelector
+                      songValue={formData.coupleEntranceSong}
+                      artistValue={formData.coupleEntranceArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="coupleEntranceSong"
+                      artistName="coupleEntranceArtist"
+                      suggestions={SONG_SUGGESTIONS.coupleEntrance}
+                      isMobile={isMobile}
                     />
                   </div>
                 </div>
 
                 {/* Section Header - Welcome and Blessing */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1507,7 +1780,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Welcome and Blessing */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1572,8 +1845,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Reception Timeline */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1605,7 +1878,7 @@ export default function WeddingAgendaForm() {
                 </div>
                 
                 {/* Reception Timeline - First Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5" style={{ marginBottom: '2rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1726,7 +1999,7 @@ export default function WeddingAgendaForm() {
                 </div>
                 
                 {/* Reception Timeline - Second Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5" style={{ marginBottom: '2rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1846,7 +2119,7 @@ export default function WeddingAgendaForm() {
                 </div>
 
                 {/* Reception Timeline - Third Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5" style={{ marginBottom: '2.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -1973,8 +2246,8 @@ export default function WeddingAgendaForm() {
 
                 {/* Section Header - Special Dances */}
                 <div style={{
-                  marginTop: '2rem',
-                  marginBottom: '1.5rem',
+                  marginTop: '3.5rem',
+                  marginBottom: '1rem',
                   borderBottom: '2px solid #e0e0e0',
                   position: 'relative'
                 }} className="section-header">
@@ -1996,7 +2269,7 @@ export default function WeddingAgendaForm() {
                 
                 {/* Special Dances Description */}
                 <div style={{
-                  marginBottom: '3rem',
+                  marginBottom: '2rem',
                   color: '#555',
                   fontSize: 'clamp(14px, 2vw, 16px)',
                   lineHeight: '1.5'
@@ -2005,7 +2278,7 @@ export default function WeddingAgendaForm() {
                 </div>
                 
                 {/* Special Dances - First Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12" style={{ marginBottom: '3rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -2015,44 +2288,19 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        First Dance
+                        💃 First Dance
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="firstDanceSong"
-                        value={formData.firstDanceSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem',
-                          minHeight: isMobile ? '44px' : 'auto'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="firstDanceArtist"
-                        value={formData.firstDanceArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '16px' : 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          minHeight: isMobile ? '44px' : 'auto'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.firstDanceSong}
+                      artistValue={formData.firstDanceArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="firstDanceSong"
+                      artistName="firstDanceArtist"
+                      suggestions={SONG_SUGGESTIONS.firstDance}
+                      isMobile={isMobile}
+                    />
                   </div>
                   <div>
                     <label style={{
@@ -2063,47 +2311,24 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Father/Daughter Dance
+                        👨‍👧 Father/Daughter Dance
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="fatherDaughterSong"
-                        value={formData.fatherDaughterSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="fatherDaughterArtist"
-                        value={formData.fatherDaughterArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.fatherDaughterSong}
+                      artistValue={formData.fatherDaughterArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="fatherDaughterSong"
+                      artistName="fatherDaughterArtist"
+                      suggestions={SONG_SUGGESTIONS.fatherDaughter}
+                      isMobile={isMobile}
+                    />
                   </div>
                 </div>
 
                 {/* Special Dances - Second Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12" style={{ marginBottom: '3rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -2113,42 +2338,19 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Mother/Son Dance
+                        👩‍👦 Mother/Son Dance
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="motherSonSong"
-                        value={formData.motherSonSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="motherSonArtist"
-                        value={formData.motherSonArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.motherSonSong}
+                      artistValue={formData.motherSonArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="motherSonSong"
+                      artistName="motherSonArtist"
+                      suggestions={SONG_SUGGESTIONS.motherSon}
+                      isMobile={isMobile}
+                    />
                   </div>
                   <div>
                     <label style={{
@@ -2159,47 +2361,24 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Bouquet Toss
+                        💐 Bouquet Toss
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="bouquetTossSong"
-                        value={formData.bouquetTossSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="bouquetTossArtist"
-                        value={formData.bouquetTossArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.bouquetTossSong}
+                      artistValue={formData.bouquetTossArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="bouquetTossSong"
+                      artistName="bouquetTossArtist"
+                      suggestions={SONG_SUGGESTIONS.bouquetToss}
+                      isMobile={isMobile}
+                    />
                   </div>
                 </div>
 
                 {/* Special Dances - Third Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16" style={{ marginBottom: '3.5rem' }}>
                   <div>
                     <label style={{
                       display: 'block',
@@ -2209,42 +2388,19 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Garter Toss
+                        👰‍♂️ Garter Toss
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="gatherTossSong"
-                        value={formData.gatherTossSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="gatherTossArtist"
-                        value={formData.gatherTossArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.gatherTossSong}
+                      artistValue={formData.gatherTossArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="gatherTossSong"
+                      artistName="gatherTossArtist"
+                      suggestions={SONG_SUGGESTIONS.garterToss}
+                      isMobile={isMobile}
+                    />
                   </div>
                   <div>
                     <label style={{
@@ -2255,50 +2411,27 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        Last Dance
+                        🎶 Last Dance
                       </span>
                     </label>
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        name="lastSong"
-                        value={formData.lastSong}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white',
-                          marginBottom: '1.2rem'
-                        }}
-                        placeholder="Song title"
-                      />
-                      <input
-                        type="text"
-                        name="lastSongArtist"
-                        value={formData.lastSongArtist || ""}
-                        onChange={handleChange}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(12px, 2vw, 16px)',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: 'clamp(16px, 2.5vw, 18px)',
-                          backgroundColor: 'white'
-                        }}
-                        placeholder="Artist"
-                      />
-                    </div>
+                    <SongSelector
+                      songValue={formData.lastSong}
+                      artistValue={formData.lastSongArtist || ""}
+                      onSongChange={handleChange}
+                      onArtistChange={handleChange}
+                      songName="lastSong"
+                      artistName="lastSongArtist"
+                      suggestions={SONG_SUGGESTIONS.lastDance}
+                      isMobile={isMobile}
+                    />
                   </div>
                 </div>
 
                 {/* Additional Information */}
-                <div className="form-section" style={{ marginTop: '2rem' }}>
+                <div className="form-section" style={{ marginTop: '3.5rem' }}>
                   <div style={{
-                    marginTop: '2rem',
-                    marginBottom: '1.5rem',
+                    marginTop: '3.5rem',
+                    marginBottom: '1rem',
                     borderBottom: '2px solid #e0e0e0',
                     position: 'relative'
                   }} className="section-header">
