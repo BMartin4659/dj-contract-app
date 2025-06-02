@@ -13,6 +13,7 @@
     "clean:dev": "node clear-cache.js && next dev"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@floating-ui/core": "^1.2.6",
     "@floating-ui/dom": "^1.4.0",
     "@floating-ui/react": "^0.24.2",
