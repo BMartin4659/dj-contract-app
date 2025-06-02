@@ -174,7 +174,7 @@ export default function RootLayout({ children }) {
       <body 
         suppressHydrationWarning={true}
         style={{
-          background: 'linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url("/dj-background-new.jpg")',
+          background: 'url("/dj-background-new.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
