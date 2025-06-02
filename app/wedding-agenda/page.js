@@ -716,34 +716,15 @@ export default function WeddingAgendaForm() {
           <style jsx global>{`
             ${animationStyles}
             
+            /* Remove duplicate body background styles and rely on globals.css */
             body {
-              background: url('/dj-background-new.jpg') !important;
-              background-size: cover !important;
-              background-position: center !important;
-              background-repeat: no-repeat !important;
-              background-attachment: fixed !important;
-              min-height: 100vh;
               -webkit-tap-highlight-color: transparent;
             }
             
-            /* Mobile-specific background fix */
+            /* Mobile-specific adjustments only */
             @media (max-width: 768px) {
               body {
                 background-attachment: scroll !important;
-              }
-              
-              .mobile-background-fix {
-                display: block;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-image: url('/dj-background-new.jpg') !important;
-                background-size: cover !important;
-                background-position: center !important;
-                background-repeat: no-repeat !important;
-                z-index: -1;
               }
               
               /* Improved touch targets for mobile */
@@ -789,23 +770,10 @@ export default function WeddingAgendaForm() {
               }
             }
             
-            /* iOS-specific background fix */
+            /* iOS-specific adjustments only */
             @supports (-webkit-touch-callout: none) {
               body {
                 background-attachment: scroll !important;
-              }
-              
-              .ios-background-fix {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-image: url('/dj-background-new.jpg') !important;
-                background-size: cover !important;
-                background-position: center !important;
-                background-repeat: no-repeat !important;
-                z-index: -1;
               }
               
               /* Prevent zoom on iOS input focus */
@@ -823,11 +791,7 @@ export default function WeddingAgendaForm() {
             }
           `}</style>
           
-          {/* Mobile background fix element */}
-          <div className="mobile-background-fix"></div>
-          
-          {/* iOS background fix element */}
-          <div className="ios-background-fix"></div>
+          {/* Remove redundant background fix elements since globals.css handles this */}
           
           {/* Main form container */}
           <div className="max-w-4xl mx-auto">
