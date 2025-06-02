@@ -47,6 +47,55 @@ export default function RootLayout({ children }) {
       document.head.appendChild(metaAppName);
     }
     metaAppName.content = "Live City DJ Booking";
+    
+    // Enhanced Grammarly cleanup
+    const cleanupGrammarlyAttributes = () => {
+      try {
+        // Remove from document element
+        if (document.documentElement) {
+          document.documentElement.removeAttribute('data-new-gr-c-s-check-loaded');
+          document.documentElement.removeAttribute('data-gr-ext-installed');
+        }
+        
+        // Remove from body
+        if (document.body) {
+          document.body.removeAttribute('data-new-gr-c-s-check-loaded');
+          document.body.removeAttribute('data-gr-ext-installed');
+        }
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    };
+    
+    // Clean up immediately
+    cleanupGrammarlyAttributes();
+    
+    // Set up observer to continuously clean up Grammarly attributes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && 
+            (mutation.attributeName === 'data-new-gr-c-s-check-loaded' || 
+             mutation.attributeName === 'data-gr-ext-installed')) {
+          cleanupGrammarlyAttributes();
+        }
+      });
+    });
+    
+    // Start observing
+    if (document.body) {
+      observer.observe(document.body, { 
+        attributes: true, 
+        attributeFilter: ['data-new-gr-c-s-check-loaded', 'data-gr-ext-installed'] 
+      });
+    }
+    
+    // Cleanup interval as backup
+    const cleanupInterval = setInterval(cleanupGrammarlyAttributes, 100);
+    
+    return () => {
+      observer.disconnect();
+      clearInterval(cleanupInterval);
+    };
   }, []);
 
   return (
@@ -68,20 +117,53 @@ export default function RootLayout({ children }) {
         <meta name="grammarly:no-attach" content="true" />
         <meta name="grammarly:no-injection" content="true" />
         
-        {/* Simple script to clear attributes immediately */}
+        {/* Enhanced script to prevent Grammarly attributes */}
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {
+              // Prevent Grammarly from adding attributes
               try {
-                // Remove attributes that cause hydration issues
-                if (document.documentElement) {
-                  document.documentElement.removeAttribute('data-new-gr-c-s-check-loaded');
-                  document.documentElement.removeAttribute('data-gr-ext-installed');
+                // Disable Grammarly
+                window.grammarly = window.grammarly || {};
+                window.grammarly.disable = true;
+                
+                // Remove attributes immediately and continuously
+                const removeGrammarlyAttributes = () => {
+                  try {
+                    if (document.documentElement) {
+                      document.documentElement.removeAttribute('data-new-gr-c-s-check-loaded');
+                      document.documentElement.removeAttribute('data-gr-ext-installed');
+                    }
+                    if (document.body) {
+                      document.body.removeAttribute('data-new-gr-c-s-check-loaded');
+                      document.body.removeAttribute('data-gr-ext-installed');
+                    }
+                  } catch (e) {
+                    // Ignore errors
+                  }
+                };
+                
+                // Run immediately
+                removeGrammarlyAttributes();
+                
+                // Run when DOM is ready
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', removeGrammarlyAttributes);
+                } else {
+                  removeGrammarlyAttributes();
                 }
-                if (document.body) {
-                  document.body.removeAttribute('data-new-gr-c-s-check-loaded');
-                  document.body.removeAttribute('data-gr-ext-installed');
-                }
+                
+                // Run continuously for a short period
+                let cleanupAttempts = 0;
+                const maxAttempts = 50;
+                const cleanupInterval = setInterval(() => {
+                  removeGrammarlyAttributes();
+                  cleanupAttempts++;
+                  if (cleanupAttempts >= maxAttempts) {
+                    clearInterval(cleanupInterval);
+                  }
+                }, 20);
+                
               } catch (e) {
                 // Ignore errors
               }
@@ -90,6 +172,7 @@ export default function RootLayout({ children }) {
         }} />
       </head>
       <body 
+        suppressHydrationWarning={true}
         style={{
           background: 'linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url("/dj-background-new.jpg")',
           backgroundSize: 'cover',
@@ -128,12 +211,31 @@ export default function RootLayout({ children }) {
                 errorMsg.includes('content did not match') ||
                 errorMsg.includes('did not match server-rendered') ||
                 errorMsg.includes('data-gr-ext-installed') ||
-                errorMsg.includes('data-new-gr-c-s-check-loaded')
+                errorMsg.includes('data-new-gr-c-s-check-loaded') ||
+                errorMsg.includes('tree hydrated but some attributes') ||
+                errorMsg.includes('grammarly') ||
+                errorMsg.includes('Grammarly')
               )) {
                 // Ignore hydration warnings
                 return;
               }
               return originalError.apply(console, args);
+            };
+            
+            // Override console.warn as well
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+              const warnMsg = args[0] || '';
+              if (typeof warnMsg === 'string' && (
+                warnMsg.includes('hydration') || 
+                warnMsg.includes('Hydration') ||
+                warnMsg.includes('data-gr-ext-installed') ||
+                warnMsg.includes('data-new-gr-c-s-check-loaded')
+              )) {
+                // Ignore hydration warnings
+                return;
+              }
+              return originalWarn.apply(console, args);
             };
           `}
         </Script>
