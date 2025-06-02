@@ -78,28 +78,18 @@ export default function WeddingAgendaCard({ eventType }) {
   console.log('WeddingAgendaCard - Rendering card for wedding event:', eventType);
   
   // Direct navigation with multiple methods for redundancy
-  const navigateToWeddingAgenda = () => {
+  const navigateToWeddingAgenda = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('WeddingAgendaCard - Navigating to wedding agenda form');
     
-    // Try multiple navigation methods for redundancy
     try {
-      // Method 1: Use window.location.href directly for most reliable navigation
-      window.location.href = '/wedding-agenda';
-      
-      // These methods below are fallbacks, but the direct navigation above should work immediately
-      
-      // Method 2: Router push (may not trigger in some cases due to the direct navigation above)
-      setTimeout(() => {
-        try {
-          router.push('/wedding-agenda');
-        } catch (e) {
-          console.error('Router push failed:', e);
-        }
-      }, 100);
+      // Use Next.js router for proper navigation
+      router.push('/wedding-agenda');
     } catch (error) {
-      console.error('Navigation error:', error);
-      // Final fallback: Direct location change
-      window.location.assign('/wedding-agenda');
+      console.error('Router navigation failed, using direct navigation:', error);
+      // Fallback to direct navigation only if router fails
+      window.location.href = '/wedding-agenda';
     }
   };
   

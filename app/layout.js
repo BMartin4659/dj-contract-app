@@ -90,18 +90,14 @@ export default function RootLayout({ children }) {
         }} />
       </head>
       <body 
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.className} antialiased`}
-        suppressHydrationWarning={true}
-        style={{ 
-          overflowX: "hidden !important",
-          maxWidth: "100vw !important",
-          width: "100% !important",
-          backgroundImage: "url('/dj-background-new.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          minHeight: "100vh"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url("/dj-background-new.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          minHeight: '100vh',
+          fontFamily: "'Montserrat', sans-serif"
         }}
       >
         {/* Add our DocumentHead component for client-side cleanup */}
