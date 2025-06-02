@@ -2,13 +2,13 @@
 import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WEDDING_EVENT_TYPES, getBasePrice } from '../utils/eventUtils';
+import { WEDDING_EVENT_TYPES_V2, getBasePriceV2 } from '../utils/weddingEventTypes';
 
-// Only wedding-related event types
+// Only wedding-related event types - Using V2 to bypass caching
 const WEDDING_EVENT_OPTIONS = [
   {
     category: '💍 Weddings & Formal',
-    options: WEDDING_EVENT_TYPES,
+    options: WEDDING_EVENT_TYPES_V2,
   }
 ];
 
@@ -23,13 +23,13 @@ export default function WeddingEventTypeDropdown({
   const [priceNote, setPriceNote] = useState('');
 
   // DEBUG: Log the wedding event types being used
-  console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES:', WEDDING_EVENT_TYPES);
+  console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES:', WEDDING_EVENT_TYPES_V2);
   console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 17:00');
 
   // Set initial price on mount if value is provided
   useEffect(() => {
     if (value && onPriceUpdate) {
-      const initialPrice = getBasePrice(value);
+      const initialPrice = getBasePriceV2(value);
       onPriceUpdate(initialPrice);
     }
   }, [value, onPriceUpdate]);
@@ -53,7 +53,7 @@ export default function WeddingEventTypeDropdown({
 
     // Use dynamic pricing based on event type
     if (onPriceUpdate && newValue) {
-      const dynamicPrice = getBasePrice(newValue);
+      const dynamicPrice = getBasePriceV2(newValue);
       onPriceUpdate(dynamicPrice);
       setPriceNote(`💰 Base price: $${dynamicPrice.toLocaleString()} for ${newValue.toLowerCase()}`);
     }
