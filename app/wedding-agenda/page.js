@@ -712,12 +712,28 @@ export default function WeddingAgendaForm() {
           DEPLOY: 2025-01-31 17:00 - Wedding Fixes
         </div>
 
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div 
+          className="min-h-screen flex items-center justify-center p-4"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url("/dj-background-new.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+            minHeight: '100vh'
+          }}
+        >
           <style jsx global>{`
             ${animationStyles}
             
-            /* Remove duplicate body background styles and rely on globals.css */
+            /* Ensure body background as fallback */
             body {
+              background: linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url('/dj-background-new.jpg') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+              background-attachment: fixed !important;
+              min-height: 100vh;
               -webkit-tap-highlight-color: transparent;
             }
             
@@ -791,7 +807,17 @@ export default function WeddingAgendaForm() {
             }
           `}</style>
           
-          {/* Remove redundant background fix elements since globals.css handles this */}
+          {/* Additional background div for extra assurance */}
+          <div 
+            className="fixed inset-0 -z-10"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(10, 10, 80, 0.8), rgba(0, 0, 0, 0.8)), url("/dj-background-new.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              backgroundAttachment: 'fixed'
+            }}
+          ></div>
           
           {/* Main form container */}
           <div className="max-w-4xl mx-auto">
