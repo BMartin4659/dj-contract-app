@@ -22,6 +22,10 @@ export default function WeddingEventTypeDropdown({
   const [selected, setSelected] = useState(value || '');
   const [priceNote, setPriceNote] = useState('');
 
+  // DEBUG: Log the wedding event types being used
+  console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES:', WEDDING_EVENT_TYPES);
+  console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 17:00');
+
   // Set initial price on mount if value is provided
   useEffect(() => {
     if (value && onPriceUpdate) {

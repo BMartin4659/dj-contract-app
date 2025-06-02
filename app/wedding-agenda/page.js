@@ -837,7 +837,18 @@ export default function WeddingAgendaForm() {
   return (
     <ClientOnly>
       <SuppressHydration>
-        <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative">
+        <Head>
+          <title>Wedding Agenda Form - DJ Bobby Drake</title>
+          <meta name="description" content="Complete your wedding agenda details with DJ Bobby Drake" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+        </Head>
+
+        {/* DEPLOYMENT VERIFICATION - REMOVE AFTER TESTING */}
+        <div style={{ position: 'fixed', top: 0, right: 0, background: 'red', color: 'white', padding: '5px', fontSize: '12px', zIndex: 9999 }}>
+          DEPLOY: 2025-01-31 17:00 - Wedding Fixes
+        </div>
+
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
           <style jsx global>{`
             ${animationStyles}
             
@@ -947,9 +958,6 @@ export default function WeddingAgendaForm() {
               }
             }
           `}</style>
-          <Head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-          </Head>
           
           {/* Mobile background fix element */}
           <div className="mobile-background-fix"></div>
