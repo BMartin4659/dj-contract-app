@@ -1,3 +1,4 @@
+// Cache-busting comment - last updated: 2025-01-31 15:30
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
