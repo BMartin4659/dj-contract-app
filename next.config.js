@@ -1,4 +1,5 @@
-// Cache-busting comment - last updated: 2025-01-31 15:30
+// FORCE REBUILD - Wedding agenda event filtering and pricing fixes - 2025-01-31 16:45
+// Critical changes: Event types limited to wedding-only, $1500 pricing for Wedding Ceremony & Reception
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,

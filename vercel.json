@@ -5,7 +5,7 @@
       "src": "package.json",
       "use": "@vercel/next",
       "config": {
-        "installCommand": "npm install && node ensure-components.js && node clear-cache.js"
+        "installCommand": "rm -rf node_modules package-lock.json && npm install && node ensure-components.js && node clear-cache.js"
       }
     }
   ],
@@ -27,7 +27,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=600, s-maxage=1200, stale-while-revalidate=600"
+          "value": "no-cache, no-store, must-revalidate"
         },
         {
           "key": "Viewport",
