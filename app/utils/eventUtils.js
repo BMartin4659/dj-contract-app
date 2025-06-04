@@ -88,8 +88,6 @@ export function getBasePriceEmergencyFix(eventType) {
   // Other wedding-related events that should be $1000
   const thousandDollarWeddingEvents = [
     'Bridal Shower',
-    'Anniversary Party',
-    'Vow Renewal',
   ];
   
   if (thousandDollarWeddingEvents.includes(eventType)) {
@@ -104,6 +102,8 @@ export function getBasePriceEmergencyFix(eventType) {
     'Bachelor Party',
     'Bachelorette Party',
     'Bachelor/Bachelorette Party',
+    'Anniversary Party',
+    'Vow Renewal',
     'Prom',
     'Homecoming'
   ];

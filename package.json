@@ -1,6 +1,6 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.9-final-ensure-components-fix-20250201",
+  "version": "1.0.10-anniversary-vow-renewal-pricing-fix-20250201",
   "private": true,
   "scripts": {
     "dev": "next dev",

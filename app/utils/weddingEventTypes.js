@@ -3,11 +3,16 @@
 // NEW FILE TO BYPASS VERCEL CACHING - Wedding event types with proper filtering
 // DEPLOYMENT TIMESTAMP: 2025-01-31 18:30 - Force deployment refresh for wedding forms
 
-// List of wedding event types - only those with "wedding" in the title
+// List of wedding event types - includes all wedding-related events
 export const WEDDING_EVENT_TYPES_V2 = [
   'Wedding Ceremony',
   'Wedding Reception',
   'Wedding Ceremony & Reception',
+  'Engagement Party',
+  'Bridal Shower',
+  'Bachelor/Bachelorette Party',
+  'Anniversary Party',
+  'Vow Renewal',
 ];
 
 // Very specific wedding keywords - only used for exact matching
@@ -52,14 +57,24 @@ export function isWeddingEventV2(eventType) {
 export function getBasePriceV2(eventType) {
   console.log('getBasePriceV2 called with:', eventType);
   
-  // Special pricing for Wedding Ceremony & Reception
+  // Special pricing for Wedding Ceremony & Reception - $1500
   if (eventType === 'Wedding Ceremony & Reception') {
     console.log('Returning $1500 for Wedding Ceremony & Reception');
     return 1500;
   }
   
-  // Other wedding events
-  if (isWeddingEventV2(eventType)) {
+  // Wedding Ceremony OR Wedding Reception separately - $1000 each
+  if (eventType === 'Wedding Ceremony' || eventType === 'Wedding Reception') {
+    console.log('Returning $1000 for individual wedding ceremony/reception:', eventType);
+    return 1000;
+  }
+  
+  // Wedding-related events that should be $1000
+  const thousandDollarWeddingEvents = [
+    'Bridal Shower',
+  ];
+  
+  if (thousandDollarWeddingEvents.includes(eventType)) {
     console.log('Returning $1000 for wedding event:', eventType);
     return 1000;
   }
@@ -71,6 +86,8 @@ export function getBasePriceV2(eventType) {
     'Bachelor Party',
     'Bachelorette Party',
     'Bachelor/Bachelorette Party',
+    'Anniversary Party',
+    'Vow Renewal',
     'Prom',
     'Homecoming'
   ];
