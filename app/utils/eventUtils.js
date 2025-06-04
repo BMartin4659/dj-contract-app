@@ -1,7 +1,7 @@
 'use client';
 
-// Updated event utils with deployment timestamp - Force refresh
-// DEPLOYMENT TIMESTAMP: 2025-01-31 18:45 - Main contract form pricing fix
+// FORCE DEPLOYMENT UPDATE - New function names to bypass caching
+// DEPLOYMENT TIMESTAMP: 2025-01-31 19:30 - Cache-busting pricing fix
 
 // List of wedding event types - only those with "wedding" in the title
 export const WEDDING_EVENT_TYPES = [
@@ -18,11 +18,11 @@ export const WEDDING_KEYWORDS = [
 ];
 
 /**
- * Check if an event type is wedding-related
+ * Check if an event type is wedding-related - V2 for cache busting
  * @param {string} eventType - The event type to check
  * @returns {boolean} - True if the event is wedding-related
  */
-export function isWeddingEvent(eventType) {
+export function isWeddingEventV2(eventType) {
   if (!eventType) return false;
   
   // Check if it's in the list of exact wedding event types
@@ -45,22 +45,22 @@ export function isWeddingEvent(eventType) {
 }
 
 /**
- * Get the base price for an event type
+ * Get the base price for an event type - V2 for cache busting
  * @param {string} eventType - The event type
  * @returns {number} - The base price for the event
  */
-export function getBasePrice(eventType) {
-  console.log('eventUtils.getBasePrice called with:', eventType);
+export function getBasePriceV2(eventType) {
+  console.log('eventUtils.getBasePriceV2 called with:', eventType);
   
-  // Special pricing for Wedding Ceremony & Reception
+  // CRITICAL: Special pricing for Wedding Ceremony & Reception
   if (eventType === 'Wedding Ceremony & Reception') {
-    console.log('Returning $1500 for Wedding Ceremony & Reception');
+    console.log('CACHE-BUST: Returning $1500 for Wedding Ceremony & Reception');
     return 1500;
   }
   
   // Other wedding events
-  if (isWeddingEvent(eventType)) {
-    console.log('Returning $1000 for wedding event:', eventType);
+  if (isWeddingEventV2(eventType)) {
+    console.log('CACHE-BUST: Returning $1000 for wedding event:', eventType);
     return 1000;
   }
   
@@ -76,11 +76,20 @@ export function getBasePrice(eventType) {
   ];
   
   if (fiveHundredDollarEvents.includes(eventType)) {
-    console.log('Returning $500 for event:', eventType);
+    console.log('CACHE-BUST: Returning $500 for event:', eventType);
     return 500;
   }
   
-  console.log('Returning default $400 for event:', eventType);
+  console.log('CACHE-BUST: Returning default $400 for event:', eventType);
   // Default for other events
   return 400;
+}
+
+// Keep old functions for backwards compatibility but make them call new ones
+export function isWeddingEvent(eventType) {
+  return isWeddingEventV2(eventType);
+}
+
+export function getBasePrice(eventType) {
+  return getBasePriceV2(eventType);
 } 
