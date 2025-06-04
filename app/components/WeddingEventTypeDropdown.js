@@ -24,7 +24,7 @@ export default function WeddingEventTypeDropdown({
 
   // DEBUG: Log the wedding event types being used
   console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES:', WEDDING_EVENT_TYPES_V2);
-  console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 17:00');
+  console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 18:30 - Force refresh');
 
   // Set initial price on mount if value is provided
   useEffect(() => {

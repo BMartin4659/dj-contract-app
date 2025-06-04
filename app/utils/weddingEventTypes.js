@@ -1,7 +1,7 @@
 'use client';
 
 // NEW FILE TO BYPASS VERCEL CACHING - Wedding event types with proper filtering
-// DEPLOYMENT TIMESTAMP: 2025-01-31 17:00
+// DEPLOYMENT TIMESTAMP: 2025-01-31 18:30 - Force deployment refresh for wedding forms
 
 // List of wedding event types - only those with "wedding" in the title
 export const WEDDING_EVENT_TYPES_V2 = [
