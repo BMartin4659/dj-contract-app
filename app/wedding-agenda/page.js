@@ -809,7 +809,8 @@ export default function WeddingAgendaForm() {
                   marginBottom: '30px',
                   position: 'relative',
                   maxWidth: '100%',
-                  padding: '0 10px'
+                  padding: isMobile ? '0 8px' : '0 10px',
+                  overflow: 'hidden'
                 }}>
                   <div style={{
                     width: isMobile ? '120px' : '150px',
@@ -834,23 +835,30 @@ export default function WeddingAgendaForm() {
                   </div>
                   
                   <h1 style={{
-                    fontSize: 'clamp(28px, 4vw, 36px)',
+                    fontSize: 'clamp(20px, 5vw, 36px)',
                     fontWeight: 'bold',
                     margin: '10px auto',
                     color: '#000',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    lineHeight: '1.2',
+                    gap: isMobile ? '4px' : '8px',
+                    lineHeight: '1.1',
                     maxWidth: '100%',
                     textAlign: 'center',
-                    flexWrap: 'nowrap'
+                    flexWrap: 'nowrap',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden'
                   }}>
                     <span style={{ 
-                      fontSize: 'clamp(28px, 4vw, 36px)'
+                      fontSize: 'clamp(20px, 5vw, 36px)',
+                      flexShrink: 0
                     }}>📝</span>
-                    <span>WEDDING AGENDA</span>
+                    <span style={{
+                      fontSize: 'clamp(16px, 4.5vw, 32px)',
+                      fontWeight: 'bold',
+                      letterSpacing: isMobile ? '-0.5px' : '0px'
+                    }}>WEDDING AGENDA</span>
                   </h1>
                 </div>
                 
