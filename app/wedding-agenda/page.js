@@ -1253,7 +1253,9 @@ export default function WeddingAgendaForm() {
                                   justifyContent: 'center',
                                   transition: 'all 0.2s ease',
                                   boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
-                                  minHeight: '32px'
+                                  minHeight: '32px',
+                                  minWidth: '200px',
+                                  width: '200px'
                                 }}
                                 onMouseOver={(e) => {
                                   e.target.style.backgroundColor = '#ef4444';
@@ -1268,7 +1270,7 @@ export default function WeddingAgendaForm() {
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
                                 <span style={{ marginRight: '6px' }}>👩🏽</span>
-                                Remove Bridesmaid #{removeIndex + 4}
+                                Remove #{removeIndex + 4}
                               </button>
                             </div>
                           ))}
@@ -1300,7 +1302,9 @@ export default function WeddingAgendaForm() {
                             justifyContent: 'center',
                             transition: 'all 0.2s ease',
                             boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
-                            minHeight: '36px'
+                            minHeight: '36px',
+                            minWidth: '200px',
+                            width: '200px'
                           }}
                           onMouseOver={(e) => {
                             e.target.style.backgroundColor = '#22c55e';
@@ -1384,7 +1388,9 @@ export default function WeddingAgendaForm() {
                                   justifyContent: 'center',
                                   transition: 'all 0.2s ease',
                                   boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
-                                  minHeight: '32px'
+                                  minHeight: '32px',
+                                  minWidth: '200px',
+                                  width: '200px'
                                 }}
                                 onMouseOver={(e) => {
                                   e.target.style.backgroundColor = '#ef4444';
@@ -1399,7 +1405,7 @@ export default function WeddingAgendaForm() {
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
                                 <span style={{ marginRight: '6px' }}>🤵🏽</span>
-                                Remove Groomsman #{removeIndex + 4}
+                                Remove #{removeIndex + 4}
                               </button>
                             </div>
                           ))}
@@ -1431,7 +1437,9 @@ export default function WeddingAgendaForm() {
                             justifyContent: 'center',
                             transition: 'all 0.2s ease',
                             boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
-                            minHeight: '36px'
+                            minHeight: '36px',
+                            minWidth: '200px',
+                            width: '200px'
                           }}
                           onMouseOver={(e) => {
                             e.target.style.backgroundColor = '#22c55e';
@@ -1529,12 +1537,11 @@ export default function WeddingAgendaForm() {
                     fontSize: 'clamp(20px, 3vw, 24px)',
                     fontWeight: '600',
                     backgroundColor: 'transparent',
-                    display: 'inline-block',
+                    display: 'flex',
+                    alignItems: 'center',
                     padding: '0 1rem 0.5rem 0',
                     position: 'relative',
-                    marginBottom: '0',
-                    display: 'flex',
-                    alignItems: 'center'
+                    marginBottom: '0'
                   }}>
                     <FaMusic className="text-red-500 mr-3" style={{ marginRight: '10px' }} /> Entrance Music
                   </h3>
