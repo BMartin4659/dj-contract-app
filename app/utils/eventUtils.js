@@ -3,11 +3,16 @@
 // FORCE DEPLOYMENT UPDATE - New function names to bypass caching
 // DEPLOYMENT TIMESTAMP: 2025-01-31 19:30 - Cache-busting pricing fix
 
-// List of wedding event types - only those with "wedding" in the title
+// List of wedding event types - all wedding-related events from dropdown
 export const WEDDING_EVENT_TYPES = [
   'Wedding Ceremony',
   'Wedding Reception',
   'Wedding Ceremony & Reception',
+  'Engagement Party',
+  'Bridal Shower',
+  'Bachelor/Bachelorette Party',
+  'Anniversary Party',
+  'Vow Renewal',
 ];
 
 // Very specific wedding keywords - only used for exact matching
@@ -58,9 +63,21 @@ export function getBasePriceV2(eventType) {
     return 1500;
   }
   
-  // Other wedding events
-  if (isWeddingEventV2(eventType)) {
-    console.log('CACHE-BUST: Returning $1000 for wedding event:', eventType);
+  // Main wedding events (ceremony and reception)
+  if (eventType === 'Wedding Ceremony' || eventType === 'Wedding Reception') {
+    console.log('CACHE-BUST: Returning $1000 for main wedding event:', eventType);
+    return 1000;
+  }
+  
+  // Wedding-related events that should be $1000
+  const thousandDollarWeddingEvents = [
+    'Bridal Shower',
+    'Anniversary Party',
+    'Vow Renewal',
+  ];
+  
+  if (thousandDollarWeddingEvents.includes(eventType)) {
+    console.log('CACHE-BUST: Returning $1000 for wedding-related event:', eventType);
     return 1000;
   }
   
@@ -78,6 +95,12 @@ export function getBasePriceV2(eventType) {
   if (fiveHundredDollarEvents.includes(eventType)) {
     console.log('CACHE-BUST: Returning $500 for event:', eventType);
     return 500;
+  }
+  
+  // Check if it's any other wedding event
+  if (isWeddingEventV2(eventType)) {
+    console.log('CACHE-BUST: Returning $1000 for other wedding event:', eventType);
+    return 1000;
   }
   
   console.log('CACHE-BUST: Returning default $400 for event:', eventType);
