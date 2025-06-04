@@ -4,7 +4,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isWeddingEventV2, getBasePriceV2 } from '../utils/eventUtils';
+import { isWeddingEvent, getBasePrice } from '../utils/eventUtils';
 
 const EVENT_OPTIONS = [
   {
@@ -106,12 +106,12 @@ export default function EventTypeDropdown({
     if (currentValue) {
       // Set initial price on mount
       if (effectiveOnPriceUpdate) {
-        effectiveOnPriceUpdate(getBasePriceV2(currentValue));
+        effectiveOnPriceUpdate(getBasePrice(currentValue));
       }
       
       // Set initial price note and agenda alert on mount
-      const price = getBasePriceV2(currentValue);
-      if (isWeddingEventV2(currentValue)) {
+      const price = getBasePrice(currentValue);
+      if (isWeddingEvent(currentValue)) {
         console.log('EventTypeDropdown - Detected wedding event on mount:', currentValue);
         // Show specific pricing message
         if (currentValue === 'Wedding Ceremony & Reception') {
@@ -147,7 +147,7 @@ export default function EventTypeDropdown({
     console.log('EventTypeDropdown - Value changed to:', newValue);
 
     // DYNAMIC PRICING: Calculate price immediately when value changes
-    const price = getBasePriceV2(newValue);
+    const price = getBasePrice(newValue);
     console.log('EventTypeDropdown - DYNAMIC PRICE CALCULATED:', price, 'for event:', newValue);
 
     // Call the parent onChange immediately
@@ -174,7 +174,7 @@ export default function EventTypeDropdown({
     }
 
     // Update UI feedback with dynamic messaging
-    const isWedding = isWeddingEventV2(newValue);
+    const isWedding = isWeddingEvent(newValue);
     console.log('EventTypeDropdown - DYNAMIC UPDATE: Event type changed:', newValue, 'Is wedding:', isWedding, 'Price:', price);
     
     if (isWedding) {
@@ -270,7 +270,7 @@ export default function EventTypeDropdown({
 
       {/* Wedding Agenda Alert - Only show for wedding events */}
       <AnimatePresence>
-        {showAgendaAlert && showWeddingAgendaLink && isWeddingEventV2(currentValue) && (
+        {showAgendaAlert && showWeddingAgendaLink && isWeddingEvent(currentValue) && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
