@@ -1,7 +1,7 @@
 'use client';
 
-// DEPLOYMENT TIMESTAMP: 2025-01-31 19:15 - Fix main contract form pricing for Wedding Ceremony & Reception
-// Fixed getBasePriceForEventType to return $1500 for Wedding Ceremony & Reception
+// FORCE CACHE REFRESH - Wedding Ceremony & Reception should return $1500
+// DEPLOYMENT TIMESTAMP: 2025-01-31 19:30 - Cache-busting update for pricing fix
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
