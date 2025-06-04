@@ -1,9 +1,9 @@
 'use client';
 
-// CRITICAL VERCEL DEPLOYMENT FIX: 2025-02-01 01:30:00 UTC - AGGRESSIVE CACHE BUST
-// FORCE DEPLOYMENT TIMESTAMP: 20250201-0130-PRICING-FIX
-// DEPLOYMENT ID: wedding-pricing-fix-final-v1
-// This file has been COMPLETELY rewritten to fix Vercel caching issues
+// EMERGENCY CACHE BYPASS: 2025-02-01 01:45:00 UTC - NEW FUNCTION NAMES
+// FORCE COMPLETE CACHE INVALIDATION - VERCEL DEPLOYMENT EMERGENCY FIX
+// DEPLOYMENT ID: emergency-pricing-fix-v2-20250201-0145
+// Using completely new function names to bypass Vercel caching
 
 // List of wedding event types - all wedding-related events from dropdown
 export const WEDDING_EVENT_TYPES = [
@@ -25,21 +25,22 @@ export const WEDDING_KEYWORDS = [
 ];
 
 /**
- * Check if an event type is wedding-related - FINAL VERSION 2025-02-01
+ * EMERGENCY: New function name to bypass Vercel caching
+ * Check if an event type is wedding-related - EMERGENCY FIX 2025-02-01
  * @param {string} eventType - The event type to check
  * @returns {boolean} - True if the event is wedding-related
  */
-export function isWeddingEvent(eventType) {
-  console.log('eventUtils.isWeddingEvent - DEPLOYMENT 20250201-0130 - called with:', eventType);
+export function isWeddingEventEmergencyFix(eventType) {
+  console.log('🚨 EMERGENCY: isWeddingEventEmergencyFix - DEPLOYMENT 20250201-0145 - called with:', eventType);
   
   if (!eventType) {
-    console.log('eventUtils.isWeddingEvent - No event type provided');
+    console.log('🚨 EMERGENCY: No event type provided');
     return false;
   }
   
   // Check if it's in the list of exact wedding event types
   if (WEDDING_EVENT_TYPES.includes(eventType)) {
-    console.log('eventUtils.isWeddingEvent - FOUND in WEDDING_EVENT_TYPES:', eventType);
+    console.log('🚨 EMERGENCY: FOUND in WEDDING_EVENT_TYPES:', eventType);
     return true;
   }
   
@@ -49,37 +50,38 @@ export function isWeddingEvent(eventType) {
   // Check if it starts with a wedding keyword
   for (const prefix of WEDDING_KEYWORDS) {
     if (eventTypeLower.startsWith(prefix)) {
-      console.log('eventUtils.isWeddingEvent - FOUND wedding keyword prefix:', prefix, 'in:', eventType);
+      console.log('🚨 EMERGENCY: FOUND wedding keyword prefix:', prefix, 'in:', eventType);
       return true;
     }
   }
   
-  console.log('eventUtils.isWeddingEvent - NOT a wedding event:', eventType);
+  console.log('🚨 EMERGENCY: NOT a wedding event:', eventType);
   return false;
 }
 
 /**
- * Get the base price for an event type - FINAL DEPLOYMENT VERSION 2025-02-01
+ * EMERGENCY: New function name to bypass Vercel caching
+ * Get the base price for an event type - EMERGENCY DEPLOYMENT VERSION 2025-02-01
  * @param {string} eventType - The event type
  * @returns {number} - The base price for the event
  */
-export function getBasePrice(eventType) {
-  console.log('==== DEPLOYMENT 20250201-0130 - FINAL PRICING DEBUG ====');
-  console.log('eventUtils.getBasePrice called with:', eventType);
-  console.log('Type:', typeof eventType);
-  console.log('Length:', eventType?.length);
-  console.log('Exact string comparison test for "Wedding Ceremony & Reception":', eventType === 'Wedding Ceremony & Reception');
+export function getBasePriceEmergencyFix(eventType) {
+  console.log('🚨🚨🚨 EMERGENCY DEPLOYMENT 20250201-0145 - PRICING FIX 🚨🚨🚨');
+  console.log('🚨 getBasePriceEmergencyFix called with:', eventType);
+  console.log('🚨 Type:', typeof eventType);
+  console.log('🚨 Length:', eventType?.length);
+  console.log('🚨 Exact string comparison test for "Wedding Ceremony & Reception":', eventType === 'Wedding Ceremony & Reception');
   
   // CRITICAL SECTION: Wedding Ceremony & Reception pricing - $1500
   if (eventType === 'Wedding Ceremony & Reception') {
-    console.log('🎯 FINAL DEPLOYMENT: EXACT MATCH - Wedding Ceremony & Reception - Returning $1500');
-    console.log('🎯 PRICING CONFIRMED: $1500 for Wedding Ceremony & Reception');
+    console.log('🚨💰 EMERGENCY FIX: EXACT MATCH - Wedding Ceremony & Reception - Returning $1500');
+    console.log('🚨💰 EMERGENCY CONFIRMED: $1500 for Wedding Ceremony & Reception');
     return 1500;
   }
   
   // Wedding Ceremony OR Wedding Reception separately - $1000 each
   if (eventType === 'Wedding Ceremony' || eventType === 'Wedding Reception') {
-    console.log('🎯 FINAL DEPLOYMENT: Individual wedding ceremony/reception - Returning $1000 for:', eventType);
+    console.log('🚨💰 EMERGENCY FIX: Individual wedding ceremony/reception - Returning $1000 for:', eventType);
     return 1000;
   }
   
@@ -91,7 +93,7 @@ export function getBasePrice(eventType) {
   ];
   
   if (thousandDollarWeddingEvents.includes(eventType)) {
-    console.log('🎯 FINAL DEPLOYMENT: Wedding-related $1000 event:', eventType);
+    console.log('🚨💰 EMERGENCY FIX: Wedding-related $1000 event:', eventType);
     return 1000;
   }
   
@@ -107,24 +109,34 @@ export function getBasePrice(eventType) {
   ];
   
   if (fiveHundredDollarEvents.includes(eventType)) {
-    console.log('🎯 FINAL DEPLOYMENT: $500 event:', eventType);
+    console.log('🚨💰 EMERGENCY FIX: $500 event:', eventType);
     return 500;
   }
   
   // Check if it's any other wedding event
-  if (isWeddingEvent(eventType)) {
-    console.log('🎯 FINAL DEPLOYMENT: Other wedding event (generic) - Returning $1000 for:', eventType);
+  if (isWeddingEventEmergencyFix(eventType)) {
+    console.log('🚨💰 EMERGENCY FIX: Other wedding event (generic) - Returning $1000 for:', eventType);
     return 1000;
   }
   
-  console.log('🎯 FINAL DEPLOYMENT: Default event - Returning $400 for:', eventType);
+  console.log('🚨💰 EMERGENCY FIX: Default event - Returning $400 for:', eventType);
   return 400;
 }
 
-// Export V2 functions as aliases for backwards compatibility
-export const isWeddingEventV2 = isWeddingEvent;
-export const getBasePriceV2 = getBasePrice;
+// BACKWARD COMPATIBILITY: Keep old function names but route to new functions
+export function isWeddingEvent(eventType) {
+  return isWeddingEventEmergencyFix(eventType);
+}
 
-// Force deployment cache invalidation
-export const DEPLOYMENT_TIMESTAMP = '2025-02-01T01:30:00Z';
-export const CACHE_BUST_ID = 'final-pricing-fix-20250201-0130'; 
+export function getBasePrice(eventType) {
+  return getBasePriceEmergencyFix(eventType);
+}
+
+// Export V2 functions as aliases for backwards compatibility
+export const isWeddingEventV2 = isWeddingEventEmergencyFix;
+export const getBasePriceV2 = getBasePriceEmergencyFix;
+
+// Force deployment cache invalidation with emergency timestamp
+export const EMERGENCY_DEPLOYMENT_TIMESTAMP = '2025-02-01T01:45:00Z';
+export const EMERGENCY_CACHE_BUST_ID = 'emergency-pricing-fix-v2-20250201-0145';
+export const FORCE_VERCEL_REBUILD = true; 

@@ -1,6 +1,6 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.7-final-pricing-fix-20250201",
+  "version": "1.0.8-emergency-pricing-fix-20250201-0145",
   "private": true,
   "scripts": {
     "dev": "next dev",
