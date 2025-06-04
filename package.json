@@ -1,15 +1,15 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.3-force-deploy-20250131",
+  "version": "1.0.4-v2-functions-20250131",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "DEPLOYMENT_TIMESTAMP=20250131-2005 next build",
-    "vercel-build": "DEPLOYMENT_TIMESTAMP=20250131-2005 node ensure-components.js && node clear-cache.js && next build",
+    "build": "DEPLOYMENT_TIMESTAMP=20250131-2015 next build",
+    "vercel-build": "DEPLOYMENT_TIMESTAMP=20250131-2015 node ensure-components.js && node clear-cache.js && next build",
     "start": "next start",
     "lint": "next lint",
     "clean": "node clear-cache.js",
-    "clean:build": "node clear-cache.js && DEPLOYMENT_TIMESTAMP=20250131-2005 next build",
+    "clean:build": "node clear-cache.js && DEPLOYMENT_TIMESTAMP=20250131-2015 next build",
     "clean:dev": "node clear-cache.js && next dev"
   },
   "dependencies": {

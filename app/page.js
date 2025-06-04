@@ -1,8 +1,8 @@
 'use client';
 
-// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00 UTC
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:10 UTC
 // CRITICAL CACHE BUSTING: Wedding event selection on main contract form
-// Wedding events not working on Vercel deployment - AGGRESSIVE REBUILD REQUIRED
+// Wedding events not working on Vercel deployment - USING V2 FUNCTIONS
 // All wedding event types must trigger dynamic pricing and wedding agenda alerts
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -104,8 +104,8 @@ import EventTypeDropdown from './components/EventTypeDropdown';
 // Import the new SuppressHydration component
 import SuppressHydration from './components/SuppressHydration';
 
-// Import the event utilities
-import { isWeddingEvent } from './utils/eventUtils';
+// Import the event utilities - UPDATED TO USE V2 CACHE-BUSTED FUNCTIONS
+import { isWeddingEventV2, getBasePriceV2 } from './utils/eventUtils';
 
 // Import the form context
 import { useFormContext } from './contexts/FormContext';
@@ -1391,39 +1391,15 @@ Live City DJ Contract Terms and Conditions:
     console.log('Test data saved:', testData);
   };
   
-  // Helper function to get base price for event type
+  // Helper function to get base price for event type - USING V2 CENTRALIZED LOGIC
   const getBasePriceForEventType = useCallback((eventType) => {
     console.log('getBasePriceForEventType called with:', eventType);
     
-    // Special pricing for Wedding Ceremony & Reception
-    if (eventType === 'Wedding Ceremony & Reception') {
-      console.log('Returning $1500 for Wedding Ceremony & Reception');
-      return 1500;
-    }
+    // Use the centralized V2 pricing function for consistency
+    const price = getBasePriceV2(eventType);
+    console.log('V2 CACHE-BUST: getBasePriceV2 returned:', price, 'for:', eventType);
     
-    // Other wedding events
-    if (isWeddingEvent(eventType)) {
-      console.log('Returning $1000 for wedding event:', eventType);
-      return 1000;
-    }
-    
-    // Specific event types that should be $500
-    const fiveHundredDollarEvents = [
-      'Company Holiday Party',
-      'Engagement Party', 
-      'Bachelor Party',
-      'Bachelorette Party',
-      'Bachelor/Bachelorette Party',
-      'Prom',
-      'Homecoming'
-    ];
-    
-    if (fiveHundredDollarEvents.includes(eventType)) {
-      return 500;
-    }
-    
-    // Default for other events
-    return 400;
+    return price;
   }, []);
   
   // Handler for event type changes
@@ -2466,7 +2442,7 @@ Live City DJ Contract Terms and Conditions:
         gap: '0.5rem',
       }}>
         <span style={{ flex: '1 1 auto' }}>
-          {isWeddingEvent(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
+          {isWeddingEventV2(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
         </span>
         <span style={{ whiteSpace: 'nowrap' }}>${basePrice}</span>
       </div>
@@ -3909,7 +3885,7 @@ Live City DJ Contract Terms and Conditions:
                   })}
                   
                   {/* Wedding Agenda Card - Using client-only component */}
-                  {formData.eventType && isWeddingEvent(formData.eventType) ? (
+                  {formData.eventType && isWeddingEventV2(formData.eventType) ? (
                     <div>
                       <WeddingAgendaCard 
                         key={`wedding-agenda-${formData.eventType}`}

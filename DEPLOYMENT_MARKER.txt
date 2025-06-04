@@ -1,9 +1,14 @@
 FORCE VERCEL DEPLOYMENT REFRESH
-Timestamp: 2025-01-31 20:05:00 UTC
-Deployment ID: wedding-fix-v2025-0131-2005
+Timestamp: 2025-01-31 20:15:00 UTC
+Deployment ID: wedding-fix-v2025-0131-2015
 Issue: Main contract wedding event selection not working on Vercel
-Fix: Updated all cache-busting timestamps and forced aggressive cache clearing
-Status: CRITICAL DEPLOYMENT - All wedding events must work on main contract form
+Fix: Updated ALL components to use V2 cache-busted functions
+Status: CRITICAL DEPLOYMENT - V2 functions implemented across all files
+
+MAJOR CHANGES:
+- EventTypeDropdown.js: Updated to use isWeddingEventV2 and getBasePriceV2
+- page.js: Updated imports and local pricing function to use V2 functions
+- eventUtils.js: Contains V2 cache-busted functions with correct pricing
 
 Wedding Events That Must Work:
 - Wedding Ceremony ($1,000)
@@ -16,11 +21,16 @@ Wedding Events That Must Work:
 - Vow Renewal ($1,000)
 
 Expected Behavior:
-1. User selects any wedding event from dropdown
-2. Dynamic pricing message appears immediately
+1. User selects "Wedding Ceremony & Reception" from dropdown
+2. Dynamic pricing message shows "$1500" immediately
 3. Wedding agenda alert shows for all wedding events
-4. Price calculation updates correctly
+4. Price calculation updates correctly to $1500
 
-This deployment marker forces Vercel to rebuild completely.
-CACHE_BUST_ID: cb-20250131-2005
-BUILD_FORCE: true 
+ROOT CAUSE IDENTIFIED:
+- Components were using old functions instead of V2 cache-busted versions
+- Local pricing logic was not consistent with centralized logic
+
+This deployment marker forces Vercel to rebuild completely with V2 functions.
+CACHE_BUST_ID: cb-20250131-2015
+BUILD_FORCE: true
+V2_FUNCTIONS: enabled 
