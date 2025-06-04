@@ -1,8 +1,8 @@
 'use client';
 
-// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:25
 // CRITICAL CACHE BUSTING: Main contract form wedding event recognition
-// Updated to ensure ALL wedding events work properly on Vercel deployment
+// Updated to consolidate V2 logic into main functions to avoid import issues
 
 // List of wedding event types - all wedding-related events from dropdown
 export const WEDDING_EVENT_TYPES = [
@@ -24,11 +24,11 @@ export const WEDDING_KEYWORDS = [
 ];
 
 /**
- * Check if an event type is wedding-related - V2 for cache busting
+ * Check if an event type is wedding-related - CONSOLIDATED V2 LOGIC
  * @param {string} eventType - The event type to check
  * @returns {boolean} - True if the event is wedding-related
  */
-export function isWeddingEventV2(eventType) {
+export function isWeddingEvent(eventType) {
   if (!eventType) return false;
   
   // Check if it's in the list of exact wedding event types
@@ -51,22 +51,22 @@ export function isWeddingEventV2(eventType) {
 }
 
 /**
- * Get the base price for an event type - V2 for cache busting
+ * Get the base price for an event type - CONSOLIDATED V2 LOGIC
  * @param {string} eventType - The event type
  * @returns {number} - The base price for the event
  */
-export function getBasePriceV2(eventType) {
-  console.log('eventUtils.getBasePriceV2 called with:', eventType);
+export function getBasePrice(eventType) {
+  console.log('eventUtils.getBasePrice called with:', eventType);
   
   // CRITICAL: Special pricing for Wedding Ceremony & Reception
   if (eventType === 'Wedding Ceremony & Reception') {
-    console.log('CACHE-BUST: Returning $1500 for Wedding Ceremony & Reception');
+    console.log('V2-LOGIC: Returning $1500 for Wedding Ceremony & Reception');
     return 1500;
   }
   
   // Main wedding events (ceremony and reception)
   if (eventType === 'Wedding Ceremony' || eventType === 'Wedding Reception') {
-    console.log('CACHE-BUST: Returning $1000 for main wedding event:', eventType);
+    console.log('V2-LOGIC: Returning $1000 for main wedding event:', eventType);
     return 1000;
   }
   
@@ -78,7 +78,7 @@ export function getBasePriceV2(eventType) {
   ];
   
   if (thousandDollarWeddingEvents.includes(eventType)) {
-    console.log('CACHE-BUST: Returning $1000 for wedding-related event:', eventType);
+    console.log('V2-LOGIC: Returning $1000 for wedding-related event:', eventType);
     return 1000;
   }
   
@@ -94,26 +94,21 @@ export function getBasePriceV2(eventType) {
   ];
   
   if (fiveHundredDollarEvents.includes(eventType)) {
-    console.log('CACHE-BUST: Returning $500 for event:', eventType);
+    console.log('V2-LOGIC: Returning $500 for event:', eventType);
     return 500;
   }
   
   // Check if it's any other wedding event
-  if (isWeddingEventV2(eventType)) {
-    console.log('CACHE-BUST: Returning $1000 for other wedding event:', eventType);
+  if (isWeddingEvent(eventType)) {
+    console.log('V2-LOGIC: Returning $1000 for other wedding event:', eventType);
     return 1000;
   }
   
-  console.log('CACHE-BUST: Returning default $400 for event:', eventType);
+  console.log('V2-LOGIC: Returning default $400 for event:', eventType);
   // Default for other events
   return 400;
 }
 
-// Keep old functions for backwards compatibility but make them call new ones
-export function isWeddingEvent(eventType) {
-  return isWeddingEventV2(eventType);
-}
-
-export function getBasePrice(eventType) {
-  return getBasePriceV2(eventType);
-} 
+// Export V2 functions as aliases for backwards compatibility
+export const isWeddingEventV2 = isWeddingEvent;
+export const getBasePriceV2 = getBasePrice; 

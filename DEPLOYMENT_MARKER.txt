@@ -1,19 +1,26 @@
 FORCE VERCEL DEPLOYMENT REFRESH
-Timestamp: 2025-01-31 20:15:00 UTC
-Deployment ID: wedding-fix-v2025-0131-2015
-Issue: Main contract wedding event selection not working on Vercel
-Fix: Updated ALL components to use V2 cache-busted functions
-Status: CRITICAL DEPLOYMENT - V2 functions implemented across all files
+Timestamp: 2025-01-31 20:25:00 UTC
+Deployment ID: wedding-fix-v2025-0131-2025
+Issue: Client-side exception - isWeddingEventV2 is not a function
+Fix: CONSOLIDATED V2 logic into main functions to avoid import issues
+Status: CRITICAL FIX - Import/export issue resolved
+
+TECHNICAL ISSUE RESOLVED:
+- Error: Uncaught TypeError: (0 , M.isWeddingEventV2) is not a function
+- Root Cause: Import/export conflicts with V2 functions in build
+- Solution: Consolidated V2 logic into main functions (isWeddingEvent, getBasePrice)
+- V2 functions now available as aliases for backwards compatibility
 
 MAJOR CHANGES:
-- EventTypeDropdown.js: Updated to use isWeddingEventV2 and getBasePriceV2
-- page.js: Updated imports and local pricing function to use V2 functions
-- eventUtils.js: Contains V2 cache-busted functions with correct pricing
+- eventUtils.js: Moved V2 logic into main functions
+- EventTypeDropdown.js: Reverted to use main functions (isWeddingEvent, getBasePrice)
+- page.js: Reverted to use main functions, updated local pricing logic
+- next.config.js: Fixed invalid turbotrace option causing build warnings
 
 Wedding Events That Must Work:
 - Wedding Ceremony ($1,000)
 - Wedding Reception ($1,000) 
-- Wedding Ceremony & Reception ($1,500)
+- Wedding Ceremony & Reception ($1,500) ← CRITICAL - Should show $1500
 - Engagement Party ($500)
 - Bridal Shower ($1,000)
 - Bachelor/Bachelorette Party ($500)
@@ -21,16 +28,17 @@ Wedding Events That Must Work:
 - Vow Renewal ($1,000)
 
 Expected Behavior:
-1. User selects "Wedding Ceremony & Reception" from dropdown
-2. Dynamic pricing message shows "$1500" immediately
-3. Wedding agenda alert shows for all wedding events
-4. Price calculation updates correctly to $1500
+1. Application loads without client-side exceptions
+2. User selects "Wedding Ceremony & Reception" from dropdown
+3. Dynamic pricing message shows "$1500" immediately
+4. Wedding agenda alert shows for all wedding events
+5. Price calculation updates correctly to $1500
 
-ROOT CAUSE IDENTIFIED:
-- Components were using old functions instead of V2 cache-busted versions
-- Local pricing logic was not consistent with centralized logic
+CRITICAL FIX:
+- Functions now use consolidated logic avoiding import/export conflicts
+- All pricing logic includes V2 updates (Wedding Ceremony & Reception = $1500)
+- Application should load without errors on Vercel
 
-This deployment marker forces Vercel to rebuild completely with V2 functions.
-CACHE_BUST_ID: cb-20250131-2015
+CACHE_BUST_ID: cb-20250131-2025
 BUILD_FORCE: true
-V2_FUNCTIONS: enabled 
+CONSOLIDATED_FUNCTIONS: enabled 

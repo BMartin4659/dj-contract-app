@@ -1,4 +1,4 @@
-// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:20
 // CRITICAL CACHE BUSTING: Wedding event form deployment fix
 // Wedding events not working on main contract form - FORCE COMPLETE REBUILD
 /** @type {import('next').NextConfig} */
@@ -12,7 +12,7 @@ const nextConfig = {
     // Fallback Google Maps API key if not set in environment
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc',
     // Force deployment timestamp
-    DEPLOYMENT_TIMESTAMP: '20250131-2000',
+    DEPLOYMENT_TIMESTAMP: '20250131-2020',
     FORCE_REBUILD: 'true',
   },
   // Disable all caching mechanisms
@@ -44,9 +44,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'dj-contract-app.web.app',
       },
-    ],
-    domains: ['js.stripe.com'],
-    remotePatterns: [
       {
         protocol: 'https',
         hostname: 'js.stripe.com',
@@ -58,14 +55,11 @@ const nextConfig = {
         pathname: '/wikipedia/commons/**',
       }
     ],
+    domains: ['js.stripe.com'],
   },
   experimental: {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
     optimizeCss: false,
-    // Force fresh builds
-    turbotrace: {
-      memoryLimit: 6000,
-    },
   },
   compiler: {
     // Enables the styled-components SWC transform
@@ -96,7 +90,7 @@ const nextConfig = {
           '__NEXT_REACT_ROOT': JSON.stringify(true),
           '__NEXT_SUPPRESS_HYDRATION_WARNING': JSON.stringify(true),
           // Force deployment marker
-          '__DEPLOYMENT_TIMESTAMP': JSON.stringify('20250131-2000'),
+          '__DEPLOYMENT_TIMESTAMP': JSON.stringify('20250131-2020'),
           '__FORCE_REBUILD': JSON.stringify(true),
         })
       );

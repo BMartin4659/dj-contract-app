@@ -104,8 +104,8 @@ import EventTypeDropdown from './components/EventTypeDropdown';
 // Import the new SuppressHydration component
 import SuppressHydration from './components/SuppressHydration';
 
-// Import the event utilities - UPDATED TO USE V2 CACHE-BUSTED FUNCTIONS
-import { isWeddingEventV2, getBasePriceV2 } from './utils/eventUtils';
+// Import the event utilities - USING CONSOLIDATED FUNCTIONS
+import { isWeddingEvent, getBasePrice } from './utils/eventUtils';
 
 // Import the form context
 import { useFormContext } from './contexts/FormContext';
@@ -1391,13 +1391,13 @@ Live City DJ Contract Terms and Conditions:
     console.log('Test data saved:', testData);
   };
   
-  // Helper function to get base price for event type - USING V2 CENTRALIZED LOGIC
+  // Helper function to get base price for event type - USING CONSOLIDATED LOGIC
   const getBasePriceForEventType = useCallback((eventType) => {
     console.log('getBasePriceForEventType called with:', eventType);
     
-    // Use the centralized V2 pricing function for consistency
-    const price = getBasePriceV2(eventType);
-    console.log('V2 CACHE-BUST: getBasePriceV2 returned:', price, 'for:', eventType);
+    // Use the consolidated function with V2 logic
+    const price = getBasePrice(eventType);
+    console.log('CONSOLIDATED: getBasePrice returned:', price, 'for:', eventType);
     
     return price;
   }, []);
@@ -2442,7 +2442,7 @@ Live City DJ Contract Terms and Conditions:
         gap: '0.5rem',
       }}>
         <span style={{ flex: '1 1 auto' }}>
-          {isWeddingEventV2(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
+          {isWeddingEvent(formData.eventType) ? '💍 Wedding Package' : '🎶 Base Package'}
         </span>
         <span style={{ whiteSpace: 'nowrap' }}>${basePrice}</span>
       </div>
@@ -3885,7 +3885,7 @@ Live City DJ Contract Terms and Conditions:
                   })}
                   
                   {/* Wedding Agenda Card - Using client-only component */}
-                  {formData.eventType && isWeddingEventV2(formData.eventType) ? (
+                  {formData.eventType && isWeddingEvent(formData.eventType) ? (
                     <div>
                       <WeddingAgendaCard 
                         key={`wedding-agenda-${formData.eventType}`}
