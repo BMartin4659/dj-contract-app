@@ -1286,35 +1286,36 @@ export default function WeddingAgendaForm() {
                           type="button"
                           onClick={() => addPartyMember('bridesmaids')}
                           style={{
-                            backgroundColor: 'transparent',
-                            color: '#22c55e', // Green color for add text
-                            border: 'none',
-                            padding: '0',
-                            fontSize: '16px',
+                            backgroundColor: '#f0f9ff',
+                            color: '#22c55e',
+                            border: '2px solid #22c55e',
+                            borderRadius: '8px',
+                            padding: '8px 16px',
+                            fontSize: '14px',
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: '20px',
-                            height: '16px',
-                            lineHeight: '16px',
-                            margin: '0',
-                            verticalAlign: 'middle'
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
+                            minHeight: '36px'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.backgroundColor = '#22c55e';
+                            e.target.style.color = 'white';
+                            e.target.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.backgroundColor = '#f0f9ff';
+                            e.target.style.color = '#22c55e';
+                            e.target.style.transform = 'translateY(0)';
                           }}
                           aria-label="Add bridesmaid"
                         >
-                          👩🏽
+                          <span style={{ marginRight: '6px' }}>👩🏽</span>
+                          Add Bridesmaid
                         </button>
-                        <span style={{ 
-                          fontSize: '14px',
-                          color: '#22c55e', // Green color for add text
-                          lineHeight: '16px',
-                          whiteSpace: 'nowrap',
-                          marginLeft: '6px',
-                          display: 'inline-block',
-                          verticalAlign: 'middle'
-                        }}>Add bridesmaid</span>
                       </div>
                     </div>
                   </div>
@@ -1415,35 +1416,36 @@ export default function WeddingAgendaForm() {
                           type="button"
                           onClick={() => addPartyMember('groomsmen')}
                           style={{
-                            backgroundColor: 'transparent',
-                            color: '#22c55e', // Green color for add button
-                            border: 'none',
-                            padding: '0',
-                            fontSize: '16px',
+                            backgroundColor: '#f0f9ff',
+                            color: '#22c55e',
+                            border: '2px solid #22c55e',
+                            borderRadius: '8px',
+                            padding: '8px 16px',
+                            fontSize: '14px',
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: '20px',
-                            height: '16px',
-                            lineHeight: '16px',
-                            margin: '0',
-                            verticalAlign: 'middle'
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
+                            minHeight: '36px'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.backgroundColor = '#22c55e';
+                            e.target.style.color = 'white';
+                            e.target.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.backgroundColor = '#f0f9ff';
+                            e.target.style.color = '#22c55e';
+                            e.target.style.transform = 'translateY(0)';
                           }}
                           aria-label="Add groomsman"
                         >
-                          🤵🏽
+                          <span style={{ marginRight: '6px' }}>🤵🏽</span>
+                          Add Groomsman
                         </button>
-                        <span style={{ 
-                          fontSize: '14px',
-                          color: '#22c55e', // Green color for add text
-                          lineHeight: '16px',
-                          whiteSpace: 'nowrap',
-                          marginLeft: '6px',
-                          display: 'inline-block',
-                          verticalAlign: 'middle'
-                        }}>Add groomsman</span>
                       </div>
                     </div>
                   </div>
