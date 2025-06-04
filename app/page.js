@@ -1,7 +1,9 @@
 'use client';
 
-// FORCE CACHE REFRESH - Wedding Ceremony & Reception should return $1500
-// DEPLOYMENT TIMESTAMP: 2025-01-31 19:30 - Cache-busting update for pricing fix
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00 UTC
+// CRITICAL CACHE BUSTING: Wedding event selection on main contract form
+// Wedding events not working on Vercel deployment - AGGRESSIVE REBUILD REQUIRED
+// All wedding event types must trigger dynamic pricing and wedding agenda alerts
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';

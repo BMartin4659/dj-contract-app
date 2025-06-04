@@ -1,5 +1,6 @@
 FORCE VERCEL DEPLOYMENT REFRESH
-Timestamp: 2025-01-31 20:00:00 UTC
+Timestamp: 2025-01-31 20:05:00 UTC
+Deployment ID: wedding-fix-v2025-0131-2005
 Issue: Main contract wedding event selection not working on Vercel
 Fix: Updated all cache-busting timestamps and forced aggressive cache clearing
 Status: CRITICAL DEPLOYMENT - All wedding events must work on main contract form
@@ -20,4 +21,6 @@ Expected Behavior:
 3. Wedding agenda alert shows for all wedding events
 4. Price calculation updates correctly
 
-This deployment marker forces Vercel to rebuild completely. 
+This deployment marker forces Vercel to rebuild completely.
+CACHE_BUST_ID: cb-20250131-2005
+BUILD_FORCE: true 
