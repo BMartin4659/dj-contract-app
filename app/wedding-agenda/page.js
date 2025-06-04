@@ -1240,35 +1240,36 @@ export default function WeddingAgendaForm() {
                                 type="button"
                                 onClick={() => removePartyMember('bridesmaids', removeIndex + 3)}
                                 style={{
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: '#fef2f2',
                                   color: '#ef4444',
-                                  border: 'none',
-                                  padding: '0',
-                                  fontSize: '16px',
+                                  border: '2px solid #ef4444',
+                                  borderRadius: '8px',
+                                  padding: '6px 14px',
+                                  fontSize: '13px',
                                   fontWeight: 'bold',
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  width: '20px',
-                                  height: '16px',
-                                  lineHeight: '16px',
-                                  margin: '0',
-                                  verticalAlign: 'middle'
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
+                                  minHeight: '32px'
+                                }}
+                                onMouseOver={(e) => {
+                                  e.target.style.backgroundColor = '#ef4444';
+                                  e.target.style.color = 'white';
+                                  e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.target.style.backgroundColor = '#fef2f2';
+                                  e.target.style.color = '#ef4444';
+                                  e.target.style.transform = 'translateY(0)';
                                 }}
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
-                                👩🏽
+                                <span style={{ marginRight: '6px' }}>👩🏽</span>
+                                Remove Bridesmaid #{removeIndex + 4}
                               </button>
-                              <span style={{ 
-                                fontSize: '14px',
-                                color: '#ef4444', // Red color for remove text
-                                lineHeight: '16px',
-                                whiteSpace: 'nowrap',
-                                marginLeft: '6px',
-                                display: 'inline-block',
-                                verticalAlign: 'middle'
-                              }}>Remove Bridesmaid #{removeIndex + 4}</span>
                             </div>
                           ))}
                         </div>
@@ -1370,35 +1371,36 @@ export default function WeddingAgendaForm() {
                                 type="button"
                                 onClick={() => removePartyMember('groomsmen', removeIndex + 3)}
                                 style={{
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: '#fef2f2',
                                   color: '#ef4444',
-                                  border: 'none',
-                                  padding: '0',
-                                  fontSize: '16px',
+                                  border: '2px solid #ef4444',
+                                  borderRadius: '8px',
+                                  padding: '6px 14px',
+                                  fontSize: '13px',
                                   fontWeight: 'bold',
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  width: '20px',
-                                  height: '16px',
-                                  lineHeight: '16px',
-                                  margin: '0',
-                                  verticalAlign: 'middle'
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
+                                  minHeight: '32px'
+                                }}
+                                onMouseOver={(e) => {
+                                  e.target.style.backgroundColor = '#ef4444';
+                                  e.target.style.color = 'white';
+                                  e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.target.style.backgroundColor = '#fef2f2';
+                                  e.target.style.color = '#ef4444';
+                                  e.target.style.transform = 'translateY(0)';
                                 }}
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
-                                🤵🏽
+                                <span style={{ marginRight: '6px' }}>🤵🏽</span>
+                                Remove Groomsman #{removeIndex + 4}
                               </button>
-                              <span style={{ 
-                                fontSize: '14px',
-                                color: '#ef4444', // Red color for remove text
-                                lineHeight: '16px',
-                                whiteSpace: 'nowrap',
-                                marginLeft: '6px',
-                                display: 'inline-block',
-                                verticalAlign: 'middle'
-                              }}>Remove Groomsman #{removeIndex + 4}</span>
                             </div>
                           ))}
                         </div>
