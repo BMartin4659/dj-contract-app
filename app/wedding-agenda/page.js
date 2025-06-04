@@ -1270,8 +1270,8 @@ export default function WeddingAgendaForm() {
                                 }}
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
-                                <span style={{ marginRight: '6px' }}>👩🏽</span>
                                 <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
+                                <span style={{ marginRight: '6px' }}>👩🏽</span>
                                 Remove #{removeIndex + 4}
                               </button>
                             </div>
@@ -1406,8 +1406,8 @@ export default function WeddingAgendaForm() {
                                 }}
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
-                                <span style={{ marginRight: '6px' }}>🤵🏽</span>
                                 <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
+                                <span style={{ marginRight: '6px' }}>🤵🏽</span>
                                 Remove #{removeIndex + 4}
                               </button>
                             </div>
