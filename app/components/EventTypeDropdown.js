@@ -113,7 +113,12 @@ export default function EventTypeDropdown({
       const price = getBasePrice(currentValue);
       if (isWeddingEvent(currentValue)) {
         console.log('EventTypeDropdown - Detected wedding event on mount:', currentValue);
-        setPriceNote(`💰 Base price updated to $${price} for weddings`);
+        // Show specific pricing message
+        if (currentValue === 'Wedding Ceremony & Reception') {
+          setPriceNote(`💰 Base price updated to $${price} for wedding ceremony & reception`);
+        } else {
+          setPriceNote(`💰 Base price updated to $${price} for ${currentValue.toLowerCase()}`);
+        }
         if (showWeddingAgendaLink) setShowAgendaAlert(true);
       } else {
         console.log('EventTypeDropdown - Detected event on mount:', currentValue, 'Price:', price);
@@ -165,7 +170,12 @@ export default function EventTypeDropdown({
     
     if (isWedding) {
       console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
-      setPriceNote(`💰 Base price updated to $${price} for weddings`);
+      // Show specific pricing message
+      if (newValue === 'Wedding Ceremony & Reception') {
+        setPriceNote(`💰 Base price updated to $${price} for wedding ceremony & reception`);
+      } else {
+        setPriceNote(`💰 Base price updated to $${price} for ${newValue.toLowerCase()}`);
+      }
       if (showWeddingAgendaLink) {
         setShowAgendaAlert(true);
         console.log('EventTypeDropdown - Wedding agenda alert shown');
