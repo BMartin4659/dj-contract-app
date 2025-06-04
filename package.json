@@ -1,6 +1,6 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.6-consolidated-fix-20250131",
+  "version": "1.0.7-debug-pricing-20250131",
   "private": true,
   "scripts": {
     "dev": "next dev",

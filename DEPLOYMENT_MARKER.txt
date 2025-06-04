@@ -1,44 +1,32 @@
 FORCE VERCEL DEPLOYMENT REFRESH
-Timestamp: 2025-01-31 20:25:00 UTC
-Deployment ID: wedding-fix-v2025-0131-2025
-Issue: Client-side exception - isWeddingEventV2 is not a function
-Fix: CONSOLIDATED V2 logic into main functions to avoid import issues
-Status: CRITICAL FIX - Import/export issue resolved
+Timestamp: 2025-01-31 20:30:00 UTC
+Deployment ID: wedding-fix-v2025-0131-2030
+Issue: Wedding Ceremony & Reception still showing $1000 instead of $1500
+Fix: DEBUGGING - Added detailed console logging to track pricing logic
+Status: DEBUGGING DEPLOYMENT - Investigating pricing calculation
 
-TECHNICAL ISSUE RESOLVED:
-- Error: Uncaught TypeError: (0 , M.isWeddingEventV2) is not a function
-- Root Cause: Import/export conflicts with V2 functions in build
-- Solution: Consolidated V2 logic into main functions (isWeddingEvent, getBasePrice)
-- V2 functions now available as aliases for backwards compatibility
+CURRENT STATUS:
+- Application loads without client-side exceptions ✅
+- Wedding event selection works ✅  
+- Wedding agenda alerts show ✅
+- Pricing logic issue: Still showing $1000 instead of $1500 ❌
 
-MAJOR CHANGES:
-- eventUtils.js: Moved V2 logic into main functions
-- EventTypeDropdown.js: Reverted to use main functions (isWeddingEvent, getBasePrice)
-- page.js: Reverted to use main functions, updated local pricing logic
-- next.config.js: Fixed invalid turbotrace option causing build warnings
+DEBUGGING ADDED:
+- Enhanced console logging in getBasePrice function
+- Detailed tracking of string comparison
+- Type checking for eventType parameter
+- Step-by-step pricing logic evaluation
 
-Wedding Events That Must Work:
-- Wedding Ceremony ($1,000)
-- Wedding Reception ($1,000) 
-- Wedding Ceremony & Reception ($1,500) ← CRITICAL - Should show $1500
-- Engagement Party ($500)
-- Bridal Shower ($1,000)
-- Bachelor/Bachelorette Party ($500)
-- Anniversary Party ($1,000)
-- Vow Renewal ($1,000)
+Expected Console Output When Selecting "Wedding Ceremony & Reception":
+=== DETAILED PRICING DEBUG ===
+eventUtils.getBasePrice called with: Wedding Ceremony & Reception
+Type of eventType: string
+Length of eventType: 28
+✅ EXACT MATCH: Wedding Ceremony & Reception - Returning $1500
 
-Expected Behavior:
-1. Application loads without client-side exceptions
-2. User selects "Wedding Ceremony & Reception" from dropdown
-3. Dynamic pricing message shows "$1500" immediately
-4. Wedding agenda alert shows for all wedding events
-5. Price calculation updates correctly to $1500
+TARGET: Identify why pricing logic returns $1000 instead of $1500
+This debugging deployment will help track the exact flow
 
-CRITICAL FIX:
-- Functions now use consolidated logic avoiding import/export conflicts
-- All pricing logic includes V2 updates (Wedding Ceremony & Reception = $1500)
-- Application should load without errors on Vercel
-
-CACHE_BUST_ID: cb-20250131-2025
+CACHE_BUST_ID: cb-20250131-2030
 BUILD_FORCE: true
-CONSOLIDATED_FUNCTIONS: enabled 
+DEBUG_MODE: enabled 

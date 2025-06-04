@@ -1,7 +1,7 @@
 'use client';
 
-// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:25
-// CRITICAL CACHE BUSTING: Main contract form wedding event recognition
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:30
+// CRITICAL CACHE BUSTING: DEBUGGING - Added detailed logging to track pricing
 // Updated to consolidate V2 logic into main functions to avoid import issues
 
 // List of wedding event types - all wedding-related events from dropdown
@@ -56,12 +56,18 @@ export function isWeddingEvent(eventType) {
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
+  console.log('=== DETAILED PRICING DEBUG ===');
   console.log('eventUtils.getBasePrice called with:', eventType);
+  console.log('Type of eventType:', typeof eventType);
+  console.log('Length of eventType:', eventType?.length);
   
   // CRITICAL: Special pricing for Wedding Ceremony & Reception
   if (eventType === 'Wedding Ceremony & Reception') {
-    console.log('V2-LOGIC: Returning $1500 for Wedding Ceremony & Reception');
+    console.log('✅ EXACT MATCH: Wedding Ceremony & Reception - Returning $1500');
     return 1500;
+  } else {
+    console.log('❌ NO EXACT MATCH for Wedding Ceremony & Reception');
+    console.log('Comparison result:', eventType === 'Wedding Ceremony & Reception');
   }
   
   // Main wedding events (ceremony and reception)
