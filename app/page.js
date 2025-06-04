@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';import { useRouter } from 'next/navigation';import Image from 'next/image';
+// DEPLOYMENT TIMESTAMP: 2025-01-31 19:15 - Fix main contract form pricing for Wedding Ceremony & Reception
+// Fixed getBasePriceForEventType to return $1500 for Wedding Ceremony & Reception
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
@@ -1386,7 +1391,17 @@ Live City DJ Contract Terms and Conditions:
   
   // Helper function to get base price for event type
   const getBasePriceForEventType = useCallback((eventType) => {
+    console.log('getBasePriceForEventType called with:', eventType);
+    
+    // Special pricing for Wedding Ceremony & Reception
+    if (eventType === 'Wedding Ceremony & Reception') {
+      console.log('Returning $1500 for Wedding Ceremony & Reception');
+      return 1500;
+    }
+    
+    // Other wedding events
     if (isWeddingEvent(eventType)) {
+      console.log('Returning $1000 for wedding event:', eventType);
       return 1000;
     }
     
