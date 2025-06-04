@@ -144,12 +144,27 @@ export function isWeddingEvent(eventType) {
 }
 
 /**
- * Get the base price for an event type
+ * Get the base price for an event type - EMERGENCY FIX FOR WEDDING CEREMONY & RECEPTION
  * @param {string} eventType - The event type
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
-  return isWeddingEvent(eventType) ? 1000 : 400;
+  console.log('🚨 ENSURE-COMPONENTS: getBasePrice called with:', eventType);
+  
+  // CRITICAL: Wedding Ceremony & Reception should be $1500
+  if (eventType === 'Wedding Ceremony & Reception') {
+    console.log('🚨 ENSURE-COMPONENTS: EXACT MATCH - Wedding Ceremony & Reception - Returning $1500');
+    return 1500;
+  }
+  
+  // Other wedding events are $1000
+  if (isWeddingEvent(eventType)) {
+    console.log('🚨 ENSURE-COMPONENTS: Other wedding event - Returning $1000 for:', eventType);
+    return 1000;
+  }
+  
+  console.log('🚨 ENSURE-COMPONENTS: Non-wedding event - Returning $400 for:', eventType);
+  return 400;
 }`
   },
   {
