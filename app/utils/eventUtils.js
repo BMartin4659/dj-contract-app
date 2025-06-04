@@ -1,5 +1,8 @@
 'use client';
 
+// Updated event utils with deployment timestamp - Force refresh
+// DEPLOYMENT TIMESTAMP: 2025-01-31 18:45 - Main contract form pricing fix
+
 // List of wedding event types - only those with "wedding" in the title
 export const WEDDING_EVENT_TYPES = [
   'Wedding Ceremony',
@@ -47,13 +50,17 @@ export function isWeddingEvent(eventType) {
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
+  console.log('eventUtils.getBasePrice called with:', eventType);
+  
   // Special pricing for Wedding Ceremony & Reception
   if (eventType === 'Wedding Ceremony & Reception') {
+    console.log('Returning $1500 for Wedding Ceremony & Reception');
     return 1500;
   }
   
   // Other wedding events
   if (isWeddingEvent(eventType)) {
+    console.log('Returning $1000 for wedding event:', eventType);
     return 1000;
   }
   
@@ -69,9 +76,11 @@ export function getBasePrice(eventType) {
   ];
   
   if (fiveHundredDollarEvents.includes(eventType)) {
+    console.log('Returning $500 for event:', eventType);
     return 500;
   }
   
+  console.log('Returning default $400 for event:', eventType);
   // Default for other events
   return 400;
 } 

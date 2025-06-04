@@ -23,13 +23,15 @@ export default function WeddingEventTypeDropdown({
   const [priceNote, setPriceNote] = useState('');
 
   // DEBUG: Log the wedding event types being used
-  console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES:', WEDDING_EVENT_TYPES_V2);
-  console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 18:30 - Force refresh');
+  console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES_V2:', WEDDING_EVENT_TYPES_V2);
+  console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-01-31 18:45 - Final fix deployment');
+  console.log('WeddingEventTypeDropdown - Available options:', WEDDING_EVENT_OPTIONS[0].options);
 
   // Set initial price on mount if value is provided
   useEffect(() => {
     if (value && onPriceUpdate) {
       const initialPrice = getBasePriceV2(value);
+      console.log('WeddingEventTypeDropdown - Setting initial price:', initialPrice, 'for event:', value);
       onPriceUpdate(initialPrice);
     }
   }, [value, onPriceUpdate]);
@@ -44,18 +46,22 @@ export default function WeddingEventTypeDropdown({
 
   const handleChange = (e) => {
     const newValue = e.target.value;
+    console.log('WeddingEventTypeDropdown - handleChange called with:', newValue);
     setSelected(newValue);
     
     // Support callback pattern - always pass the value, not the event
     if (onChange) {
+      console.log('WeddingEventTypeDropdown - Calling onChange with value:', newValue);
       onChange(newValue);
     }
 
     // Use dynamic pricing based on event type
     if (onPriceUpdate && newValue) {
       const dynamicPrice = getBasePriceV2(newValue);
+      console.log('WeddingEventTypeDropdown - Price calculated:', dynamicPrice, 'for event:', newValue);
       onPriceUpdate(dynamicPrice);
       setPriceNote(`💰 Base price: $${dynamicPrice.toLocaleString()} for ${newValue.toLowerCase()}`);
+      console.log('WeddingEventTypeDropdown - Price note set:', `💰 Base price: $${dynamicPrice.toLocaleString()} for ${newValue.toLowerCase()}`);
     }
   };
 

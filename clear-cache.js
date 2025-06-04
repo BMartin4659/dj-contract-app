@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
+// DEPLOYMENT TIMESTAMP: 2025-01-31 18:45 - Force complete cache clear and rebuild
+
 // Paths to clean
 const pathsToClean = [
   '.next',
