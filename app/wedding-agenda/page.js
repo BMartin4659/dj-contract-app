@@ -20,7 +20,8 @@ import {
   FaBirthdayCake,
   FaMicrophoneAlt,
   FaAddressCard,
-  FaUserFriends
+  FaUserFriends,
+  FaBan
 } from 'react-icons/fa';
 import Image from 'next/image';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
@@ -1270,6 +1271,7 @@ export default function WeddingAgendaForm() {
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
                                 <span style={{ marginRight: '6px' }}>👩🏽</span>
+                                <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
                                 Remove #{removeIndex + 4}
                               </button>
                             </div>
@@ -1405,6 +1407,7 @@ export default function WeddingAgendaForm() {
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
                                 <span style={{ marginRight: '6px' }}>🤵🏽</span>
+                                <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
                                 Remove #{removeIndex + 4}
                               </button>
                             </div>
