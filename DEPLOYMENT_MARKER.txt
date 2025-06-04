@@ -1,0 +1,23 @@
+FORCE VERCEL DEPLOYMENT REFRESH
+Timestamp: 2025-01-31 20:00:00 UTC
+Issue: Main contract wedding event selection not working on Vercel
+Fix: Updated all cache-busting timestamps and forced aggressive cache clearing
+Status: CRITICAL DEPLOYMENT - All wedding events must work on main contract form
+
+Wedding Events That Must Work:
+- Wedding Ceremony ($1,000)
+- Wedding Reception ($1,000) 
+- Wedding Ceremony & Reception ($1,500)
+- Engagement Party ($500)
+- Bridal Shower ($1,000)
+- Bachelor/Bachelorette Party ($500)
+- Anniversary Party ($1,000)
+- Vow Renewal ($1,000)
+
+Expected Behavior:
+1. User selects any wedding event from dropdown
+2. Dynamic pricing message appears immediately
+3. Wedding agenda alert shows for all wedding events
+4. Price calculation updates correctly
+
+This deployment marker forces Vercel to rebuild completely. 

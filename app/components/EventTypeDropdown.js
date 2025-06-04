@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isWeddingEvent, getBasePrice } from '../utils/eventUtils';
 
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00
+// CACHE BUSTING: All wedding events should work on main contract form
+// This file has been updated to fix Vercel deployment caching issues
+
 const EVENT_OPTIONS = [
   {
     category: '💍 Weddings & Formal',

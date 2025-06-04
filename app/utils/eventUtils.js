@@ -1,7 +1,8 @@
 'use client';
 
-// FORCE DEPLOYMENT UPDATE - New function names to bypass caching
-// DEPLOYMENT TIMESTAMP: 2025-01-31 19:30 - Cache-busting pricing fix
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00
+// CRITICAL CACHE BUSTING: Main contract form wedding event recognition
+// Updated to ensure ALL wedding events work properly on Vercel deployment
 
 // List of wedding event types - all wedding-related events from dropdown
 export const WEDDING_EVENT_TYPES = [
