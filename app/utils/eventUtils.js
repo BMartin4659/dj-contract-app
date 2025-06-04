@@ -1,5 +1,6 @@
 'use client';
 
+// AGGRESSIVE CACHE BUST: 2025-01-31 21:45:00 UTC - DEBUG LOGS MISSING
 // FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:30
 // CRITICAL CACHE BUSTING: DEBUGGING - Added detailed logging to track pricing
 // Updated to consolidate V2 logic into main functions to avoid import issues

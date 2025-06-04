@@ -1,3 +1,8 @@
+FORCE CACHE BUST - DEBUG LOGS NOT SHOWING: 2025-01-31 21:45:00 UTC
+DEBUG VERSION: Enhanced logging for Wedding Ceremony & Reception pricing 
+This file forces Vercel to invalidate all caches and redeploy fresh code.
+Previous deployment was missing debug logs - forcing complete refresh.
+
 FORCE VERCEL DEPLOYMENT REFRESH
 Timestamp: 2025-01-31 20:30:00 UTC
 Deployment ID: wedding-fix-v2025-0131-2030
