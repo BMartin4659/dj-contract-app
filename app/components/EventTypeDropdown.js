@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isWeddingEvent, getBasePrice } from '../utils/eventUtils';
 
-// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:25
-// CACHE BUSTING: Using consolidated functions to fix import issues
-// This file has been updated to fix Vercel deployment caching issues
+// FINAL PRICING FIX DEPLOYMENT - 2025-02-01 01:30:00 UTC
+// DEPLOYMENT ID: wedding-pricing-fix-final-v1 
+// This component has been updated for the FINAL pricing fix deployment
 
 const EVENT_OPTIONS = [
   {

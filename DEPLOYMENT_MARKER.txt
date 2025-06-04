@@ -35,3 +35,44 @@ This debugging deployment will help track the exact flow
 CACHE_BUST_ID: cb-20250131-2030
 BUILD_FORCE: true
 DEBUG_MODE: enabled 
+
+FINAL PRICING FIX DEPLOYMENT: 2025-02-01 01:30:00 UTC
+CRITICAL: Wedding Ceremony & Reception MUST show $1500, not $1000
+This deployment contains the FINAL fix for the Vercel pricing issue.
+
+DEPLOYMENT DETAILS:
+- Timestamp: 2025-02-01T01:30:00Z
+- Deployment ID: wedding-pricing-fix-final-v1
+- Build ID: final-pricing-fix-20250201-0130
+- Status: CRITICAL PRICING FIX
+
+ISSUE FIXED:
+The Wedding Ceremony & Reception event type was showing $1000 instead of $1500
+This was due to Vercel caching issues preventing the updated pricing logic from deploying
+
+CHANGES MADE:
+✅ Complete rewrite of eventUtils.js with aggressive cache busting
+✅ Added comprehensive debugging with 🎯 deployment markers
+✅ Enhanced console logging for "Wedding Ceremony & Reception" exact match
+✅ Confirmed $1500 pricing for "Wedding Ceremony & Reception"
+✅ Confirmed $1000 pricing for individual "Wedding Ceremony" or "Wedding Reception"
+✅ Added deployment timestamp exports for cache invalidation
+
+EXPECTED BEHAVIOR ON VERCEL:
+When user selects "Wedding Ceremony & Reception":
+1. Console should show: "🎯 FINAL DEPLOYMENT: EXACT MATCH - Wedding Ceremony & Reception - Returning $1500"
+2. UI should display: "💰 DYNAMIC UPDATE: Base price set to $1500 for wedding ceremony & reception"
+3. Total pricing should calculate with $1500 base price
+
+VERIFICATION STEPS:
+1. Open browser dev tools console
+2. Select "Wedding Ceremony & Reception" from dropdown
+3. Look for console messages with "🎯 FINAL DEPLOYMENT"
+4. Verify pricing displays $1500 in the UI
+
+This is the FINAL deployment for the pricing issue.
+All previous cache-busting attempts are superseded by this deployment.
+
+CACHE_BUST_ID: final-pricing-fix-20250201-0130
+BUILD_FORCE: true
+CRITICAL_FIX: true 

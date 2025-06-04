@@ -1,6 +1,6 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.6-debug-cache-bust",
+  "version": "1.0.7-final-pricing-fix-20250201",
   "private": true,
   "scripts": {
     "dev": "next dev",
