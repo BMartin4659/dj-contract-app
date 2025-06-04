@@ -1228,12 +1228,12 @@ export default function WeddingAgendaForm() {
                       {/* Remove buttons section - only show if there are more than 3 bridesmaids */}
                       {formData.bridesmaids.length > 3 && (
                         <div style={{ 
-                          marginTop: '8px',
-                          marginBottom: '8px'
+                          marginTop: '12px',
+                          marginBottom: '16px'
                         }}>
                           {formData.bridesmaids.slice(3).map((_, removeIndex) => (
                             <div key={`remove-${removeIndex + 3}`} style={{ 
-                              marginBottom: '8px',
+                              marginBottom: '12px',
                               display: 'flex',
                               alignItems: 'center'
                             }}>
@@ -1243,36 +1243,38 @@ export default function WeddingAgendaForm() {
                                 style={{
                                   backgroundColor: '#fef2f2',
                                   color: '#ef4444',
-                                  border: '2px solid #ef4444',
+                                  border: '1px solid #ef4444',
                                   borderRadius: '8px',
-                                  padding: '6px 14px',
-                                  fontSize: '13px',
-                                  fontWeight: 'bold',
+                                  padding: 'clamp(12px, 2vw, 16px)',
+                                  fontSize: 'clamp(14px, 2.2vw, 16px)',
+                                  fontWeight: '600',
                                   cursor: 'pointer',
-                                  display: 'inline-flex',
+                                  display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all 0.2s ease',
-                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
-                                  minHeight: '32px',
-                                  minWidth: '200px',
-                                  width: '200px'
+                                  justifyContent: 'flex-start',
+                                  transition: 'all 0.2s ease-in-out',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.15)',
+                                  width: '100%',
+                                  minHeight: isMobile ? '44px' : 'clamp(44px, 3vw, 52px)',
+                                  gap: '8px'
                                 }}
                                 onMouseOver={(e) => {
                                   e.target.style.backgroundColor = '#ef4444';
                                   e.target.style.color = 'white';
                                   e.target.style.transform = 'translateY(-1px)';
+                                  e.target.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.25)';
                                 }}
                                 onMouseOut={(e) => {
                                   e.target.style.backgroundColor = '#fef2f2';
                                   e.target.style.color = '#ef4444';
                                   e.target.style.transform = 'translateY(0)';
+                                  e.target.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.15)';
                                 }}
                                 aria-label={`Remove bridesmaid ${removeIndex + 4}`}
                               >
-                                <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
-                                <span style={{ marginRight: '6px' }}>👩🏽</span>
-                                Remove #{removeIndex + 4}
+                                <FaBan style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', flexShrink: 0 }} />
+                                <span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', flexShrink: 0 }}>👩🏽</span>
+                                <span style={{ fontSize: 'clamp(14px, 2.2vw, 16px)' }}>Remove Bridesmaid #{removeIndex + 4}</span>
                               </button>
                             </div>
                           ))}
@@ -1283,8 +1285,6 @@ export default function WeddingAgendaForm() {
                         marginTop: '16px',
                         display: 'flex',
                         alignItems: 'center',
-                        marginLeft: '2px',
-                        minHeight: '20px',
                         marginBottom: '0'
                       }}>
                         <button 
@@ -1293,35 +1293,37 @@ export default function WeddingAgendaForm() {
                           style={{
                             backgroundColor: '#f0f9ff',
                             color: '#22c55e',
-                            border: '2px solid #22c55e',
+                            border: '1px solid #22c55e',
                             borderRadius: '8px',
-                            padding: '8px 16px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
+                            padding: 'clamp(12px, 2vw, 16px)',
+                            fontSize: 'clamp(14px, 2.2vw, 16px)',
+                            fontWeight: '600',
                             cursor: 'pointer',
-                            display: 'inline-flex',
+                            display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
-                            minHeight: '36px',
-                            minWidth: '200px',
-                            width: '200px'
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.15)',
+                            width: '100%',
+                            minHeight: isMobile ? '44px' : 'clamp(44px, 3vw, 52px)',
+                            gap: '8px'
                           }}
                           onMouseOver={(e) => {
                             e.target.style.backgroundColor = '#22c55e';
                             e.target.style.color = 'white';
                             e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 4px 8px rgba(34, 197, 94, 0.25)';
                           }}
                           onMouseOut={(e) => {
                             e.target.style.backgroundColor = '#f0f9ff';
                             e.target.style.color = '#22c55e';
                             e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 2px 4px rgba(34, 197, 94, 0.15)';
                           }}
                           aria-label="Add bridesmaid"
                         >
-                          <span style={{ marginRight: '6px' }}>👩🏽</span>
-                          Add Bridesmaid
+                          <span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>👩🏽</span>
+                          <span>Add Bridesmaid</span>
                         </button>
                       </div>
                     </div>
@@ -1364,12 +1366,12 @@ export default function WeddingAgendaForm() {
                       {/* Remove buttons section - only show if there are more than 3 groomsmen */}
                       {formData.groomsmen.length > 3 && (
                         <div style={{ 
-                          marginTop: '8px',
-                          marginBottom: '8px'
+                          marginTop: '12px',
+                          marginBottom: '16px'
                         }}>
                           {formData.groomsmen.slice(3).map((_, removeIndex) => (
                             <div key={`remove-${removeIndex + 3}`} style={{ 
-                              marginBottom: '8px',
+                              marginBottom: '12px',
                               display: 'flex',
                               alignItems: 'center'
                             }}>
@@ -1379,36 +1381,38 @@ export default function WeddingAgendaForm() {
                                 style={{
                                   backgroundColor: '#fef2f2',
                                   color: '#ef4444',
-                                  border: '2px solid #ef4444',
+                                  border: '1px solid #ef4444',
                                   borderRadius: '8px',
-                                  padding: '6px 14px',
-                                  fontSize: '13px',
-                                  fontWeight: 'bold',
+                                  padding: 'clamp(12px, 2vw, 16px)',
+                                  fontSize: 'clamp(14px, 2.2vw, 16px)',
+                                  fontWeight: '600',
                                   cursor: 'pointer',
-                                  display: 'inline-flex',
+                                  display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all 0.2s ease',
-                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
-                                  minHeight: '32px',
-                                  minWidth: '200px',
-                                  width: '200px'
+                                  justifyContent: 'flex-start',
+                                  transition: 'all 0.2s ease-in-out',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.15)',
+                                  width: '100%',
+                                  minHeight: isMobile ? '44px' : 'clamp(44px, 3vw, 52px)',
+                                  gap: '8px'
                                 }}
                                 onMouseOver={(e) => {
                                   e.target.style.backgroundColor = '#ef4444';
                                   e.target.style.color = 'white';
                                   e.target.style.transform = 'translateY(-1px)';
+                                  e.target.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.25)';
                                 }}
                                 onMouseOut={(e) => {
                                   e.target.style.backgroundColor = '#fef2f2';
                                   e.target.style.color = '#ef4444';
                                   e.target.style.transform = 'translateY(0)';
+                                  e.target.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.15)';
                                 }}
                                 aria-label={`Remove groomsman ${removeIndex + 4}`}
                               >
-                                <FaBan style={{ marginRight: '6px', fontSize: '12px' }} />
-                                <span style={{ marginRight: '6px' }}>🤵🏽</span>
-                                Remove #{removeIndex + 4}
+                                <FaBan style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', flexShrink: 0 }} />
+                                <span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', flexShrink: 0 }}>🤵🏽</span>
+                                <span style={{ fontSize: 'clamp(14px, 2.2vw, 16px)' }}>Remove Groomsman #{removeIndex + 4}</span>
                               </button>
                             </div>
                           ))}
@@ -1419,8 +1423,6 @@ export default function WeddingAgendaForm() {
                         marginTop: '16px',
                         display: 'flex',
                         alignItems: 'center',
-                        marginLeft: '2px',
-                        minHeight: '20px',
                         marginBottom: '0'
                       }}>
                         <button 
@@ -1429,35 +1431,37 @@ export default function WeddingAgendaForm() {
                           style={{
                             backgroundColor: '#f0f9ff',
                             color: '#22c55e',
-                            border: '2px solid #22c55e',
+                            border: '1px solid #22c55e',
                             borderRadius: '8px',
-                            padding: '8px 16px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
+                            padding: 'clamp(12px, 2vw, 16px)',
+                            fontSize: 'clamp(14px, 2.2vw, 16px)',
+                            fontWeight: '600',
                             cursor: 'pointer',
-                            display: 'inline-flex',
+                            display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.2)',
-                            minHeight: '36px',
-                            minWidth: '200px',
-                            width: '200px'
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: '0 2px 4px rgba(34, 197, 94, 0.15)',
+                            width: '100%',
+                            minHeight: isMobile ? '44px' : 'clamp(44px, 3vw, 52px)',
+                            gap: '8px'
                           }}
                           onMouseOver={(e) => {
                             e.target.style.backgroundColor = '#22c55e';
                             e.target.style.color = 'white';
                             e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 4px 8px rgba(34, 197, 94, 0.25)';
                           }}
                           onMouseOut={(e) => {
                             e.target.style.backgroundColor = '#f0f9ff';
                             e.target.style.color = '#22c55e';
                             e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 2px 4px rgba(34, 197, 94, 0.15)';
                           }}
                           aria-label="Add groomsman"
                         >
-                          <span style={{ marginRight: '6px' }}>🤵🏽</span>
-                          Add Groomsman
+                          <span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>🤵🏽</span>
+                          <span>Add Groomsman</span>
                         </button>
                       </div>
                     </div>
