@@ -208,11 +208,16 @@ function PaymentSuccessContent() {
   const bookingId = searchParams.get('booking_id');
 
   useEffect(() => {
+    console.log('Payment success page loaded with:', { sessionId, bookingId });
+    
     if (sessionId) {
+      console.log('Processing Stripe payment with session ID:', sessionId);
       processStripePayment();
     } else if (bookingId) {
+      console.log('Processing direct booking with booking ID:', bookingId);
       processDirectBooking();
     } else {
+      console.error('No sessionId or bookingId found in URL parameters');
       setError('Invalid payment session. Missing payment information.');
       setLoading(false);
     }
@@ -222,18 +227,32 @@ function PaymentSuccessContent() {
     try {
       setLoading(true);
       
-      // First get the session details from Stripe
-      const sessionResponse = await fetch('/api/get-session-details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-      });
+      // First get the session details from Stripe using GET method with query params
+      console.log('Fetching session details for sessionId:', sessionId);
+      const sessionResponse = await fetch(`/api/get-session-details?session_id=${sessionId}`);
 
+      console.log('Session response status:', sessionResponse.status);
+      
       if (!sessionResponse.ok) {
-        throw new Error('Failed to retrieve payment session details');
+        let errorMessage = 'Failed to retrieve payment session details';
+        try {
+          const errorData = await sessionResponse.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error('Session API error:', errorData);
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError);
+          const responseText = await sessionResponse.text();
+          console.error('Raw error response:', responseText);
+        }
+        throw new Error(errorMessage);
       }
 
       const sessionData = await sessionResponse.json();
+      console.log('Session data retrieved successfully:', {
+        sessionId: sessionData.sessionId,
+        hasMetadata: !!sessionData.metadata,
+        paymentStatus: sessionData.payment_status
+      });
       setPaymentDetails(sessionData);
 
       // Extract booking details from session metadata
