@@ -6,11 +6,26 @@ import 'react-datepicker/dist/react-datepicker.css';
 const CustomInput = forwardRef(({ value, onClick, placeholder, isMobile }, ref) => (
   <div 
     className="datepicker-input"
-    onClick={onClick}
+    onClick={(e) => {
+      try {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(e);
+      } catch (error) {
+        console.error('Input click error:', error);
+      }
+    }}
     onTouchEnd={(e) => {
-      // Prevent default to avoid double-tap issues on mobile
-      e.preventDefault();
-      onClick(e);
+      try {
+        // Prevent default to avoid double-tap issues on mobile
+        e.preventDefault();
+        e.stopPropagation();
+        if (isMobile) {
+          onClick(e);
+        }
+      } catch (error) {
+        console.error('Input touch error:', error);
+      }
     }}
     ref={ref}
     style={{
@@ -90,7 +105,17 @@ const ReactDatePickerField = ({
           offset: [0, 8]
         }
       }
-    ]
+    ],
+    // Ensure portal container exists
+    portalContainer: (() => {
+      let container = document.getElementById("react-datepicker-portal");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "react-datepicker-portal";
+        document.body.appendChild(container);
+      }
+      return container;
+    })()
   } : {
     popperPlacement: "bottom-start",
     popperProps: {
@@ -102,7 +127,20 @@ const ReactDatePickerField = ({
     <div className="relative w-full" style={{ width: '100%', marginBottom: '1rem', display: 'block' }}>
       <DatePicker
         selected={selectedDate ? new Date(selectedDate) : null}
-        onChange={onChange}
+        onChange={(date) => {
+          // Safe date handling to prevent crashes
+          try {
+            if (date && typeof date === 'object' && date instanceof Date) {
+              onChange(date);
+            } else if (date === null) {
+              onChange(null);
+            }
+          } catch (error) {
+            console.error('Date picker error:', error);
+            // Fallback to null if there's an error
+            onChange(null);
+          }
+        }}
         dateFormat={dateFormat}
         placeholderText={placeholder}
         minDate={minDate}
@@ -120,28 +158,45 @@ const ReactDatePickerField = ({
         disabledKeyboardNavigation={isMobile} // Disable keyboard navigation on mobile
         preventOpenOnFocus={isMobile} // Prevent auto-open on focus for mobile
         onCalendarOpen={() => {
-          if (isMobile) {
-            // Prevent body scroll when calendar is open on mobile
-            document.body.style.overflow = 'hidden';
-            // Add click handler to close on background click
-            setTimeout(() => {
-              const portalEl = document.getElementById('react-datepicker-portal');
-              if (portalEl) {
-                portalEl.addEventListener('click', (e) => {
-                  if (e.target === portalEl) {
-                    // Close the calendar by triggering a click outside
-                    const event = new Event('click', { bubbles: true });
-                    document.body.dispatchEvent(event);
-                  }
-                });
-              }
-            }, 100);
+          try {
+            if (isMobile) {
+              // Prevent body scroll when calendar is open on mobile
+              document.body.style.overflow = 'hidden';
+              // Add click handler to close on background click
+              setTimeout(() => {
+                const portalEl = document.getElementById('react-datepicker-portal');
+                if (portalEl) {
+                  const handlePortalClick = (e) => {
+                    if (e.target === portalEl) {
+                      // Close the calendar by triggering a click outside
+                      const event = new Event('click', { bubbles: true });
+                      document.body.dispatchEvent(event);
+                    }
+                  };
+                  portalEl.addEventListener('click', handlePortalClick);
+                  // Store the handler to remove it later
+                  portalEl._clickHandler = handlePortalClick;
+                }
+              }, 100);
+            }
+          } catch (error) {
+            console.error('Calendar open error:', error);
           }
         }}
         onCalendarClose={() => {
-          if (isMobile) {
-            // Restore body scroll when calendar is closed on mobile
-            document.body.style.overflow = '';
+          try {
+            if (isMobile) {
+              // Restore body scroll when calendar is closed on mobile
+              document.body.style.overflow = '';
+              // Clean up event listener
+              const portalEl = document.getElementById('react-datepicker-portal');
+              if (portalEl && portalEl._clickHandler) {
+                portalEl.removeEventListener('click', portalEl._clickHandler);
+                delete portalEl._clickHandler;
+              }
+            }
+          } catch (error) {
+            console.error('Calendar close error:', error);
           }
         }}
       />

@@ -3252,48 +3252,10 @@ Live City DJ Contract Terms and Conditions:
             body {
               background-attachment: scroll !important;
             }
-            
-            .mobile-background-fix {
-              display: block;
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg') !important;
-              background-size: cover !important;
-              background-position: center !important;
-              background-repeat: no-repeat !important;
-              z-index: -1;
-            }
-          }
-          
-          /* iOS-specific background fix */
-          @supports (-webkit-touch-callout: none) {
-            body {
-              background-attachment: scroll !important;
-            }
-            
-            .ios-background-fix {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg') !important;
-              background-size: cover !important;
-              background-position: center !important;
-              background-repeat: no-repeat !important;
-              z-index: -1;
-            }
           }
         `}</style>
         
-        {/* Mobile background fix element */}
-        <div className="mobile-background-fix"></div>
-        
-        {/* iOS background fix element */}
-        <div className="ios-background-fix"></div>
+
         
         <ToastContainer position="top-center" autoClose={5000} />
         {showConfirmation && (
