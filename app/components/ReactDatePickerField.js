@@ -69,33 +69,10 @@ const ReactDatePickerField = ({
 
   // Mobile-specific date picker props
   const mobileProps = isMobile ? {
-    withPortal: true, // Use portal for better mobile experience
-    portalId: "react-datepicker-portal",
-    popperContainer: ({ children }) => {
-      // Create portal container for mobile
-      const portalContainer = document.getElementById("react-datepicker-portal") || 
-        (() => {
-          const container = document.createElement("div");
-          container.id = "react-datepicker-portal";
-          container.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
-          `;
-          document.body.appendChild(container);
-          return container;
-        })();
-      return <div>{children}</div>;
-    },
+    withPortal: true,
+    portalId: "react-datepicker-portal", 
+    popperClassName: "mobile-datepicker-popper",
+    popperPlacement: "auto",
     popperModifiers: [
       {
         name: "preventOverflow",
@@ -104,6 +81,13 @@ const ReactDatePickerField = ({
           rootBoundary: "viewport",
           tether: false,
           altAxis: true
+        }
+      },
+      {
+        name: "offset",
+        enabled: true,
+        options: {
+          offset: [0, 8]
         }
       }
     ]
@@ -139,6 +123,19 @@ const ReactDatePickerField = ({
           if (isMobile) {
             // Prevent body scroll when calendar is open on mobile
             document.body.style.overflow = 'hidden';
+            // Add click handler to close on background click
+            setTimeout(() => {
+              const portalEl = document.getElementById('react-datepicker-portal');
+              if (portalEl) {
+                portalEl.addEventListener('click', (e) => {
+                  if (e.target === portalEl) {
+                    // Close the calendar by triggering a click outside
+                    const event = new Event('click', { bubbles: true });
+                    document.body.dispatchEvent(event);
+                  }
+                });
+              }
+            }, 100);
           }
         }}
         onCalendarClose={() => {
@@ -169,17 +166,29 @@ const ReactDatePickerField = ({
         }
         
         .mobile-calendar .react-datepicker__day {
-          width: 2.2rem !important;
-          line-height: 2.2rem !important;
-          margin: 0.2rem !important;
+          width: 2.5rem !important;
+          height: 2.5rem !important;
+          line-height: 2.5rem !important;
+          margin: 0.15rem !important;
           font-size: 14px !important;
+          border-radius: 50% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          -webkit-tap-highlight-color: transparent !important;
         }
         
         .mobile-calendar .react-datepicker__day-name {
-          width: 2.2rem !important;
-          line-height: 2.2rem !important;
+          width: 2.5rem !important;
+          height: 2.5rem !important;
+          line-height: 2.5rem !important;
           font-size: 12px !important;
           font-weight: 600 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0.15rem !important;
         }
         
         .mobile-calendar .react-datepicker__navigation {
@@ -202,9 +211,36 @@ const ReactDatePickerField = ({
             top: 50% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
-            z-index: 9999 !important;
+            z-index: 10000 !important;
             width: auto !important;
+            max-width: 90vw !important;
+            max-height: 80vh !important;
+            overflow: visible !important;
+          }
+          
+          .mobile-datepicker-popper {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 10001 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            padding: 20px !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          
+          .mobile-datepicker-popper .react-datepicker {
+            margin: 0 auto !important;
             max-width: 320px !important;
+            width: 90% !important;
+            position: relative !important;
+            transform: none !important;
           }
           
           .react-datepicker-wrapper {
@@ -216,6 +252,22 @@ const ReactDatePickerField = ({
             font-size: 16px !important;
             -webkit-appearance: none !important;
             appearance: none !important;
+          }
+          
+          /* Ensure portal container is properly positioned */
+          #react-datepicker-portal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 10000 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>
