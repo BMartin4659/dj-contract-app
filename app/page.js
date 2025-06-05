@@ -2548,21 +2548,8 @@ Live City DJ Contract Terms and Conditions:
               overflowY: 'auto', 
               flex: '1 1 auto',
               marginBottom: '20px',
-              paddingRight: '5px' 
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onScroll={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onWheel={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchMove={(e) => {
-              e.stopPropagation();
+              paddingRight: '5px',
+              WebkitOverflowScrolling: 'touch' // Enable smooth scrolling on iOS
             }}
           >
             <p style={{ marginBottom: '18px', color: '#333', fontSize: '1rem', lineHeight: 1.6 }}>
