@@ -4490,7 +4490,25 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 {/* Signature Section Header with Agreement Message - simplified */}
-                                <div style={{                background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',                color: 'white',                borderRadius: '10px',                padding: '18px 24px',                display: 'flex',                alignItems: 'center',                fontSize: '1rem',                fontWeight: 500,                marginBottom: '18px',                borderBottom: 'none',                justifyContent: 'center',                width: '100%',                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',              }}>                <div style={{ display: 'flex', alignItems: 'center' }}>                  By entering your name below, you agree to the terms and conditions.                  <button                    onClick={(e) => {                      e.preventDefault();                      e.stopPropagation();                      setShowTerms(true);                    }}                    style={{                      background: 'none',                      border: 'none',                      display: 'inline-flex',                      alignItems: 'center',                      justifyContent: 'center',                      marginLeft: '10px',                      cursor: 'pointer',                      padding: 0                    }}                    title="View terms and conditions"                    type="button"                  >                    <FaFileAlt                       size={20}                       color="#ffffff"                     />                  </button>                </div>              </div>
+                <div style={{
+                  background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: '18px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: 'clamp(28px, 4vw, 36px)',
+                  fontWeight: 'bold',
+                  marginBottom: '18px',
+                  borderBottom: 'none',
+                  justifyContent: 'center',
+                  width: '100%',
+                  boxShadow: '0 2px 8px rgba(59,130,246,0.08)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    By entering your name below, you agree to the terms and conditions.
+                  </div>
+                </div>
                 {/* Signature Input Field with Script Font */}
                 <div style={{
                   backgroundColor: '#f8f9fa',
