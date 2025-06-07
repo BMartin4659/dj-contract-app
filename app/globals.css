@@ -63,20 +63,22 @@
   }
 }
 
+/* =============================================
+   CLEAN PAGE STRUCTURE - NO CONFLICTS
+   ============================================= */
+
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
 
-/* Clean page structure - fix scrolling issue */
+/* Simplified html/body structure */
 html {
   height: 100%;
   font-family: 'Montserrat', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
@@ -84,12 +86,10 @@ body {
   padding: 0;
   height: 100%;
   color: #333;
-  position: relative;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 
-/* DJ Background Image Implementation */
+/* DJ Background Image - Mobile-First Approach */
 body::before {
   content: '';
   position: fixed;
@@ -100,36 +100,68 @@ body::before {
   width: 100vw;
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background: url('/dj-background-new.jpg') no-repeat center center;
+  background-image: url('/dj-background-new.jpg');
+  background-repeat: no-repeat;
+  background-position: center center;
   background-size: cover;
-  background-attachment: fixed;
   z-index: -1000;
   pointer-events: none;
-  /* Force hardware acceleration for better performance */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
 }
 
-/* Mobile-specific background fix */
+/* Mobile background fix - absolute positioning */
 @media (max-width: 768px) {
   body::before {
-    /* On mobile, use absolute positioning instead of fixed */
     position: absolute;
     background-attachment: scroll;
-    /* Ensure it covers the full document height */
     min-height: 100vh;
     height: 100%;
-    /* Prevent background from moving with form scrolling */
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
   }
   
-  /* Ensure body has proper height for absolute positioning */
   body {
     position: relative;
     min-height: 100vh;
   }
+}
+
+/* Fixed #__next container - Proper flex layout */
+#__next {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed main-wrapper - Flex: 1 to fill available space */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 10px;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+/* =============================================
+   FORM STYLING
+   ============================================= */
+
+.form-container {
+  position: relative;
+  width: 100%;
+  padding: 20px;
+  max-width: 850px;
+  margin: 0 auto;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 /* Header styles */
@@ -152,63 +184,30 @@ header a:hover {
   color: var(--primary-hover);
 }
 
-/* Form containers - matching wedding agenda transparency */
-.form-container {
-  position: relative;
-  width: 100%;
-  padding: 20px;
-  max-width: 850px;
-  margin: 0 auto;
-  border-radius: 12px;
-  background-color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  /* Ensure form doesn't interfere with background */
-  z-index: 10;
-  /* Prevent backdrop filter interactions */
-  isolation: isolate;
-  transform: translateZ(0);
-}
+/* =============================================
+   MOBILE OPTIMIZATIONS - CLEAN & SIMPLE
+   ============================================= */
 
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 30px;
-}
-
-/* Mobile Responsive Styles */
 @media (max-width: 768px) {
-  /* Remove backdrop filters on mobile to prevent background artifacts */
-  * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-  
+  /* Remove problematic mobile overrides */
   html {
     font-size: 16px;
-    height: 100%;
-    /* Prevent horizontal scrolling */
     overflow-x: hidden;
   }
   
   body {
-    min-height: 100vh;
-    height: auto;
-    -webkit-overflow-scrolling: touch; /* Enable momentum scrolling */
-    backface-visibility: hidden; /* Reduce repaints */
-    -webkit-backface-visibility: hidden;
-    /* Prevent horizontal scrolling */
+    -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
-    position: relative;
   }
   
-  /* Optimize form container for mobile */
   .form-container {
-    position: relative;
-    z-index: 10;
-    /* Ensure form doesn't interfere with background */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    padding: 15px;
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+  
+  .main-wrapper {
+    padding: 0 5px;
   }
 }
 
@@ -216,13 +215,18 @@ header a:hover {
   html {
     font-size: 14px;
   }
-  body {
-    min-height: 100vh;
-    height: auto;
+  
+  .form-container {
+    padding: 10px;
+    margin: 5px;
+    width: calc(100% - 10px);
   }
 }
 
-/* Add basic form element styling */
+/* =============================================
+   FORM ELEMENTS
+   ============================================= */
+
 input, select, textarea, button {
   font-family: 'Montserrat', sans-serif;
   max-width: 100%;
@@ -233,306 +237,44 @@ input:focus, select:focus, textarea:focus {
   outline-offset: 2px;
 }
 
-/* Improved input appearance on iOS */
-input, select {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/* Fix for iOS zooming when focusing on inputs */
-@media screen and (max-width: 768px) {
-  input, select, textarea {
-    font-size: 16px !important;
-  }
-  
-  input[type="radio"],
-  input[type="checkbox"] {
-    width: 22px !important;
-    height: 22px !important;
-  }
-}
-
-/* Better tap targets for mobile */
-button, 
-[role="button"],
-input[type="checkbox"],
-input[type="radio"] {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Fix for position fixed on iOS */
-.ios-position-fixed {
-  position: fixed;
-  width: 100%;
-  -webkit-transform: translateZ(0);
-}
-
-/* Container for vertical scrolling content */
-.vertical-scroll-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 60px; /* Add padding at bottom for better scrolling experience */
-  max-width: 100vw;
-}
-
-/* Mobile form spacing */
-@media (max-width: 480px) {
-  .form-group {
-    margin-bottom: 0.75rem;
-  }
-  
-  .form-control {
-    margin-bottom: 0.5rem;
-  }
-  
-  .form-container {
-    padding: 0 0.5rem;
-  }
-  
-  .main-content {
-    padding-top: 0;
-  }
-}
-
-/* Fix iOS smooth scrolling issue */
-@supports (-webkit-touch-callout: none) {
-  .smooth-scroll {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Fix for iOS virtual keyboard issues */
-@supports (-webkit-touch-callout: none) {
-  input:focus, 
-  select:focus, 
-  textarea:focus {
-    font-size: 16px !important;
-    position: relative;
-    z-index: 5;
-  }
-  
-  /* Force the page to use the full height */
-  html,
-  body {
-    min-height: 100%;
-    height: var(--app-height);
-    max-width: 100vw;
-  }
-  
-  /* Prevent content from jumping */
-  .form-container {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-  /* Add some padding to the bottom to ensure content is not covered by virtual keyboard */
-  .vertical-scroll-container {
-    padding-bottom: 100px;
-  }
-}
-
-/* Fix for Android virtual keyboard */
-@supports not (-webkit-touch-callout: none) {
-  @media (max-width: 768px) {
-    input:focus, 
-    select:focus, 
-    textarea:focus {
-      position: relative;
-      z-index: 5;
-    }
-    
-    html, body {
-      max-width: 100vw;
-    }
-  }
-}
-
-/* Payment method options styling for mobile */
-@media (max-width: 768px) {
-  .payment-options {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .payment-option {
-    width: 100%;
-    padding: 8px;
-    min-width: 0;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-  
-  .payment-option svg {
-    margin-right: 0;
-    margin-bottom: 5px;
-  }
-  
-  /* Make payment icons smaller on mobile */
-  .payment-icon {
-    font-size: 20px !important;
-    margin-right: 0 !important;
-    margin-bottom: 4px !important;
-  }
-  
-  .payment-method-label {
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 480px) {
-  .payment-options {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .payment-option {
-    padding: 6px;
-  }
-  
-  html {
-    font-size: 14px;
-  }
-  
-  /* Smaller header text on very small screens */
-  h1.text-black {
-    font-size: 1.75rem !important;
-  }
-}
-
-/* Mobile optimizations - removed conflicting background rules */
-@media (max-width: 768px) {
-  /* Prevent backdrop filter artifacts on mobile */
-  body, html {
-    will-change: auto !important;
-    contain: none !important;
-  }
-  
-  /* Mobile form optimizations - background handled by main definition */
-  .form-container, .main-content {
-    backdrop-filter: none !important; /* Remove expensive filters on mobile */
-  }
-}
-
-/* Prevent horizontal overflow for all elements */
-* {
-  max-width: 100vw;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-/* CSS Reset */
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  max-width: 100vw;
-  scroll-behavior: smooth;
-  background: none;
-}
-
-html {
-  --app-height: 100vh;
-}
-
-body {
-  min-height: var(--app-height);
-  width: 100%;
-  color: #333;
-  background: none;
-}
-
-/* Background image for mobile devices */
-.mobile-background {
-  display: none;
-}
-
-/* Basic styling */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  width: 100%;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Duplicate form-container removed - consolidated with main definition above */
-
-.form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.form-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #222;
-}
-
-.form-header p {
-  color: #555;
-  font-size: 1rem;
-}
-
+/* Form groups */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
   font-weight: 500;
-  color: #222;
+  color: #333;
 }
 
 .form-group input,
-.form-group select,
-.form-group textarea {
+.form-group select {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: #fff;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
 }
 
 .form-group textarea {
-  min-height: 120px;
-  resize: vertical;
+  min-height: 100px;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  outline: none;
-  border-color: #0070f3;
-  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
 }
 
+/* Form rows */
 .form-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .form-row .form-group {
@@ -540,358 +282,83 @@ a {
   margin-bottom: 0;
 }
 
-.input-error {
-  color: #e53e3e;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.required-field::after {
-  content: "*";
-  color: #e53e3e;
-  margin-left: 0.25rem;
-}
-
 /* Submit button */
 .submit-button {
-  display: block;
   width: 100%;
-  padding: 0.75rem;
-  background-color: #0070f3;
+  padding: 15px 20px;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .submit-button:hover {
-  background-color: #005cc5;
+  background-color: var(--primary-hover);
 }
 
 .submit-button:disabled {
-  background-color: #93c5fd;
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
-/* Loading spinner */
-.loading-container {
+/* Terms container */
+.terms-container {
+  background-color: #0070f3;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 1rem;
+  gap: 10px;
 }
 
-.loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #0070f3;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Custom checkbox styling */
-.checkbox-container {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.checkbox-container input[type="checkbox"] {
-  width: auto;
-  margin-right: 10px;
-  margin-top: 4px;
-}
-
-.checkbox-container label {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-/* Error message styling */
-.error-message {
-  color: #e53e3e;
-  background-color: #fee2e2;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #e53e3e;
-}
-
-/* Success message styling */
-.success-message {
-  color: #059669;
-  background-color: #d1fae5;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #059669;
-}
-
-/* Responsive styles */
+/* Mobile form adjustments */
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0;
   }
   
-  .form-container {
-    padding: 1.5rem;
-    margin: 1rem auto;
+  .form-row .form-group {
+    margin-bottom: 20px;
   }
   
-  .form-header h1 {
-    font-size: 1.75rem;
-  }
-  
-  /* Mobile body styling handled by main body::before implementation */
-  
-  /* Remove duplicate mobile background - handled by body::before */
-}
-
-@media (max-width: 480px) {
-  .form-container {
-    padding: 1.25rem;
-    width: 95%;
-    margin: 0.75rem auto;
-  }
-  
-  .form-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .form-header p {
-    font-size: 0.9rem;
-  }
-  
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    padding: 0.6rem;
-    font-size: 0.95rem;
-  }
-  
-  html, body {
-    position: relative;
-    width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-  
+  /* Fix iOS zoom on input focus */
   input, select, textarea {
-    max-width: 100%;
-    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    font-size: 16px !important;
   }
 }
 
-/* iOS support - background handled by body::before */
-@supports (-webkit-touch-callout: none) {
-  /* iOS-specific optimizations without background conflicts */
-}
+/* =============================================
+   PAYMENT & CONFIRMATION
+   ============================================= */
 
-/* Payment method styling */
-.form-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.form-radio-option {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 6px;
-  transition: background-color 0.2s;
-}
-
-.form-radio-option:hover {
-  background-color: rgba(255, 255, 255, 0.8);
-}
-
-.form-radio-option.selected {
-  background-color: rgba(0, 112, 243, 0.1);
-  border: 1px solid rgba(0, 112, 243, 0.5);
-}
-
-.form-radio-input {
-  margin-right: 0.5rem;
-}
-
-.form-radio-label {
-  display: flex;
-  align-items: center;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-}
-
-.form-radio-label svg {
-  margin-right: 0.5rem;
-}
-
-/* Terms and conditions container */
-.terms-container {
-  background-color: rgba(255, 255, 255, 0.92);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
-  overflow-y: auto;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.terms-container h3 {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #2d3748;
-}
-
-.terms-container p {
-  margin-bottom: 12px;
-}
-
-.terms-container ul {
-  padding-left: 20px;
-  margin-bottom: 12px;
-}
-
-.terms-container li {
-  margin-bottom: 6px;
-}
-
-/* Itemized total section */
-.itemized-total-container {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid #ddd;
-}
-
-.itemized-total-header {
-  font-weight: bold;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  color: #222;
-}
-
-.itemized-total-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.itemized-total-row.total {
-  border-top: 1px solid #ddd;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  font-weight: bold;
-}
-
-/* Page layout - proper flex structure for footer */
-.main-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 100%;
-  padding: 0 10px;
-}
-
-/* Additional fixes specifically for mobile devices to prevent horizontal scrolling */
-@media (max-width: 768px) {
-  html, body {
-    /* Changed from overflow-x: hidden to prevent background clipping */
-    overflow-x: visible;
-    width: 100%;
-    position: relative;
-  }
-  
-  body {
-    touch-action: pan-y;
-  }
-  
-  .form-container, 
-  .itemized-total-container, 
-  .terms-container {
-    width: calc(95% - 0.5rem);
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
-  }
-  
-  input, 
-  select, 
-  textarea {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-/* Ensure no background interferes with our body::before implementation */
-#__next {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Payment Confirmation Banner */
 .payment-confirmation-banner {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: #f0fff4;
-  border-bottom: 1px solid #68d391;
+  background-color: #4CAF50;
+  color: white;
   padding: 15px;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  z-index: 1000;
 }
 
 .confirmation-content {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
-  text-align: center;
-  position: relative;
-}
-
-.close-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #666;
-}
-
-.payment-confirmation-content {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
-/* Payment Method Styles */
-.payment-method-group {
-  margin-bottom: 20px;
-}
-
+/* Payment options */
 .payment-options {
   display: flex;
   flex-wrap: wrap;
@@ -915,29 +382,12 @@ a {
 .payment-option.selected {
   border-color: #4a90e2;
   background-color: #f0f7ff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.form-radio-input {
-  position: absolute;
-  opacity: 0;
-}
-
-.form-radio-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  width: 100%;
-  font-weight: 500;
 }
 
 .payment-option:hover {
   background-color: #f0f7ff;
-  transform: translateY(-2px);
 }
 
-/* Responsive Styles */
 @media (max-width: 768px) {
   .payment-options {
     flex-direction: column;
@@ -946,51 +396,92 @@ a {
   .payment-option {
     width: 100%;
   }
-  
-  body {
-    font-size: 14px;
-  }
 }
 
-@media (max-width: 480px) {
-  body {
-    font-size: 12px;
-  }
-  
-  .payment-option {
-    padding: 8px;
-  }
+/* =============================================
+   ERROR & SUCCESS MESSAGES
+   ============================================= */
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+  display: block;
 }
 
-/* Duplicate form-container and main-wrapper removed - using main definitions */
-
-.payment-confirmation-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #4CAF50;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  z-index: 1000;
+.success-message {
+  color: #28a745;
+  font-size: 14px;
+  margin-top: 5px;
+  display: block;
 }
 
-.confirmation-content {
-  max-width: 800px;
-  margin: 0 auto;
+/* =============================================
+   LOADING & ANIMATIONS
+   ============================================= */
+
+.loading-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  padding: 20px;
 }
 
-/* Input styles */
-input, select, textarea {
-  max-width: 100%;
+.loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =============================================
+   DATEPICKER STYLES
+   ============================================= */
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--primary-color);
+  border-bottom: none;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: white;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.react-datepicker__day:hover {
+  background-color: #e6f3ff;
+}
+
+.datepicker-input {
   width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: white;
+  cursor: pointer;
 }
 
-/* Add more responsive styles as needed */
+/* =============================================
+   UTILITY CLASSES
+   ============================================= */
 
 .text-gradient {
   background-clip: text;
@@ -999,675 +490,16 @@ input, select, textarea {
   background-image: linear-gradient(to right, var(--primary-gradient-start), var(--primary-gradient-end));
 }
 
-/* Update form styling */
-form {
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-  background-color: rgba(255, 255, 255, 0.98); /* Increased opacity to maintain design without backdrop filter */
-  transition: box-shadow 0.2s ease; /* Reduce transition complexity */
-}
-
-/* Mobile form optimization */
-@media (max-width: 768px) {
-  form, 
-  form[style*="backdrop-filter"],
-  form[style*="-webkit-backdrop-filter"],
-  #wedding-form {
-    backdrop-filter: none !important; /* Remove expensive filters */
-    -webkit-backdrop-filter: none !important;
-    transition: none !important; /* Remove transitions on mobile */
-    transform: translateZ(0); /* Force hardware acceleration */
-  }
-  
-  /* Remove backdrop filters from all elements on mobile for performance */
-  * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-}
-
-/* Add animations */
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0.7);
-  }
-  
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(49, 130, 206, 0);
-  }
-  
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0);
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-/* Add header font styling */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--header-font);
-}
-
-/* Add responsive form styling */
-@media (max-width: 767px) {
-  form {
-    padding: 1.5rem 1rem !important;
-    width: 100% !important;
-    max-width: 96% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    border-radius: 15px !important;
-  }
-  
-  /* Improve header spacing on mobile */
-  .text-center h1 {
-    line-height: 1.3 !important;
-    margin-bottom: 0.75rem !important;
-  }
-  
-  .text-center .flex {
-    margin-top: 0.5rem !important;
-  }
-  
-  /* Ensure background extends to edges on mobile, maintain flex layout */
-  .main-wrapper {
-    padding: 0 !important;
-  }
-  
-  .main-content {
-    padding: 0 !important;
-    width: 100% !important;
-  }
-}
-
-/* Add animation support for UI components */
-@layer base {
-  * {
-    @apply border-gray-200 dark:border-gray-700;
-  }
-  /* Remove body background from Tailwind - we handle this with body::before */
-}
-
-/* Animation classes for dialog and other components */
-@layer utilities {
-  .animate-in {
-    animation-duration: 150ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    --tw-enter-opacity: initial;
-    --tw-enter-scale: initial;
-    --tw-enter-rotate: initial;
-    --tw-enter-translate-x: initial;
-    --tw-enter-translate-y: initial;
-  }
-
-  .animate-out {
-    animation-duration: 150ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    --tw-exit-opacity: initial;
-    --tw-exit-scale: initial;
-    --tw-exit-rotate: initial;
-    --tw-exit-translate-x: initial;
-    --tw-exit-translate-y: initial;
-  }
-
-  .fade-in {
-    animation-name: fade-in;
-  }
-  .fade-out {
-    animation-name: fade-out;
-  }
-  .zoom-in {
-    animation-name: zoom-in;
-  }
-  .zoom-out {
-    animation-name: zoom-out;
-  }
-  .slide-in-from-top {
-    animation-name: slide-in-from-top;
-  }
-  .slide-out-to-top {
-    animation-name: slide-out-to-top;
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: var(--tw-enter-opacity, 0);
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes fade-out {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: var(--tw-exit-opacity, 0);
-    }
-  }
-
-  @keyframes zoom-in {
-    from {
-      opacity: 0;
-      transform: scale(var(--tw-enter-scale, 0.95));
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes zoom-out {
-    from {
-      opacity: 1;
-      transform: scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: scale(var(--tw-exit-scale, 0.95));
-    }
-  }
-
-  @keyframes slide-in-from-top {
-    from {
-      opacity: 0;
-      transform: translateY(var(--tw-enter-translate-y, -10px));
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-out-to-top {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(var(--tw-exit-translate-y, -10px));
-    }
-  }
-}
-
-/* Mobile Performance and Scrolling Optimizations */
-@media (max-width: 768px) {
-  /* Mobile performance optimizations */
-  html, body {
-    -webkit-overflow-scrolling: touch !important;
-    /* Changed from overflow-x: hidden to prevent background clipping */
-    overflow-x: visible !important;
-  }
-  
-  /* Force hardware acceleration and prevent tearing */
-  body, .main-wrapper, .form-container {
-    transform: translateZ(0) !important;
-    -webkit-transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
-    will-change: auto !important; /* Only use when needed */
-  }
-  
-  /* Optimize scrolling performance */
-  * {
-    -webkit-overflow-scrolling: touch;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-  }
-  
-  /* Remove unnecessary transforms from form elements */
-  .fixed-position-input {
-    position: relative !important;
-    transform: none !important;
-    height: auto;
-    min-height: 44px;
-  }
-  
-  .fixed-position-input:focus {
-    position: relative !important;
-    transform: none !important;
-  }
-  
-  /* Prevent viewport shifting when keyboard appears - removed problematic scroll properties */
-  .form-container {
-    height: auto;
-  }
-  
-  /* Better tap targets for mobile */
-  input, select, textarea, button, 
-  [role="button"],
-  input[type="checkbox"],
-  input[type="radio"] {
-    min-height: 44px;
-    min-width: 44px;
-    font-size: 16px !important;
-  }
-  
-  /* Prevent zoom on iOS form focus */
-  input, select, textarea {
-    font-size: 16px !important;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  
-  /* Remove scroll-behavior smooth on mobile for better performance */
-  html {
-    scroll-behavior: auto !important;
-  }
-  
-  /* Optimize container performance */
-  .vertical-scroll-container {
-    -webkit-overflow-scrolling: touch;
-    transform: translateZ(0);
-    will-change: scroll-position;
-  }
-  
-  /* Prevent repaints on scroll */
-  .main-content, .form-header, .form-body {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-  
-  /* Optimize background rendering */
-  .mobile-background, .ios-background-fix {
-    transform: translateZ(0);
-    will-change: auto;
-  }
-}
-
-/* React DatePicker Styles */
-.react-datepicker-popper {
-  z-index: 9999 !important;
-}
-
-.react-datepicker__header {
-  background-color: #6366f1 !important;
-  border-bottom: 1px solid #5152c9 !important;
-}
-
-.react-datepicker__current-month,
-.react-datepicker__day-name {
-  color: white !important;
-}
-
-.react-datepicker__navigation-icon::before {
-  border-color: white !important;
-}
-
-.react-datepicker__navigation:hover *::before {
-  border-color: #e2e8f0 !important;
-}
-
-.react-datepicker__day--selected,
-.react-datepicker__day--in-selecting-range,
-.react-datepicker__day--in-range {
-  background-color: #6366f1 !important;
-  color: white !important;
-}
-
-.react-datepicker__day:hover {
-  background-color: #e2e8f0 !important;
-}
-
-.react-datepicker__day--today {
+/* Required field indicator */
+.required-field::after {
+  content: " *";
+  color: #dc3545;
   font-weight: bold;
-  border: 1px solid #6366f1;
 }
 
-.datepicker-input {
-  width: 100%;
-  background-color: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: clamp(12px, 2vw, 16px);
-  font-size: clamp(16px, 2.5vw, 18px);
-  color: #000;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-
-@media (max-width: 640px) {
-  .react-datepicker-popper {
-    width: 100% !important;
-    max-width: 320px !important;
-    transform: none !important;
-    left: 50% !important;
-    margin-left: -160px !important;
-  }
-  
-  .react-datepicker {
-    width: 100% !important;
-  }
-}
-
-/* Payment Confirmation Page Styles */
-.payment-confirmation-page {
-  min-height: 100vh;
-  background-color: #f5f7fa;
-  padding: 2rem 1rem;
-}
-
-.confirmation-card {
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.confirmation-header {
-  background: linear-gradient(to right, #3b82f6, #60a5fa);
-  padding: 2.5rem 2rem;
-  text-align: center;
-  color: white;
-}
-
-.confirmation-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-}
-
-.confirmation-body {
-  padding: 2rem;
-}
-
-.info-card {
-  background-color: #f8fafc;
-  border-radius: 12px;
-  padding: 1.5rem;
-  height: 100%;
-}
-
-.info-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #e0f2fe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1rem;
-  color: #3b82f6;
-}
-
-.info-label {
-  color: #64748b;
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
-}
-
-.info-value {
-  color: #0f172a;
-  font-weight: 600;
-}
-
-.payment-method-card {
-  display: flex;
-  align-items: center;
-}
-
-.payment-method-icon {
-  font-size: 2rem;
-  margin-right: 0.75rem;
-}
-
-.payment-method-name {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.payment-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  color: white;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.payment-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-}
-
-.payment-button-venmo {
-  background-color: #3D95CE;
-}
-
-.payment-button-cashapp {
-  background-color: #00C244;
-}
-
-.payment-button-paypal {
-  background-color: #003087;
-}
-
-.order-details-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background-color: #f8fafc;
-  border: none;
-  cursor: pointer;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.order-details-content {
-  padding: 1.5rem;
-}
-
-.order-item-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.order-item-row:last-child {
-  border-bottom: none;
-}
-
-.order-item-name {
-  color: #64748b;
-}
-
-.order-item-price {
-  font-weight: 500;
-  color: #0f172a;
-}
-
-.order-total-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem 0;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.help-card {
-  background-color: #eff6ff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: flex-start;
-}
-
-.help-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #dbeafe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1rem;
-  color: #3b82f6;
-  flex-shrink: 0;
-}
-
-.help-content h3 {
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 0.5rem;
-}
-
-.help-content p {
-  color: #475569;
-  margin-bottom: 1rem;
-}
-
-.help-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.help-link {
-  color: #3b82f6;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s ease;
-}
-
-.help-link:hover {
-  color: #2563eb;
-}
-
-.confirmation-footer {
-  background-color: #f8fafc;
-  padding: 1rem;
-  text-align: center;
-  border-top: 1px solid #e2e8f0;
-  color: #64748b;
-}
-
-@media (max-width: 768px) {
-  .confirmation-header {
-    padding: 2rem 1rem;
-  }
-  
-  .confirmation-body {
-    padding: 1.5rem 1rem;
-  }
-  
-  .info-card {
-    margin-bottom: 1rem;
-  }
-  
-  .help-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .help-icon {
-    margin-right: 0;
-    margin-bottom: 1rem;
-  }
-  
-  .help-links {
-    justify-content: center;
-  }
-}
-
-/* All background handling moved to body::before - no separate wrapper needed */
-
-/* Smooth scrolling for the entire app */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  -webkit-overflow-scrolling: touch;
-  min-height: 100vh;
-}
-
-/* Prevent layout jumps when form elements are focused */
-input, select, textarea {
-  transition: all 0.2s ease;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Stabilize layout for form controls to prevent jumps */
-.form-control, .select-control, .input-control {
-  position: relative;
-  z-index: 1;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Mobile-optimized form elements */
-@media (max-width: 768px) {
-  /* Remove expensive properties on mobile */
-  input, select, textarea {
-    transition: none !important;
-    transform: translateZ(0);
-    will-change: auto;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-
-  /* Stabilize event type dropdowns and cards */
-  .form-control, .select-control, .input-control, 
-  select, option, .service-card {
-    position: relative;
-    z-index: 1;
-    transform: translateZ(0);
-    will-change: auto;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-
-  /* Remove transitions from service cards on mobile */
-  .service-card {
-    transition: none !important;
-  }
-}
-
-/* Desktop form elements (keep transitions) */
-@media (min-width: 769px) {
-  input, select, textarea {
-    transition: border-color 0.2s ease;
-    transform: translateZ(0);
-    will-change: auto;
-  }
-
-  .service-card {
-    transition: box-shadow 0.2s ease;
-  }
-}
-
-/* Optimize modal animations only */
-.modal-overlay {
-  will-change: opacity;
-}
-
-.modal-content {
-  will-change: transform;
+/* Input error state */
+.input-error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
 }
 
