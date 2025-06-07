@@ -55,19 +55,30 @@ export default function AddressAutocomplete({
       
       // Load new script
       return new Promise((resolve, reject) => {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc';
+        // Enhanced environment variable detection for Vercel
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 
+                      window?.process?.env?.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+                      'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc';
+        
+        console.log('🗺️ Loading Google Maps API with key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
+        
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async&v=3.56`;
         script.async = true;
         script.defer = true;
         
         script.onload = () => {
+          console.log('✅ Google Maps API script loaded successfully');
           setTimeout(() => {
-            resolve(!!window.google?.maps?.places?.Autocomplete);
+            const isReady = !!window.google?.maps?.places?.Autocomplete;
+            console.log('Google Maps Places API ready:', isReady);
+            resolve(isReady);
           }, 500);
         };
         
-        script.onerror = () => {
+        script.onerror = (error) => {
+          console.error('❌ Failed to load Google Maps API:', error);
+          console.error('Using API key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
           reject(new Error('Failed to load Google Maps API'));
         };
         
@@ -82,7 +93,7 @@ export default function AddressAutocomplete({
         // Skip if already initialized
         if (autocompleteRef.current) return;
 
-        console.log('Initializing address autocomplete...');
+        console.log('🔧 Initializing address autocomplete...');
 
         const autocomplete = new window.google.maps.places.Autocomplete(
           inputRef.current,
@@ -110,9 +121,9 @@ export default function AddressAutocomplete({
         autocompleteRef.current = autocomplete;
         setIsReady(true);
         setError(null);
-        console.log('Address autocomplete initialized successfully');
+        console.log('✅ Address autocomplete initialized successfully');
       } catch (err) {
-        console.error('Error initializing autocomplete:', err);
+        console.error('❌ Error initializing autocomplete:', err);
         setError('Address suggestions temporarily unavailable');
       }
     };
@@ -122,9 +133,12 @@ export default function AddressAutocomplete({
         const loaded = await loadGoogleMapsAPI();
         if (loaded && isComponentMounted) {
           await initializeAutocomplete();
+        } else {
+          console.warn('⚠️ Google Maps API failed to load or component unmounted');
+          setError('Address suggestions temporarily unavailable');
         }
       } catch (err) {
-        console.error('Error setting up autocomplete:', err);
+        console.error('❌ Error setting up autocomplete:', err);
         setError('Address suggestions temporarily unavailable');
       }
     };
