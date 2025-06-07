@@ -72,7 +72,7 @@ export default function WeddingEventTypeDropdown({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       <div className="relative">
         <select
           value={selected}
@@ -91,7 +91,10 @@ export default function WeddingEventTypeDropdown({
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 1rem top 50%',
             backgroundSize: '0.75rem auto',
-            paddingRight: 'clamp(24px, 3vw, 32px)'
+            paddingRight: 'clamp(24px, 3vw, 32px)',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            MozAppearance: 'none',
           }}
         >
           <option value="" disabled>
