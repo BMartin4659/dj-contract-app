@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps API Key Test</title>
+</head>
+<body>
+    <h1>Google Maps API Key Test</h1>
+    <input id="address" type="text" placeholder="Enter address..." style="width: 300px; padding: 10px;">
+    <div id="status">Loading...</div>
+    
+    <script>
+        console.log('Script starting...');
+        
+        function initGoogleMaps() {
+            console.log('Google Maps API loaded successfully!');
+            document.getElementById('status').textContent = 'Google Maps API loaded!';
+            
+            // Initialize autocomplete
+            const input = document.getElementById('address');
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['address'],
+                componentRestrictions: { country: 'us' }
+            });
+            
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                console.log('Place selected:', place.formatted_address);
+                document.getElementById('status').textContent = 'Place selected: ' + place.formatted_address;
+            });
+            
+            document.getElementById('status').textContent = 'Autocomplete ready! Type an address...';
+        }
+        
+        function loadGoogleMaps() {
+            console.log('Loading Google Maps API...');
+            document.getElementById('status').textContent = 'Loading Google Maps API...';
+            
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc&libraries=places&callback=initGoogleMaps';
+            script.async = true;
+            script.defer = true;
+            
+            script.onerror = function(error) {
+                console.error('Error loading Google Maps API:', error);
+                document.getElementById('status').textContent = 'Error loading Google Maps API';
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Make initGoogleMaps global
+        window.initGoogleMaps = initGoogleMaps;
+        
+        // Load the API
+        loadGoogleMaps();
+    </script>
+</body>
+</html> 

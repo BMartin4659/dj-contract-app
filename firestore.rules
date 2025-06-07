@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to read all documents
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Allow authenticated users to write to djContracts collection
+    match /djContracts/{docId} {
+      allow write: if request.auth != null || true; // Remove "|| true" for production to require authentication
+    }
+    
+    // Allow users to write to stripePayments collection
+    match /stripePayments/{docId} {
+      allow write: if true;
+    }
+    
+    // Add more collection-specific rules as needed
+    // Default deny for anything else
+    match /{collectionName}/{docId} {
+      allow write: if false;
+    }
+  }
+} 
