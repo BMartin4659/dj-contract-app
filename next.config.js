@@ -71,8 +71,7 @@ const nextConfig = {
   experimental: {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
     // Disable CSS optimization that might interfere with background fix
-    optimizeCss: false,
-    esmExternals: false,
+    optimizeCss: false
   },
   compiler: {
     // Enables the styled-components SWC transform
