@@ -144,12 +144,57 @@ export function isWeddingEvent(eventType) {
 }
 
 /**
- * Get the base price for an event type
+ * Get the base price for an event type - UPDATED PRICING FOR ANNIVERSARY & VOW RENEWAL
  * @param {string} eventType - The event type
  * @returns {number} - The base price for the event
  */
 export function getBasePrice(eventType) {
-  return isWeddingEvent(eventType) ? 1000 : 400;
+  console.log('🚨 ENSURE-COMPONENTS: getBasePrice called with:', eventType);
+  
+  // CRITICAL: Wedding Ceremony & Reception should be $1500
+  if (eventType === 'Wedding Ceremony & Reception') {
+    console.log('🚨 ENSURE-COMPONENTS: EXACT MATCH - Wedding Ceremony & Reception - Returning $1500');
+    return 1500;
+  }
+  
+  // Wedding Ceremony OR Wedding Reception separately - $1000 each
+  if (eventType === 'Wedding Ceremony' || eventType === 'Wedding Reception') {
+    console.log('🚨 ENSURE-COMPONENTS: Individual wedding ceremony/reception - Returning $1000 for:', eventType);
+    return 1000;
+  }
+  
+  // Wedding-related events that should be $1000
+  const thousandDollarWeddingEvents = [
+    'Bridal Shower',
+  ];
+  
+  if (thousandDollarWeddingEvents.includes(eventType)) {
+    console.log('🚨 ENSURE-COMPONENTS: Wedding-related $1000 event:', eventType);
+    return 1000;
+  }
+  
+  // Specific event types that should be $500
+  const fiveHundredDollarEvents = [
+    'Engagement Party', 
+    'Bachelor Party',
+    'Bachelorette Party',
+    'Anniversary Party',
+    'Vow Renewal',
+  ];
+  
+  if (fiveHundredDollarEvents.includes(eventType)) {
+    console.log('🚨 ENSURE-COMPONENTS: $500 event:', eventType);
+    return 500;
+  }
+  
+  // Check if it's any other wedding event (default wedding pricing)
+  if (isWeddingEvent(eventType)) {
+    console.log('🚨 ENSURE-COMPONENTS: Other wedding event - Returning $1000 for:', eventType);
+    return 1000;
+  }
+  
+  console.log('🚨 ENSURE-COMPONENTS: Non-wedding event - Returning $400 for:', eventType);
+  return 400;
 }`
   },
   {

@@ -1,11 +1,41 @@
-// FORCE REBUILD - Wedding agenda event filtering and pricing fixes - 2025-01-31 16:45
-// Critical changes: Event types limited to wedding-only, $1500 pricing for Wedding Ceremony & Reception
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:20
+// CRITICAL CACHE BUSTING: Wedding event form deployment fix
+// Wedding events not working on main contract form - FORCE COMPLETE REBUILD
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  // Force complete cache invalidation
+  generateBuildId: () => {
+    return `wedding-fix-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  },
   env: {
     // Fallback Google Maps API key if not set in environment
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc',
+    // Force deployment timestamp
+    DEPLOYMENT_TIMESTAMP: '20250131-2020',
+    FORCE_REBUILD: 'true',
+  },
+  // Disable all caching mechanisms
+  headers: async () => {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
+    ];
   },
   images: {
     unoptimized: true,
@@ -14,9 +44,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'dj-contract-app.web.app',
       },
-    ],
-    domains: ['js.stripe.com'],
-    remotePatterns: [
       {
         protocol: 'https',
         hostname: 'js.stripe.com',
@@ -28,10 +55,11 @@ const nextConfig = {
         pathname: '/wikipedia/commons/**',
       }
     ],
+    domains: ['js.stripe.com'],
   },
   experimental: {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
-    optimizeCss: false
+    optimizeCss: false,
   },
   compiler: {
     // Enables the styled-components SWC transform
@@ -50,6 +78,9 @@ const nextConfig = {
   },
   // Add custom webpack configuration to help with hydration errors
   webpack: (config, { dev, isServer }) => {
+    // Force webpack to treat this as a completely new build
+    config.cache = false;
+    
     if (!isServer) {
       const webpack = require('webpack');
       config.plugins.push(
@@ -58,6 +89,9 @@ const nextConfig = {
           '__NEXT_STRICT_MODE': JSON.stringify(false),
           '__NEXT_REACT_ROOT': JSON.stringify(true),
           '__NEXT_SUPPRESS_HYDRATION_WARNING': JSON.stringify(true),
+          // Force deployment marker
+          '__DEPLOYMENT_TIMESTAMP': JSON.stringify('20250131-2020'),
+          '__FORCE_REBUILD': JSON.stringify(true),
         })
       );
     }

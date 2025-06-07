@@ -2,58 +2,36 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
-// Paths to clean
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:00
+// AGGRESSIVE CACHE CLEARING for wedding event form issues
+
+// Paths to clean - comprehensive cache clearing
 const pathsToClean = [
   '.next',
-  'node_modules/.cache'
+  'node_modules/.cache',
+  '.vercel',
+  'dist',
+  'build'
 ];
 
-// Delete a directory recursively
-function deleteFolderRecursive(filePath) {
-  if (fs.existsSync(filePath)) {
-    if (fs.lstatSync(filePath).isDirectory()) {
-      fs.readdirSync(filePath).forEach((file) => {
-        const curPath = path.join(filePath, file);
-        if (fs.lstatSync(curPath).isDirectory()) {
-          // Recursive call for directories
-          deleteFolderRecursive(curPath);
-        } else {
-          // Delete files
-          try {
-            fs.unlinkSync(curPath);
-          } catch (err) {
-            console.error(`Failed to delete file: ${curPath}`, err);
-          }
-        }
-      });
-      
-      try {
-        // Delete the empty directory
-        fs.rmdirSync(filePath);
-      } catch (err) {
-        console.error(`Failed to delete directory: ${filePath}`, err);
-      }
-    } else {
-      // Delete file
-      try {
-        fs.unlinkSync(filePath);
-      } catch (err) {
-        console.error(`Failed to delete file: ${filePath}`, err);
-      }
-    }
-  }
-}
+console.log('🚀 AGGRESSIVE CACHE CLEARING - Wedding form deployment fix');
+console.log('⏰ Timestamp: 2025-01-31 20:00');
+console.log('🎯 Target: Fix main contract wedding event recognition');
 
-// Clean cache directories
+// Force complete rebuild
 pathsToClean.forEach(pathToClean => {
-  console.log(`Cleaning ${pathToClean}...`);
   try {
-    deleteFolderRecursive(pathToClean);
-    console.log(`Successfully cleaned ${pathToClean}`);
-  } catch (err) {
-    console.error(`Error cleaning ${pathToClean}:`, err);
+    if (fs.existsSync(pathToClean)) {
+      console.log(`🗑️ Clearing cache: ${pathToClean}`);
+      fs.rmSync(pathToClean, { recursive: true, force: true });
+      console.log(`✅ Cleared: ${pathToClean}`);
+    }
+  } catch (error) {
+    console.log(`⚠️ Could not clear ${pathToClean}:`, error.message);
   }
 });
+
+console.log('🎉 Cache clearing complete - forcing fresh deployment');
 
 // Run additional cleanup commands
 console.log('Running additional cleanup...');

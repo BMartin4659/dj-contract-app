@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';import { useRouter } from 'next/navigation';import Image from 'next/image';
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:10 UTC
+// CRITICAL CACHE BUSTING: Wedding event selection on main contract form
+// Wedding events not working on Vercel deployment - USING V2 FUNCTIONS
+// All wedding event types must trigger dynamic pricing and wedding agenda alerts
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import StripeCheckout from '../components/StripeCheckout';
@@ -97,8 +104,8 @@ import EventTypeDropdown from './components/EventTypeDropdown';
 // Import the new SuppressHydration component
 import SuppressHydration from './components/SuppressHydration';
 
-// Import the event utilities
-import { isWeddingEvent } from './utils/eventUtils';
+// Import the event utilities - USING CONSOLIDATED FUNCTIONS
+import { isWeddingEvent, getBasePrice } from './utils/eventUtils';
 
 // Import the form context
 import { useFormContext } from './contexts/FormContext';
@@ -1384,29 +1391,15 @@ Live City DJ Contract Terms and Conditions:
     console.log('Test data saved:', testData);
   };
   
-  // Helper function to get base price for event type
+  // Helper function to get base price for event type - USING CONSOLIDATED LOGIC
   const getBasePriceForEventType = useCallback((eventType) => {
-    if (isWeddingEvent(eventType)) {
-      return 1000;
-    }
+    console.log('getBasePriceForEventType called with:', eventType);
     
-    // Specific event types that should be $500
-    const fiveHundredDollarEvents = [
-      'Company Holiday Party',
-      'Engagement Party', 
-      'Bachelor Party',
-      'Bachelorette Party',
-      'Bachelor/Bachelorette Party',
-      'Prom',
-      'Homecoming'
-    ];
+    // Use the consolidated function with V2 logic
+    const price = getBasePrice(eventType);
+    console.log('CONSOLIDATED: getBasePrice returned:', price, 'for:', eventType);
     
-    if (fiveHundredDollarEvents.includes(eventType)) {
-      return 500;
-    }
-    
-    // Default for other events
-    return 400;
+    return price;
   }, []);
   
   // Handler for event type changes
@@ -2555,21 +2548,8 @@ Live City DJ Contract Terms and Conditions:
               overflowY: 'auto', 
               flex: '1 1 auto',
               marginBottom: '20px',
-              paddingRight: '5px' 
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onScroll={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onWheel={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchMove={(e) => {
-              e.stopPropagation();
+              paddingRight: '5px',
+              WebkitOverflowScrolling: 'touch' // Enable smooth scrolling on iOS
             }}
           >
             <p style={{ marginBottom: '18px', color: '#333', fontSize: '1rem', lineHeight: 1.6 }}>
@@ -3257,63 +3237,9 @@ Live City DJ Contract Terms and Conditions:
         overflowX: 'hidden',
         paddingBottom: '2rem'
       }}>
-        <style jsx global>{`
-          body {
-            background: url('/dj-background-new.jpg') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            background-attachment: fixed !important;
-            min-height: 100vh;
-          }
-          
-          /* Mobile-specific background fix */
-          @media (max-width: 768px) {
-            body {
-              background-attachment: scroll !important;
-            }
-            
-            .mobile-background-fix {
-              display: block;
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg') !important;
-              background-size: cover !important;
-              background-position: center !important;
-              background-repeat: no-repeat !important;
-              z-index: -1;
-            }
-          }
-          
-          /* iOS-specific background fix */
-          @supports (-webkit-touch-callout: none) {
-            body {
-              background-attachment: scroll !important;
-            }
-            
-            .ios-background-fix {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: url('/dj-background-new.jpg') !important;
-              background-size: cover !important;
-              background-position: center !important;
-              background-repeat: no-repeat !important;
-              z-index: -1;
-            }
-          }
-        `}</style>
+
         
-        {/* Mobile background fix element */}
-        <div className="mobile-background-fix"></div>
-        
-        {/* iOS background fix element */}
-        <div className="ios-background-fix"></div>
+
         
         <ToastContainer position="top-center" autoClose={5000} />
         {showConfirmation && (
@@ -4548,7 +4474,25 @@ Live City DJ Contract Terms and Conditions:
                 </div>
                 
                 {/* Signature Section Header with Agreement Message - simplified */}
-                                <div style={{                background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',                color: 'white',                borderRadius: '10px',                padding: '18px 24px',                display: 'flex',                alignItems: 'center',                fontSize: '1rem',                fontWeight: 500,                marginBottom: '18px',                borderBottom: 'none',                justifyContent: 'center',                width: '100%',                boxShadow: '0 2px 8px rgba(59,130,246,0.08)',              }}>                <div style={{ display: 'flex', alignItems: 'center' }}>                  By entering your name below, you agree to the terms and conditions.                  <button                    onClick={(e) => {                      e.preventDefault();                      e.stopPropagation();                      setShowTerms(true);                    }}                    style={{                      background: 'none',                      border: 'none',                      display: 'inline-flex',                      alignItems: 'center',                      justifyContent: 'center',                      marginLeft: '10px',                      cursor: 'pointer',                      padding: 0                    }}                    title="View terms and conditions"                    type="button"                  >                    <FaFileAlt                       size={20}                       color="#ffffff"                     />                  </button>                </div>              </div>
+                <div style={{
+                  background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: '18px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: 'clamp(28px, 4vw, 36px)',
+                  fontWeight: 'bold',
+                  marginBottom: '18px',
+                  borderBottom: 'none',
+                  justifyContent: 'center',
+                  width: '100%',
+                  boxShadow: '0 2px 8px rgba(59,130,246,0.08)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    By entering your name below, you agree to the terms and conditions.
+                  </div>
+                </div>
                 {/* Signature Input Field with Script Font */}
                 <div style={{
                   backgroundColor: '#f8f9fa',

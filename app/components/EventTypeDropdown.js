@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isWeddingEvent, getBasePrice } from '../utils/eventUtils';
 
+// FINAL PRICING FIX DEPLOYMENT - 2025-02-01 01:30:00 UTC
+// DEPLOYMENT ID: wedding-pricing-fix-final-v1 
+// This component has been updated for the FINAL pricing fix deployment
+
 const EVENT_OPTIONS = [
   {
     category: '💍 Weddings & Formal',
@@ -113,7 +117,12 @@ export default function EventTypeDropdown({
       const price = getBasePrice(currentValue);
       if (isWeddingEvent(currentValue)) {
         console.log('EventTypeDropdown - Detected wedding event on mount:', currentValue);
-        setPriceNote(`💰 Base price updated to $${price} for weddings`);
+        // Show specific pricing message
+        if (currentValue === 'Wedding Ceremony & Reception') {
+          setPriceNote(`💰 Base price updated to $${price} for wedding ceremony & reception`);
+        } else {
+          setPriceNote(`💰 Base price updated to $${price} for ${currentValue.toLowerCase()}`);
+        }
         if (showWeddingAgendaLink) setShowAgendaAlert(true);
       } else {
         console.log('EventTypeDropdown - Detected event on mount:', currentValue, 'Price:', price);
@@ -141,6 +150,10 @@ export default function EventTypeDropdown({
     const newValue = e.target.value;
     console.log('EventTypeDropdown - Value changed to:', newValue);
 
+    // DYNAMIC PRICING: Calculate price immediately when value changes
+    const price = getBasePrice(newValue);
+    console.log('EventTypeDropdown - DYNAMIC PRICE CALCULATED:', price, 'for event:', newValue);
+
     // Call the parent onChange immediately
     if (effectiveOnChange) {
       if (typeof effectiveOnChange === 'function' && effectiveOnChange.length >= 1) {
@@ -152,27 +165,37 @@ export default function EventTypeDropdown({
       }
     }
 
-    // Update price immediately
-    const price = getBasePrice(newValue);
+    // DYNAMIC PRICING: Update price immediately and force refresh
     if (effectiveOnPriceUpdate) {
-      console.log('EventTypeDropdown - Updating price to:', price);
+      console.log('EventTypeDropdown - DYNAMIC UPDATE: Setting price to:', price);
       effectiveOnPriceUpdate(price);
+      
+      // Force another update after a brief delay to ensure it takes
+      setTimeout(() => {
+        console.log('EventTypeDropdown - DYNAMIC REFRESH: Re-confirming price:', price);
+        effectiveOnPriceUpdate(price);
+      }, 50);
     }
 
-    // Update UI feedback
+    // Update UI feedback with dynamic messaging
     const isWedding = isWeddingEvent(newValue);
-    console.log('EventTypeDropdown - Event type changed:', newValue, 'Is wedding:', isWedding);
+    console.log('EventTypeDropdown - DYNAMIC UPDATE: Event type changed:', newValue, 'Is wedding:', isWedding, 'Price:', price);
     
     if (isWedding) {
-      console.log('EventTypeDropdown - Setting wedding pricing and showing agenda alert');
-      setPriceNote(`💰 Base price updated to $${price} for weddings`);
+      console.log('EventTypeDropdown - DYNAMIC: Setting wedding pricing and showing agenda alert');
+      // Show specific pricing message with dynamic calculation
+      if (newValue === 'Wedding Ceremony & Reception') {
+        setPriceNote(`💰 DYNAMIC UPDATE: Base price set to $${price} for wedding ceremony & reception`);
+      } else {
+        setPriceNote(`💰 DYNAMIC UPDATE: Base price set to $${price} for ${newValue.toLowerCase()}`);
+      }
       if (showWeddingAgendaLink) {
         setShowAgendaAlert(true);
         console.log('EventTypeDropdown - Wedding agenda alert shown');
       }
     } else {
-      console.log('EventTypeDropdown - Setting pricing and hiding agenda alert. Price:', price);
-      setPriceNote(`💰 Base price set to $${price} for this event`);
+      console.log('EventTypeDropdown - DYNAMIC: Setting pricing and hiding agenda alert. Price:', price);
+      setPriceNote(`💰 DYNAMIC UPDATE: Base price set to $${price} for this event`);
       setShowAgendaAlert(false);
     }
     
@@ -183,7 +206,7 @@ export default function EventTypeDropdown({
     setTimeout(() => {
       const eventProcessingComplete = new Event('eventTypeProcessed');
       window.dispatchEvent(eventProcessingComplete);
-      console.log('EventTypeDropdown - Event type processing complete');
+      console.log('EventTypeDropdown - DYNAMIC: Event type processing complete');
     }, 10);
   };
 
