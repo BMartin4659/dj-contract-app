@@ -110,7 +110,6 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         
         {/* Preload critical images */}
-        <link rel="preload" href="/dj-background-new.jpg" as="image" />
         <link rel="preload" href="/dj-bobby-drake-logo.png" as="image" />
 
         {/* Prevent Grammarly from attaching to the document */}
@@ -174,11 +173,6 @@ export default function RootLayout({ children }) {
       <body 
         suppressHydrationWarning={true}
         style={{
-          background: 'url("/dj-background-new.jpg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
           minHeight: '100vh',
           fontFamily: "'Montserrat', sans-serif"
         }}

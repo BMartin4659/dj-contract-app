@@ -3237,23 +3237,7 @@ Live City DJ Contract Terms and Conditions:
         overflowX: 'hidden',
         paddingBottom: '2rem'
       }}>
-        <style jsx global>{`
-          body {
-            background: url('/dj-background-new.jpg') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            background-attachment: fixed !important;
-            min-height: 100vh;
-          }
-          
-          /* Mobile-specific background fix */
-          @media (max-width: 768px) {
-            body {
-              background-attachment: scroll !important;
-            }
-          }
-        `}</style>
+
         
 
         
