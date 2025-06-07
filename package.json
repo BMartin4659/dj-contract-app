@@ -1,6 +1,6 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.11-vercel-rebuild-force-20250201-1545",
+  "version": "1.0.12-FORCE-VERCEL-REBUILD-NOW-20250201-1600",
   "private": true,
   "scripts": {
     "dev": "next dev",
