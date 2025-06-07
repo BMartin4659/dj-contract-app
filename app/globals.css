@@ -105,6 +105,31 @@ body::before {
   background-attachment: fixed;
   z-index: -1000;
   pointer-events: none;
+  /* Force hardware acceleration for better performance */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Mobile-specific background fix */
+@media (max-width: 768px) {
+  body::before {
+    /* On mobile, use absolute positioning instead of fixed */
+    position: absolute;
+    background-attachment: scroll;
+    /* Ensure it covers the full document height */
+    min-height: 100vh;
+    height: 100%;
+    /* Prevent background from moving with form scrolling */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  
+  /* Ensure body has proper height for absolute positioning */
+  body {
+    position: relative;
+    min-height: 100vh;
+  }
 }
 
 /* Header styles */
@@ -162,24 +187,29 @@ header a:hover {
   html {
     font-size: 16px;
     height: 100%;
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
   }
+  
   body {
     min-height: 100vh;
     height: auto;
     -webkit-overflow-scrolling: touch; /* Enable momentum scrolling */
-    transform: translateZ(0); /* Force hardware acceleration */
     backface-visibility: hidden; /* Reduce repaints */
     -webkit-backface-visibility: hidden;
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
+    position: relative;
   }
   
-  /* Ensure background pseudo-element works on mobile */
-  body::before {
-    background-attachment: fixed !important;
-    -webkit-transform: translateZ(0);
+  /* Optimize form container for mobile */
+  .form-container {
+    position: relative;
+    z-index: 10;
+    /* Ensure form doesn't interfere with background */
     transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
-  
-  /* Mobile background optimization */
 }
 
 @media (max-width: 480px) {
