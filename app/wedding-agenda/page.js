@@ -36,7 +36,7 @@ import ClientOnly from '../components/ClientOnly';
 import SuppressHydration from '../components/SuppressHydration';
 import { useRouter } from 'next/navigation';
 import { useFormContext } from '../contexts/FormContext';
-import { getBasePriceV2, WEDDING_EVENT_TYPES_V2 } from '../utils/weddingEventTypes';
+import { getBasePriceV2 } from '../utils/weddingEventTypes';
 import SongSelector from '../components/SongSelector';
 
 // Add CSS for animation
@@ -48,6 +48,13 @@ const animationStyles = `
   
   .animate-spin {
     animation: spin 1s linear infinite;
+  }
+
+  @font-face {
+    font-family: 'Hugh is Life Personal Use';
+    src: url('/fonts/Hugh-is-Life-Personal-Use.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
   }
 `;
 
@@ -841,9 +848,9 @@ export default function WeddingAgendaForm() {
                   
                   <h1 style={{
                     fontFamily: '"Hugh is Life Personal Use", cursive',
-                    fontSize: 'clamp(52.5px, 13.125vw, 94.5px)', // Increased by 50%
-                    fontWeight: '300', // Made thinner
-                    margin: '30px auto', // Increased margin
+                    fontSize: 'clamp(52.5px, 13.125vw, 94.5px)',
+                    fontWeight: '300',
+                    margin: '30px auto',
                     color: '#000',
                     display: 'flex',
                     alignItems: 'center',
@@ -854,14 +861,10 @@ export default function WeddingAgendaForm() {
                     flexWrap: 'nowrap',
                     whiteSpace: 'nowrap',
                     overflow: 'visible',
-                    padding: '0 30px', // Added padding
-                    textTransform: 'capitalize' // Only first letter capitalized
+                    padding: '0 30px',
+                    textTransform: 'capitalize'
                   }}>
-                    <span style={{
-                      fontSize: 'clamp(45px, 11.8125vw, 84px)', // Increased by 50%
-                      fontWeight: '300', // Made thinner
-                      letterSpacing: isMobile ? '0px' : '1.5px'
-                    }}>Wedding Agenda</span>
+                    Wedding Agenda
                   </h1>
                 </div>
                 

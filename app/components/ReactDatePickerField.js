@@ -35,7 +35,15 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
       WebkitUserSelect: 'none',
       userSelect: 'none',
       touchAction: 'manipulation',
-      transition: 'all 0.2s ease'
+      transition: 'all 0.2s ease',
+      ':hover': {
+        borderColor: '#6366f1',
+      },
+      ':focus': {
+        outline: 'none',
+        borderColor: '#6366f1',
+        boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+      }
     }}
   >
     <span style={{ 
