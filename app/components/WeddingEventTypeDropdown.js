@@ -4,16 +4,11 @@ import { FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WEDDING_EVENT_TYPES_V2, getBasePriceV2 } from '../utils/weddingEventTypes';
 
-// Filter to only include events that contain the word "wedding"
-const WEDDING_ONLY_EVENT_TYPES = WEDDING_EVENT_TYPES_V2.filter(eventType => 
-  eventType.toLowerCase().includes('wedding')
-);
-
 // Only wedding-related event types - Using V2 to bypass caching
 const WEDDING_EVENT_OPTIONS = [
   {
     category: '💍 Wedding Events',
-    options: WEDDING_ONLY_EVENT_TYPES,
+    options: WEDDING_EVENT_TYPES_V2, // Use all wedding events directly
   }
 ];
 
@@ -29,7 +24,6 @@ export default function WeddingEventTypeDropdown({
 
   // DEBUG: Log the wedding event types being used
   console.log('WeddingEventTypeDropdown - WEDDING_EVENT_TYPES_V2:', WEDDING_EVENT_TYPES_V2);
-  console.log('WeddingEventTypeDropdown - WEDDING_ONLY_EVENT_TYPES (filtered):', WEDDING_ONLY_EVENT_TYPES);
   console.log('WeddingEventTypeDropdown - Deploy timestamp: 2025-06-07 18:50 - Wedding-only filter applied');
   console.log('WeddingEventTypeDropdown - Available options:', WEDDING_EVENT_OPTIONS[0].options);
 

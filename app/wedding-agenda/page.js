@@ -36,7 +36,7 @@ import ClientOnly from '../components/ClientOnly';
 import SuppressHydration from '../components/SuppressHydration';
 import { useRouter } from 'next/navigation';
 import { useFormContext } from '../contexts/FormContext';
-import { getBasePriceV2 } from '../utils/weddingEventTypes';
+import { getBasePriceV2, WEDDING_EVENT_TYPES_V2 } from '../utils/weddingEventTypes';
 import SongSelector from '../components/SongSelector';
 
 // Add CSS for animation
@@ -855,15 +855,14 @@ export default function WeddingAgendaForm() {
                     whiteSpace: 'nowrap',
                     overflow: 'hidden'
                   }}>
-                    <span style={{ 
-                      fontSize: 'clamp(20px, 5vw, 36px)',
-                      flexShrink: 0
-                    }}>📝</span>
                     <span style={{
-                      fontSize: 'clamp(16px, 4.5vw, 32px)',
-                      fontWeight: 'bold',
-                      letterSpacing: isMobile ? '-0.5px' : '0px'
-                    }}>WEDDING AGENDA</span>
+                      fontSize: 'clamp(28px, 5vw, 42px)',
+                      fontWeight: '500',
+                      fontFamily: "'Playfair Display', serif",
+                      letterSpacing: '2px',
+                      color: '#4A154B',
+                      textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)'
+                    }}>Wedding Agenda</span>
                   </h1>
                 </div>
                 
