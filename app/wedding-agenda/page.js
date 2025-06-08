@@ -49,6 +49,13 @@ const animationStyles = `
   .animate-spin {
     animation: spin 1s linear infinite;
   }
+
+  @font-face {
+    font-family: 'Hugh is Life Personal Use';
+    src: url('/fonts/Hugh-is-Life-Personal-Use.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
 `;
 
 // Song suggestions data
@@ -840,30 +847,28 @@ export default function WeddingAgendaForm() {
                   </div>
                   
                   <h1 style={{
-                    fontSize: 'clamp(20px, 5vw, 36px)',
-                    fontWeight: 'bold',
-                    margin: '10px auto',
+                    fontFamily: '"Hugh is Life Personal Use", cursive',
+                    fontSize: 'clamp(52.5px, 13.125vw, 94.5px)', // Increased by 50%
+                    fontWeight: '300',
+                    margin: '30px auto', // Increased margin to accommodate larger font
                     color: '#000',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: isMobile ? '4px' : '8px',
-                    lineHeight: '1.1',
+                    lineHeight: '1.4',
                     maxWidth: '100%',
                     textAlign: 'center',
                     flexWrap: 'nowrap',
                     whiteSpace: 'nowrap',
-                    overflow: 'hidden'
+                    overflow: 'visible',
+                    padding: '0 30px', // Increased padding for larger font
+                    textTransform: 'capitalize'
                   }}>
-                    <span style={{ 
-                      fontSize: 'clamp(20px, 5vw, 36px)',
-                      flexShrink: 0
-                    }}>📝</span>
                     <span style={{
-                      fontSize: 'clamp(16px, 4.5vw, 32px)',
-                      fontWeight: 'bold',
-                      letterSpacing: isMobile ? '-0.5px' : '0px'
-                    }}>WEDDING AGENDA</span>
+                      fontSize: 'clamp(45px, 11.8125vw, 84px)', // Increased by 50%
+                      fontWeight: '300',
+                      letterSpacing: isMobile ? '0px' : '1.5px' // Slightly increased letter spacing
+                    }}>Wedding Agenda</span>
                   </h1>
                 </div>
                 

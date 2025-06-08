@@ -21,20 +21,29 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
       backgroundColor: 'white',
       border: '1px solid #ccc',
       borderRadius: '8px',
-      padding: '12px 16px',
-      fontSize: '16px', // Prevent zoom on iOS
+      padding: 'clamp(12px, 2vw, 16px)',
+      fontSize: 'clamp(16px, 2.5vw, 18px)',
       color: '#000',
       marginBottom: '1rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       cursor: 'pointer',
-      minHeight: '44px', // Better touch target
+      minHeight: '44px',
       WebkitTapHighlightColor: 'transparent',
       WebkitTouchCallout: 'none',
       WebkitUserSelect: 'none',
       userSelect: 'none',
-      touchAction: 'manipulation'
+      touchAction: 'manipulation',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        borderColor: '#6366f1',
+      },
+      ':focus': {
+        outline: 'none',
+        borderColor: '#6366f1',
+        boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+      }
     }}
   >
     <span style={{ color: value ? '#000' : '#6b7280' }}>

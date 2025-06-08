@@ -3529,26 +3529,28 @@ Live City DJ Contract Terms and Conditions:
                 <div className="form-grid-1col">
                   {/* Event Date */}
                   <div>
-                    <label style={labelStyle} className="field-label">
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FaCalendarAlt style={{ color: '#6366f1' }} /> Event Date *
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: 'bold',
+                      color: '#333',
+                      fontSize: 'clamp(16px, 2.5vw, 18px)'
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        <FaCalendarAlt className="text-blue-500 mr-3" style={{ marginRight: '10px' }} /> Event Date *
                       </span>
                     </label>
-                    
-                    {/* Replace CustomDatePicker with ReactDatePickerField */}
                     <ReactDatePickerField
-                      key={`date-picker-${formData.eventType}`}
-                      selectedDate={formData.eventDate ? new Date(formData.eventDate) : null}
+                      id="weddingDate"
+                      name="weddingDate"
+                      selectedDate={formData.weddingDate}
                       onChange={(date) => {
-                        handleChange({
-                          target: {
-                            name: 'eventDate',
-                            value: date ? date.toISOString().split('T')[0] : ''
-                          }
-                        });
+                        setFormData(prev => ({ ...prev, weddingDate: date }));
+                        setErrors(prev => ({ ...prev, weddingDate: '' }));
                       }}
-                      errorMessage={formErrors.eventDate}
-                      minDate={new Date()}
+                      placeholder="Select date"
+                      error={errors.weddingDate}
+                      className="w-full p-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
