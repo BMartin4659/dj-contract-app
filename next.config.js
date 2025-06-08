@@ -3,10 +3,10 @@
 // Wedding events not working on main contract form - FORCE COMPLETE REBUILD
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   // Force complete cache invalidation
   generateBuildId: () => {
-    return `wedding-fix-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    return `build-${Date.now()}`;
   },
   env: {
     // Fallback Google Maps API key if not set in environment
@@ -58,7 +58,7 @@ const nextConfig = {
     domains: ['js.stripe.com'],
   },
   experimental: {
-    optimizeCss: false,
+    optimizeCss: true,
   },
   compiler: {
     // Enables the styled-components SWC transform

@@ -1,16 +1,12 @@
 {
   "name": "dj-contract-app",
-  "version": "1.0.12-FORCE-VERCEL-REBUILD-NOW-20250201-1600",
+  "version": "1.0.12",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "clean": "node clear-cache.js",
-    "clean:build": "node clear-cache.js && next build",
-    "clean:dev": "node clear-cache.js && next dev"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
