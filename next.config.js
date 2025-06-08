@@ -58,7 +58,7 @@ const nextConfig = {
     domains: ['js.stripe.com'],
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
   },
   compiler: {
     // Enables the styled-components SWC transform
@@ -75,6 +75,8 @@ const nextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  // Disable static page generation for error pages
+  output: 'standalone',
   // Add custom webpack configuration to help with hydration errors
   webpack: (config, { dev, isServer }) => {
     // Force webpack to treat this as a completely new build
