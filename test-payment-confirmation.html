@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .success {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        .info {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        .warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+        .feature-list {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .feature-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎉 Payment Confirmation Test</h1>
+        <p class="subtitle">Testing the enhanced payment flow with Pro Event Checklist</p>
+        
+        <div class="status success">
+            <strong>✅ Enhanced Features Implemented:</strong>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span class="feature-icon">📧</span>
+                    <span>Comprehensive Pro Event Checklist in confirmation emails</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <span>8-step professional event planning roadmap</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📱</span>
+                    <span>Enhanced contact information and communication timeline</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">💡</span>
+                    <span>Pro tips for amazing events included</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔄</span>
+                    <span>Improved Stripe payment success routing</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📋</span>
+                    <span>Detailed service package information</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 Test the Payment Flow</h2>
+            <p>Follow these steps to test the complete payment confirmation system:</p>
+            
+            <ol style="line-height: 1.8;">
+                <li><strong>Start a booking:</strong> Go to the main contract page</li>
+                <li><strong>Fill out the form:</strong> Complete all event details</li>
+                <li><strong>Choose payment method:</strong> Select Stripe for testing</li>
+                <li><strong>Complete payment:</strong> Use Stripe test card: 4242 4242 4242 4242</li>
+                <li><strong>Verify redirect:</strong> Should redirect to payment success page</li>
+                <li><strong>Check email:</strong> Confirmation email with Pro Event Checklist should be sent</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Pro Event Checklist Features</h2>
+            <p>The confirmation email now includes:</p>
+            
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span class="feature-icon">📋</span>
+                    <span><strong>Music Preference Form:</strong> Sent 4 weeks before event</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📞</span>
+                    <span><strong>Pre-Event Planning Call:</strong> Scheduled 2 weeks prior</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🏢</span>
+                    <span><strong>Venue Coordination:</strong> Contact venue 1 week before</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <span><strong>Technical Requirements:</strong> Power and setup details</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎵</span>
+                    <span><strong>Equipment Setup:</strong> Arrive 1-2 hours early</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">💰</span>
+                    <span><strong>Final Payment:</strong> Due 7 days before (if deposit)</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📱</span>
+                    <span><strong>Day-of Communication:</strong> Direct contact info</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎉</span>
+                    <span><strong>Event Day Excellence:</strong> Professional MC services</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="http://localhost:3005/" class="test-button">
+                🎵 Test Main Contract Page
+            </a>
+            <a href="http://localhost:3005/payment/success?session_id=test" class="test-button">
+                ✅ Test Success Page
+            </a>
+        </div>
+        
+        <div class="status info">
+            <strong>📧 Email Template Features:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Beautiful responsive design with gradient backgrounds</li>
+                <li>Professional branding with DJ Bobby Drake logo</li>
+                <li>Complete event details and payment information</li>
+                <li>8-step Pro Event Checklist with detailed descriptions</li>
+                <li>Service package inclusions list</li>
+                <li>Contact information with best times to reach</li>
+                <li>Pro tips for amazing events</li>
+                <li>Both HTML and plain text versions</li>
+            </ul>
+        </div>
+        
+        <div class="status warning">
+            <strong>⚠️ Testing Notes:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Use Stripe test card: 4242 4242 4242 4242</li>
+                <li>Any future date and CVC will work</li>
+                <li>Check browser console for any errors</li>
+                <li>Verify email is sent to the provided address</li>
+                <li>Test both deposit and full payment scenarios</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 40px; text-align: center; opacity: 0.8;">
+            <p><strong>Payment Confirmation System v2.0</strong></p>
+            <p>Enhanced with comprehensive Pro Event Checklist and improved user experience</p>
+        </div>
+    </div>
+</body>
+</html> 

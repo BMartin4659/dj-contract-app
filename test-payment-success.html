@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .success {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        .info {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎉 Payment Success Test</h1>
+        
+        <div class="status success">
+            <strong>✅ Issues Fixed:</strong>
+            <ul>
+                <li>Nodemailer import error resolved (createTransport vs createTransporter)</li>
+                <li>Layout metadata export conflict fixed</li>
+                <li>Next.js cache cleared and rebuilt successfully</li>
+                <li>Payment confirmation API working</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 Test Payment Success Page</h2>
+            <p>Click the buttons below to test different scenarios:</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="http://localhost:3000/payment/success?session_id=cs_test_123456789" class="test-button">
+                    ✅ Test Success Page (Mock Session)
+                </a>
+                <a href="http://localhost:3000/payment/success?payment_method=venmo&booking_id=test123&amount=500" class="test-button">
+                    💰 Test Alternative Payment
+                </a>
+                <a href="http://localhost:3000/" class="test-button">
+                    🎵 Main Contract Page
+                </a>
+            </div>
+        </div>
+        
+        <div class="status info">
+            <strong>📋 What Should Happen:</strong>
+            <ol>
+                <li><strong>Stripe Payment:</strong> After completing Stripe checkout, user should be redirected to /payment/success?session_id=...</li>
+                <li><strong>Email Confirmation:</strong> Pro Event Checklist email should be sent automatically</li>
+                <li><strong>Success Page:</strong> Beautiful confirmation page with event details</li>
+                <li><strong>No Errors:</strong> No 500 errors or webpack issues</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Testing Steps:</h2>
+            <ol>
+                <li>Go to the main contract page</li>
+                <li>Fill out the booking form completely</li>
+                <li>Select "Pay with Stripe"</li>
+                <li>Use test card: <strong>4242 4242 4242 4242</strong></li>
+                <li>Complete the payment</li>
+                <li>Should redirect to payment success page</li>
+                <li>Check email for Pro Event Checklist confirmation</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 40px; text-align: center; opacity: 0.8;">
+            <p><strong>Payment Confirmation System v2.1</strong></p>
+            <p>All critical issues resolved - Ready for testing!</p>
+        </div>
+    </div>
+</body>
+</html> 
