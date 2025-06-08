@@ -21,26 +21,30 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
       backgroundColor: 'white',
       border: '1px solid #ccc',
       borderRadius: '8px',
-      padding: '12px 16px',
-      fontSize: '16px', // Prevent zoom on iOS
+      padding: 'clamp(12px, 2vw, 16px)',
+      fontSize: 'clamp(16px, 2.5vw, 18px)',
       color: '#000',
       marginBottom: '1rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       cursor: 'pointer',
-      minHeight: '44px', // Better touch target
+      minHeight: '44px',
       WebkitTapHighlightColor: 'transparent',
       WebkitTouchCallout: 'none',
       WebkitUserSelect: 'none',
       userSelect: 'none',
-      touchAction: 'manipulation'
+      touchAction: 'manipulation',
+      transition: 'all 0.2s ease'
     }}
   >
-    <span style={{ color: value ? '#000' : '#6b7280' }}>
+    <span style={{ 
+      color: value ? '#000' : '#6b7280',
+      fontSize: 'clamp(16px, 2.5vw, 18px)'
+    }}>
       {value || placeholder || 'Select a date'}
     </span>
-    <FaCalendarAlt style={{ color: '#6366f1', fontSize: '1.2rem' }} />
+    <FaCalendarAlt style={{ color: '#6366f1', fontSize: 'clamp(16px, 2.5vw, 18px)' }} />
   </div>
 ));
 

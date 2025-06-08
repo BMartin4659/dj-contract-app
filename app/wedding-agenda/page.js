@@ -840,42 +840,44 @@ export default function WeddingAgendaForm() {
                   </div>
                   
                   <h1 style={{
-                    fontSize: 'clamp(20px, 5vw, 36px)',
-                    fontWeight: 'bold',
-                    margin: '10px auto',
+                    fontFamily: '"Hugh is Life Personal Use", cursive',
+                    fontSize: 'clamp(52.5px, 13.125vw, 94.5px)', // Increased by 50%
+                    fontWeight: '300', // Made thinner
+                    margin: '30px auto', // Increased margin
                     color: '#000',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: isMobile ? '4px' : '8px',
-                    lineHeight: '1.1',
+                    lineHeight: '1.4',
                     maxWidth: '100%',
                     textAlign: 'center',
                     flexWrap: 'nowrap',
                     whiteSpace: 'nowrap',
-                    overflow: 'hidden'
+                    overflow: 'visible',
+                    padding: '0 30px', // Added padding
+                    textTransform: 'capitalize' // Only first letter capitalized
                   }}>
                     <span style={{
-                      fontSize: 'clamp(28px, 5vw, 42px)',
-                      fontWeight: '500',
-                      fontFamily: "'Playfair Display', serif",
-                      letterSpacing: '2px',
-                      color: '#4A154B',
-                      textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)'
+                      fontSize: 'clamp(45px, 11.8125vw, 84px)', // Increased by 50%
+                      fontWeight: '300', // Made thinner
+                      letterSpacing: isMobile ? '0px' : '1.5px'
                     }}>Wedding Agenda</span>
                   </h1>
                 </div>
                 
-                {/* Spacer div */}
+                {/* Spacer div with increased margin */}
                 <div style={{ 
                   height: '20px', 
-                  marginBottom: '20px', 
+                  marginBottom: '30px', // Increased margin
                   borderBottom: '1px solid #e0e0e0',
                   opacity: 0.5
                 }} className="section-divider"></div>
                 
-                {/* Event Type and Wedding Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2.5rem' }}>
+                {/* Event Type and Wedding Date with improved spacing */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ 
+                  marginBottom: '30px',
+                  marginTop: '20px'
+                }}>
                   {/* Event Type */}
                   <div>
                     <label style={{
@@ -886,21 +888,30 @@ export default function WeddingAgendaForm() {
                       fontSize: 'clamp(16px, 2.5vw, 18px)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center' }}>
-                        <FaMusic className="text-purple-500 mr-3" style={{ marginRight: '10px' }} /> Event Type
+                        <FaMusic className="text-blue-500 mr-3" style={{ marginRight: '10px' }} /> Event Type
                       </span>
                     </label>
-                    <WeddingEventTypeDropdown
-                      value={formData.eventType}
-                      onChange={(value) => {
-                        setFormData(prev => ({ ...prev, eventType: value }));
-                        setEventType(value);
-                      }}
-                      onPriceUpdate={setBasePrice}
+                    <select
                       name="eventType"
-                    />
+                      value={formData.eventType}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: 'clamp(12px, 2vw, 16px)',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: 'clamp(16px, 2.5vw, 18px)',
+                        backgroundColor: 'white',
+                        marginBottom: '1rem'
+                      }}
+                    >
+                      <option value="Wedding Ceremony">Wedding Ceremony</option>
+                      <option value="Wedding Reception">Wedding Reception</option>
+                      <option value="Ceremony & Reception">Ceremony & Reception</option>
+                    </select>
                   </div>
                   
-                  {/* Event Date */}
+                  {/* Wedding Date */}
                   <div>
                     <label style={{
                       display: 'block',

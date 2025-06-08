@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const MONTHS = [
@@ -126,8 +126,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, onCha
     }
   };
   
-  // Calculate if the calendar should appear above or below the input
-  const calculatePosition = (): void => {
+  // Calculate if the calendar should appear above or below the input (memoized)
+  const calculatePosition = useCallback((): void => {
     if (!datePickerRef.current) return;
     
     const rect = datePickerRef.current.getBoundingClientRect();
@@ -152,7 +152,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, onCha
         setCalendarPosition({ top: 'calc(100% + 5px)', bottom: 'auto' });
       }
     }
-  };
+  }, [isMobile]); // Only recreate when isMobile changes
   
   // Toggle calendar visibility and compute position
   const toggleCalendar = (e: React.MouseEvent | React.TouchEvent): void => {
@@ -264,9 +264,15 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, onCha
     if (isOpen) {
       calculatePosition();
     }
-  }, [isOpen, isMobile]);
+  }, [isOpen, calculatePosition]); // Add calculatePosition to dependencies
   
   // When selected date changes, update the displayed month/year
+  // Initial position calculation on mount
+  useEffect(() => {
+    calculatePosition();
+  }, [calculatePosition]); // Add calculatePosition to dependencies
+274
+  // Update displayed month/year when selected date changes
   useEffect(() => {
     if (selectedDate) {
       setCurrentMonth(selectedDate.getMonth());

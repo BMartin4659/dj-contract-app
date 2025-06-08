@@ -294,9 +294,9 @@ const formatCashAppURL = (username, amount = 0) => {
 };
 
 // Add this component before the main DJContractForm component
-function PlaylistHelpModal({ streamingService, onClose }) {
+const PlaylistHelpModal = ({ streamingService, onClose }) => {
   const [animateIn, setAnimateIn] = useState(false);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 50);
     return () => clearTimeout(timer);
@@ -314,9 +314,9 @@ function PlaylistHelpModal({ streamingService, onClose }) {
     margin: '12px 0',
     transition: 'transform 0.2s ease',
     cursor: 'default',
-    ':hover': {
-      transform: 'translateY(-2px)',
-    }
+    '&:hover': {
+      transform: 'translateY(-2px)'
+    },
   };
 
   const numberBadgeStyle = (color) => ({
@@ -3860,9 +3860,9 @@ Live City DJ Contract Terms and Conditions:
                       position: 'relative',
                       overflow: 'hidden',
                       marginBottom: '1.5rem',
-                      ':hover': {
+                      '&:hover': {
                         borderColor: '#0070f3',
-                        boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)'
+                        boxShadow: '0 4px 14px rgba(0, 112, 243, 0.1)',
                       }
                     }}
                   >

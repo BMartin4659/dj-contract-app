@@ -1,28 +1,21 @@
-// FORCE VERCEL DEPLOYMENT REBUILD - 2025-02-01 15:45
-// CRITICAL FIX: Google Maps API and CSS background scrolling for Vercel
-// Background scrolling and Google autocomplete not working on Vercel - FORCE COMPLETE REBUILD
-// TRIGGER VERCEL REBUILD NOW - DEPLOYMENT ID: 20250201-1545
+// FORCE VERCEL DEPLOYMENT REFRESH - 2025-01-31 20:20
+// CRITICAL CACHE BUSTING: Wedding event form deployment fix
+// Wedding events not working on main contract form - FORCE COMPLETE REBUILD
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  // Force complete cache invalidation with new timestamp
+  // Force complete cache invalidation
   generateBuildId: () => {
-    return `vercel-rebuild-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    return `wedding-fix-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   },
   env: {
-    // Ensure Google Maps API key is available in production
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc',
-    // Force deployment timestamp - UPDATE TO TRIGGER REBUILD
-    DEPLOYMENT_TIMESTAMP: '20250201-1545',
+    // Fallback Google Maps API key if not set in environment
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC8PCjGiQZm9PQE5YeRjU8CgTmrHQdUFyc',
+    // Force deployment timestamp
+    DEPLOYMENT_TIMESTAMP: '20250131-2020',
     FORCE_REBUILD: 'true',
-    VERCEL_DEPLOYMENT: 'true',
-    FORCE_VERCEL_REBUILD: 'NOW',
   },
-  // Production-specific configuration for Vercel
-  publicRuntimeConfig: {
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc',
-  },
-  // Disable all caching mechanisms for CSS and JS
+  // Disable all caching mechanisms
   headers: async () => {
     return [
       {
@@ -39,10 +32,6 @@ const nextConfig = {
           {
             key: 'Expires',
             value: '0',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
           },
         ],
       },
@@ -70,8 +59,7 @@ const nextConfig = {
   },
   experimental: {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
-    // Disable CSS optimization that might interfere with background fix
-    optimizeCss: false
+    optimizeCss: false,
   },
   compiler: {
     // Enables the styled-components SWC transform
@@ -88,7 +76,7 @@ const nextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
-  // Add custom webpack configuration for production fixes
+  // Add custom webpack configuration to help with hydration errors
   webpack: (config, { dev, isServer }) => {
     // Force webpack to treat this as a completely new build
     config.cache = false;
@@ -102,26 +90,13 @@ const nextConfig = {
           '__NEXT_REACT_ROOT': JSON.stringify(true),
           '__NEXT_SUPPRESS_HYDRATION_WARNING': JSON.stringify(true),
           // Force deployment marker
-          '__DEPLOYMENT_TIMESTAMP': JSON.stringify('20250201-1545'),
+          '__DEPLOYMENT_TIMESTAMP': JSON.stringify('20250131-2020'),
           '__FORCE_REBUILD': JSON.stringify(true),
-          '__VERCEL_DEPLOYMENT': JSON.stringify(true),
-          // Expose Google Maps API key to client
-          '__GOOGLE_MAPS_API_KEY': JSON.stringify(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc'),
         })
       );
-      
-      // Ensure CSS is processed correctly in production
-      if (!dev) {
-        config.optimization.splitChunks.cacheGroups.styles = {
-          name: 'styles',
-          test: /\.(css|scss|sass)$/,
-          chunks: 'all',
-          enforce: true,
-        };
-      }
     }
     return config;
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;
