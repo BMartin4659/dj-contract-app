@@ -18,10 +18,11 @@ export const metadata = {
   keywords: "DJ, booking, contract, event, party, wedding, live music",
   viewport: "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0",
   themeColor: "#0070f3",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default"
+  }
 };
 
 export default function RootLayout({ children }) {
