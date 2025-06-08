@@ -21,6 +21,18 @@ const robotoMono = Roboto_Mono({
   subsets: ["latin"],
 });
 
+export const metadata = {
+  title: "Live City DJ Contract",
+  description: "Book your DJ services with Live City - Professional DJ services for weddings, parties and events",
+  keywords: "DJ, booking, contract, event, party, wedding, live music",
+  viewport: "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0",
+  themeColor: "#0070f3",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+  },
+};
+
 // Metadata moved to head section since this is a client component
 export default function RootLayout({ children }) {
   useEffect(() => {
