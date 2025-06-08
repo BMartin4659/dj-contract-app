@@ -1,10 +1,9 @@
 'use client';
 
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import dynamic from "next/dynamic";
-import { Inter } from 'next/font/google';
 import ClientFormProvider from './components/ClientFormProvider';
 import { useEffect } from 'react';
 
@@ -12,17 +11,15 @@ import { useEffect } from 'react';
 const HydrationSuppressor = dynamic(() => import('./components/HydrationSuppressor'), { ssr: false });
 const DocumentHead = dynamic(() => import('./components/DocumentHead'), { ssr: false });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
-
-const inter = Inter({ subsets: ['latin'] });
 
 // Metadata moved to head section since this is a client component
 export default function RootLayout({ children }) {
@@ -99,7 +96,7 @@ export default function RootLayout({ children }) {
   }, []);
 
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning={true} className={`${inter.variable} ${robotoMono.variable}`}>
       <head>
         <title>Live City DJ Contract</title>
         <meta name="description" content="Book your DJ services with Live City - Professional DJ services for weddings, parties and events" />

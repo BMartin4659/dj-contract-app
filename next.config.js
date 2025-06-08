@@ -58,7 +58,6 @@ const nextConfig = {
     domains: ['js.stripe.com'],
   },
   experimental: {
-    allowedDevOrigins: ['localhost', '127.0.0.1'],
     optimizeCss: false,
   },
   compiler: {
