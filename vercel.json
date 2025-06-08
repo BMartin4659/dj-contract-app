@@ -1,56 +1,27 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "installCommand": "rm -rf node_modules package-lock.json && npm install && node ensure-components.js && node clear-cache.js"
-      }
-    }
-  ],
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
+  "cleanUrls": true,
+  "public": true,
+  "regions": ["iad1"],
   "env": {
-    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyC-5o9YY4NS8y8F2ZTg8-zibHYRP_1dOEc",
-    "VERCEL_DEPLOYMENT": "true"
+    "NEXT_PUBLIC_FIREBASE_API_KEY": "@next_public_firebase_api_key",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "@next_public_firebase_auth_domain",
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "@next_public_firebase_project_id",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "@next_public_firebase_storage_bucket",
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "@next_public_firebase_messaging_sender_id",
+    "NEXT_PUBLIC_FIREBASE_APP_ID": "@next_public_firebase_app_id",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
+    "EMAIL_SERVICE": "@email_service",
+    "EMAIL_USER": "@email_user",
+    "EMAIL_PASSWORD": "@email_password",
+    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY": "@next_public_google_maps_api_key"
   },
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        },
-        {
-          "key": "Viewport",
-          "value": "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
-        }
-      ]
-    }
-  ],
-  "functions": {
-    "app/**/*.js": {
-      "maxDuration": 30
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   }
 } 

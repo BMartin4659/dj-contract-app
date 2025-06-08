@@ -2,6 +2,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
+/* Add custom font */
+@font-face {
+  font-family: 'Geraldine';
+  src: url('/fonts/Geraldine-Personal-Use.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
